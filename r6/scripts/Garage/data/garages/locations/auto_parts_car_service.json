@@ -1,0 +1,40 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "auto_parts_car_service",
+    "name": "Auto Parts Car Service",
+    "region": "Rancho Coronado",
+    "deck": { "x": 239.4116973877, "y": -1464.8952636719, "z": 9.7324371337891, "yaw": 147.72955322266 },
+    "zone": { "enter": 15, "exit": 5, "service": 4, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "" },
+    "limits": { "width": 2.74, "length": 6.96, "height": 1.84 },
+    "playerSpawn": { "x": 240.21195983887, "y": -1467.1688232422, "z": 9.5704116821289, "yaw": 25.484432220459 },
+    "audio": {
+        "x": 239.4116973877,
+        "y": -1464.8952636719,
+        "z": 9.7324371337891,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

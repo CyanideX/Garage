@@ -1,0 +1,40 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "coastview_automotive",
+    "name": "Coastview Automotive",
+    "region": "Coastview",
+    "deck": { "x": -1558.5380859375, "y": -1884.0606689453, "z": 74.350555419922, "yaw": 65.999694824219 },
+    "zone": { "enter": 28, "exit": 9, "service": 7.2, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "6775853724936494537" },
+    "limits": { "width": 3.42, "length": 7.06, "height": 2.16 },
+    "playerSpawn": { "x": -1557.9671630859, "y": -1886.9211425781, "z": 74.005012512207, "yaw": 19.58465385437 },
+    "audio": {
+        "x": -1553.3203125,
+        "y": -1890.0971679688,
+        "z": 75.388336181641,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

@@ -1,0 +1,40 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "new_american_autoworks",
+    "name": "New American Autoworks",
+    "region": "Jackson Plains",
+    "deck": { "x": -143.76992797852, "y": -4425.0874023438, "z": 59.219543457031, "yaw": -76.284812927246 },
+    "zone": { "enter": 15.3, "exit": 7.1, "service": 5.68, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "4055621952485262016" },
+    "limits": { "width": 2.9, "length": 7.1, "height": 2.45 },
+    "playerSpawn": { "x": -146.06367492676, "y": -4422.7670898438, "z": 58.868988037109, "yaw": -129.72709655762 },
+    "audio": {
+        "x": -155.89462280273,
+        "y": -4417.7470703125,
+        "z": 60.080821990967,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

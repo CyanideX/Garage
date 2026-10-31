@@ -1,0 +1,40 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "kenduchi_auto",
+    "name": "Kenduchi Auto",
+    "region": "Rancho Coronado",
+    "deck": { "x": -298.0715637207, "y": -1745.4644775391, "z": 7.8135757446289, "yaw": -27.960405349731 },
+    "zone": { "enter": 35, "exit": 10, "service": 8, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "7802833096587759455" },
+    "limits": { "width": 3.78, "length": 7.84, "height": 2.57 },
+    "playerSpawn": { "x": -301.10766601563, "y": -1744.7346191406, "z": 7.4630646705627, "yaw": -105.61545562744 },
+    "audio": {
+        "x": -298.0715637207,
+        "y": -1745.4644775391,
+        "z": 7.8135757446289,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

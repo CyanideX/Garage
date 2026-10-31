@@ -1,0 +1,9 @@
+{
+    "Vehicle.v_delamain_taxi": { "half": [1.158, 2.88, 0.715], "offset": [0, -0.139, 0.345] },
+    "Vehicle.v_sport1_rayfield_caliburn_02_player": { "half": [1.108, 2.413, 0.599], "offset": [0, 0, 0.1962] },
+    "Vehicle.v_sport1_rayfield_aerondight": { "half": [1.217, 3.2868, 0.664], "offset": [0, -0.273, 0.221] },
+    "Vehicle.v_standard2_makigai_maimai": { "half": [0.864, 1.322, 0.736], "offset": [0, 0.0939, 0.4971] },
+    "model:Vehicle.Type66": { "half": [1.221, 2.655, 0.769], "offset": [0, 0, 0.3506] },
+    "Vehicle.v_sport2_quadra_type66_nomad_tribute": { "half": [1.211, 2.588, 0.737], "offset": [0.0001, 0, 0.3187] },
+    "Vehicle.v_sport2_quadra_type66_nomad_player_03": { "half": [1.221, 2.655, 0.769], "offset": [0, 0, 0.3506] }
+}

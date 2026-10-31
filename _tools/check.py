@@ -33,9 +33,9 @@ BASE = [cc.XUTILS, cc.CODEWARE, cc.MOD_SETTINGS]
 
 cc.CONFIGS.clear()
 cc.CONFIGS.update({
-    "garage": [*BASE, SCRIPTS],
-    "nomodsettings": [cc.XUTILS, cc.CODEWARE, SCRIPTS],
-    "audio": [*BASE, AUDIOXL, SCRIPTS],
+    "garage": [*BASE, TWEAKXL, VEHICLECORE, SCRIPTS],
+    "nomodsettings": [cc.XUTILS, cc.CODEWARE, TWEAKXL, VEHICLECORE, SCRIPTS],
+    "audio": [*BASE, TWEAKXL, AUDIOXL, VEHICLECORE, SCRIPTS],
     "cars": [*BASE, TWEAKXL, AUDIOXL, SCRIPTS, VEHICLECORE, *CARS],
     "carsalone": [cc.CODEWARE, cc.MOD_SETTINGS, TWEAKXL, AUDIOXL, VEHICLECORE, *CARS],
 })

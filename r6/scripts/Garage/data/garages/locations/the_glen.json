@@ -1,0 +1,40 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "the_glen",
+    "name": "The Glen",
+    "region": "La Catrina Funeral Home",
+    "deck": { "x": -1144.9567871094, "y": -671.04437255859, "z": 8.6080169677734, "yaw": 54.661281585693 },
+    "zone": { "enter": 22, "exit": 9.5, "service": 7.6000000000000005, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "4898218520754325387" },
+    "limits": { "width": 2.52, "length": 5.62, "height": 1.61 },
+    "playerSpawn": { "x": -1145.0357666016, "y": -673.72888183594, "z": 8.3048467636108, "yaw": -12.485626220703 },
+    "audio": {
+        "x": -1149.1638183594,
+        "y": -672.88543701172,
+        "z": 11.20910358429,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

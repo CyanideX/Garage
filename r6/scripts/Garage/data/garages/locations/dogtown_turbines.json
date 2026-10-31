@@ -1,0 +1,39 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "dogtown_turbines",
+    "name": "Dogtown Turbines",
+    "region": "Dogtown",
+    "deck": { "x": -1632.2227783203, "y": -2120.2612304688, "z": 39.388359069824, "yaw": -160.06845092773 },
+    "zone": { "enter": 24.6, "exit": 7.5, "service": 6, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "6147760800248904567" },
+    "limits": { "width": 3, "length": 6.84, "height": 1.9 },
+    "audio": {
+        "x": -1628.7819824219,
+        "y": -2116.9465332031,
+        "z": 39.994167327881,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

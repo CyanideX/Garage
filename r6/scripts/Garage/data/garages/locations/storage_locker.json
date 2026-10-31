@@ -1,0 +1,40 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "storage_locker",
+    "name": "Storage Locker",
+    "region": "Rancho Coronado",
+    "deck": { "x": 498.34280395508, "y": -653.68981933594, "z": 9.2332382202148, "yaw": -170.34762573242 },
+    "zone": { "enter": 19.7, "exit": 7.6, "service": 6.08, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "6763874719944306754" },
+    "limits": { "width": 3.18, "length": 6.36, "height": 2.24 },
+    "playerSpawn": { "x": 500.15023803711, "y": -651.97021484375, "z": 8.9403610229492, "yaw": 133.78447723389 },
+    "audio": {
+        "x": 497.16644287109,
+        "y": -650.28509521484,
+        "z": 9.1795845031738,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

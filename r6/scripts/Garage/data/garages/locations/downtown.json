@@ -1,0 +1,39 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "downtown",
+    "name": "Downtown",
+    "region": "City Center",
+    "deck": { "x": -2123.9204101563, "y": 533.00671386719, "z": 10.64949798584, "yaw": -13.00133228302 },
+    "zone": { "enter": 15.4, "exit": 8.2, "service": 6.56, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "15328338922303809626" },
+    "limits": { "width": 0, "length": 0, "height": 0 },
+    "audio": {
+        "x": -2123.9204101563,
+        "y": 533.00671386719,
+        "z": 10.64949798584,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Premium",
+        "serviceMultiplier": 1.2,
+        "maxVehicleTier": "Hyper",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

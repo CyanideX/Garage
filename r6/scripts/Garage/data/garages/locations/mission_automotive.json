@@ -1,0 +1,39 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "mission_automotive",
+    "name": "Mission Automotive",
+    "region": "Arroyo",
+    "deck": { "x": -629.79443359375, "y": -753.57586669922, "z": 11.659736633301, "yaw": 83.69970703125 },
+    "zone": { "enter": 20, "exit": 9.5, "service": 7.6000000000000005, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "13238620051123127440" },
+    "limits": { "width": 5.4699997901917, "length": 10.689999580383, "height": 2.4300000667572 },
+    "audio": {
+        "x": -629.79443359375,
+        "y": -753.57586669922,
+        "z": 11.659736633301,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

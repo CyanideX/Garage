@@ -1,0 +1,32 @@
+{
+    "version": 3,
+    "motion": 1,
+    "curve": "linear",
+    "alpha": 0.5,
+    "ends": "clamped",
+    "stopAtKeys": "none",
+    "rotMode": "slerp",
+    "fovMode": "linear",
+    "closed": false,
+    "timing": "uniform",
+    "duration": 6,
+    "ease": "linear",
+    "loop": "once",
+    "loopCount": 2,
+    "preroll": 0,
+    "postroll": 0,
+    "hasRot": true,
+    "hasFov": true,
+    "keys": [
+        { "id": 1, "x": -843.34185791016, "y": 2781.1921386719, "z": 39.465921020508, "yaw": 98.339469909668, "pitch": -6.4999890327454, "roll": -16.985733032227, "fov": 53.237983703613, "turns": 0, "name": "", "kb": [0, 0, 0], "time": 0, "pass": "auto", "hold": 0 },
+        { "id": 2, "x": -842.01239013672, "y": 2781.6215820313, "z": 39.665437316895, "yaw": 99.866523742676, "pitch": -13.899980545044, "roll": -26.25074005127, "fov": 50.237983703613, "turns": 0, "name": "", "kb": [0, 0, 0], "time": 0, "pass": "auto", "hold": 0 }
+    ],
+    "app": {
+        "garage": {
+            "title": false,
+            "adaptive": true,
+            "shake": { "intensity": 1, "frequency": 1 },
+            "frame": { "center": [-843.81219482422, 2782.1455078125, 39.205], "yaw": 108.80093383789, "halfHeight": 0.62999999523163 }
+        }
+    }
+}

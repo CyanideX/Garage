@@ -1,0 +1,40 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "sunset_auto",
+    "name": "Sunset Auto",
+    "region": "Red Peaks",
+    "deck": { "x": 1714.6, "y": -753.86, "z": 50.09, "yaw": 104.4 },
+    "zone": { "enter": 28, "exit": 11.5, "service": 9.200000000000001, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "8637817427283168016" },
+    "limits": { "width": 2.76, "length": 6.22, "height": 1.9 },
+    "playerSpawn": { "x": 1716.6040039063, "y": -755.50390625, "z": 49.792350769043, "yaw": 44.72289276123 },
+    "audio": {
+        "x": 1714.5120849609,
+        "y": -757.44738769531,
+        "z": 51.315731048584,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

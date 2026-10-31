@@ -1,0 +1,40 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "black_market",
+    "name": "Black Market",
+    "region": "Rocky Ridge",
+    "deck": { "x": 3647.8518066406, "y": -937.79064941406, "z": 121.82586669922, "yaw": 59.999778747559 },
+    "zone": { "enter": 15, "exit": 5, "service": 4, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "" },
+    "limits": { "width": 2.44, "length": 6, "height": 1.95 },
+    "playerSpawn": { "x": 3647.7109375, "y": -941.13537597656, "z": 121.4753112793, "yaw": 5.2729268074036 },
+    "audio": {
+        "x": 3647.3117675781,
+        "y": -934.09857177734,
+        "z": 122.62828826904,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

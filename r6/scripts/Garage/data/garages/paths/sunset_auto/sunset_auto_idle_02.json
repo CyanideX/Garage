@@ -1,0 +1,27 @@
+{
+    "version": 3,
+    "motion": 1,
+    "curve": "linear",
+    "alpha": 0.5,
+    "ends": "clamped",
+    "stopAtKeys": "none",
+    "rotMode": "slerp",
+    "fovMode": "linear",
+    "closed": false,
+    "timing": "uniform",
+    "duration": 6,
+    "ease": "linear",
+    "loop": "once",
+    "loopCount": 2,
+    "preroll": 0,
+    "postroll": 0,
+    "hasRot": true,
+    "hasFov": true,
+    "keys": [
+        { "id": 1, "x": 1713.31640625, "y": -751.86511230469, "z": 53.585427856445, "yaw": -125.30001831055, "pitch": -56.549625396729, "roll": 6.204384803772, "fov": 68.237983703613, "turns": 0, "name": "", "kb": [0, 0, 0], "time": 0, "pass": "auto", "hold": 0 },
+        { "id": 2, "x": 1712.3581542969, "y": -752.61932373047, "z": 53.201341247559, "yaw": -135.54672241211, "pitch": -58.949645996094, "roll": 6.2043781280518, "fov": 68.237983703613, "turns": 0, "name": "", "kb": [0, 0, 0], "time": 0, "pass": "auto", "hold": 0 }
+    ],
+    "app": {
+        "garage": { "title": false, "adaptive": false }
+    }
+}

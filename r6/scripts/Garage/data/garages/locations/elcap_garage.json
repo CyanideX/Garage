@@ -1,0 +1,40 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "elcap_garage",
+    "name": "El Cap's Garage",
+    "region": "Northside",
+    "deck": { "x": -843.81219482422, "y": 2782.1455078125, "z": 38.925956726074, "yaw": 108.80093383789 },
+    "zone": { "enter": 40, "exit": 18, "service": 14.4, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "17263465343618105" },
+    "limits": { "width": 4.06, "length": 7.71, "height": 3.16 },
+    "playerSpawn": { "x": -841.61938476563, "y": 2780.2478027344, "z": 38.575401306152, "yaw": 72.272804260254 },
+    "audio": {
+        "x": -845.9,
+        "y": 2778.5,
+        "z": 39.5,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_room_medium__small",
+        "reverbLevel": 0.9,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

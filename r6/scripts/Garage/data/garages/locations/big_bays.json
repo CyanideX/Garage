@@ -1,0 +1,40 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "big_bays",
+    "name": "Big Bays",
+    "region": "Arroyo",
+    "deck": { "x": -590.83380126953, "y": -1957.4974365234, "z": 6.5544967651367, "yaw": 144.6000213623 },
+    "zone": { "enter": 30.1, "exit": 8.9, "service": 7.120000000000001, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "6147760800248904567" },
+    "limits": { "width": 2.56, "length": 5.88, "height": 2.31 },
+    "playerSpawn": { "x": -587.80932617188, "y": -1958.1895751953, "z": 5.9953460693359, "yaw": 86.534538269043 },
+    "audio": {
+        "x": -590.83380126953,
+        "y": -1957.4974365234,
+        "z": 6.5544967651367,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

@@ -1,11 +1,13 @@
 module Garage
 
+import Garage.Data.*
 import Garage.Services.*
 
 // A service, so it outlives every load and session events start and stop the addons
 public class GarageSystem extends ScriptableService {
   private let m_xu: ref<XUtilsMod>;
   private let m_log: ref<XUtilsLog>;
+  private let m_data: ref<GarageData>;
   private let m_addons: array<ref<GarageAddon>>;
   private let m_started: array<Bool>;
   private let m_inSession: Bool;
@@ -19,6 +21,8 @@ public class GarageSystem extends ScriptableService {
   private cb func OnInitialize() {
     this.m_xu = XUtils.Mod("Garage");
     this.m_log = this.m_xu.Log("Core");
+    this.m_data = new GarageData();
+    this.m_data.Setup(this.m_xu);
     this.FindAddons();
     this.m_xu.On(XUtilsEventType.PlayerReady, this, n"OnPlayerReady");
     this.m_xu.On(XUtilsEventType.SessionEnd, this, n"OnSessionEnd");
@@ -27,6 +31,8 @@ public class GarageSystem extends ScriptableService {
   public func Xu() -> ref<XUtilsMod> { return this.m_xu; }
 
   public func Log() -> ref<XUtilsLog> { return this.m_log; }
+
+  public func Data() -> ref<GarageData> { return this.m_data; }
 
   // Third parties subclass GarageAddon, there's no registration call
   private func FindAddons() -> Void {
@@ -45,9 +51,14 @@ public class GarageSystem extends ScriptableService {
   public func OnPlayerReady(e: ref<XUtilsEvent>) -> Void {
     this.m_inSession = true;
     this.ApplySettings();
+    this.m_data.Reload();
+    this.m_data.LogContents();
+    this.m_log.Info("Garage up: " + IntToString(ArraySize(this.m_addons)) + " addons, " + IntToString(this.m_data.LocationCount()) + " garages ("
+                    + IntToString(this.m_data.UserLocationCount()) + " user's, " + IntToString(this.m_data.BrokenCount()) + " broken), "
+                    + IntToString(this.m_data.BoxCount()) + " boxes");
     if !this.m_said {
       this.m_said = true;
-      this.m_log.Info("Garage up: " + IntToString(ArraySize(this.m_addons)) + " addons, hub title reads \"" + GarageText.Get(n"Garage-Hub-Title") + "\"");
+      this.m_log.Info("hub title reads \"" + GarageText.Get(n"Garage-Hub-Title") + "\", a Type-66 variant's box by model " + ToString(IsDefined(this.m_data.GetBox(t"Vehicle.v_sport2_quadra_type66_player"))));
     }
   }
 
@@ -62,7 +73,9 @@ public class GarageSystem extends ScriptableService {
   private func ApplySettings() -> Void {
     let settings: ref<GarageSettings> = GarageSettings.Get();
     if IsDefined(settings) {
-      this.m_log.SetLevel(settings.debugLogging ? XUtilsLogLevel.Debug : XUtilsLogLevel.Info);
+      let level: XUtilsLogLevel = settings.debugLogging ? XUtilsLogLevel.Debug : XUtilsLogLevel.Info;
+      this.m_log.SetLevel(level);
+      this.m_data.SetLogLevel(level);
     }
     this.SyncAddons();
   }

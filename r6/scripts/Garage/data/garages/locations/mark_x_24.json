@@ -1,0 +1,39 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "mark_x_24",
+    "name": "Mark X 24",
+    "region": "Japantown",
+    "deck": { "x": -720.29, "y": 857.56, "z": 20.73, "yaw": -9 },
+    "zone": { "enter": 30, "exit": 15, "service": 12, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "" },
+    "limits": { "width": 0, "length": 0, "height": 0 },
+    "audio": {
+        "x": -720.29,
+        "y": 857.56,
+        "z": 20.73,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

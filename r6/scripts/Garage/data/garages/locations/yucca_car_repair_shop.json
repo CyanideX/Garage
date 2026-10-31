@@ -1,0 +1,39 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "yucca_car_repair_shop",
+    "name": "Yucca Car Repair Shop",
+    "region": "Yucca Car Repair Shop",
+    "deck": { "x": -3968.9099121094, "y": -6482.2294921875, "z": 76.246826171875, "yaw": 164.66561889648 },
+    "zone": { "enter": 15.7, "exit": 6.8, "service": 5.44, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "" },
+    "limits": { "width": 4.85, "length": 8.56, "height": 1.83 },
+    "audio": {
+        "x": -3968.9099121094,
+        "y": -6482.2294921875,
+        "z": 76.246826171875,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}

@@ -3,3 +3,4 @@ __pycache__/
 *.code-workspace
 /_ref
 /_plans
+_tools/convert_report.txt

@@ -1,0 +1,39 @@
+{
+    "format": "garage.location",
+    "version": 1,
+    "id": "bad_auto",
+    "name": "Bad Auto",
+    "region": "Rocky Ridge",
+    "deck": { "x": 2574.03, "y": -8.52, "z": 81.29, "yaw": -138.3 },
+    "zone": { "enter": 30, "exit": 15, "service": 12, "arrival": 2, "events": true },
+    "door": { "nodeRef": "", "entityHash": "" },
+    "limits": { "width": 0, "length": 0, "height": 0 },
+    "audio": {
+        "x": 2574.03,
+        "y": -8.52,
+        "z": 81.29,
+        "type": "auto",
+        "gain": 1,
+        "reverb": "revb_interior_factory_medium__medium",
+        "reverbLevel": 0.35,
+        "lowPass": 0,
+        "highPass": 0,
+        "occlusion": true,
+        "occlusionHz": 1200,
+        "occlusionLevel": 0.9,
+        "playlist": "pool"
+    },
+    "economy": {
+        "tier": "Standard",
+        "serviceMultiplier": 1,
+        "maxVehicleTier": "",
+        "maxPool": 0,
+        "cooldownMultiplier": 1,
+        "blockedClasses": [],
+        "surcharges": [],
+        "services": [],
+        "saleDelay": { "min": 0, "max": 0, "multiplier": 1 }
+    },
+    "camera": { "idleShake": "timeline", "partViewShake": "showroom", "maxIdleSeconds": 6 },
+    "app": {}
+}
