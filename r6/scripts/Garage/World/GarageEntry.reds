@@ -57,7 +57,7 @@ public abstract class GarageEntry {
              + location.region + " (" + IntToString(RoundF(away)) + " m)";
     }
     if GarageLocks.IsBanned(location.id) { return GarageText.Get(n"Garage-Notify-Banned"); }
-    if GarageLocks.IsLocked(location.id) { return GarageLocks.LockText(location.id); }
+    if GarageLocks.IsLocked(location.id) { return GarageLocks.EntryText(location.id); }
     if xu.State().Is(XUtilsStateField.IsInVehicle) { return GarageText.Get(n"Garage-Notify-ExitVehicle"); }
 
     vehicle = GarageEntry.ClosestVehicle(player, deck, site.service);
@@ -135,8 +135,7 @@ public abstract class GarageEntry {
   }
 
   private static func TierFits(schema: ref<VehicleSchema>, location: ref<GarageLocation>) -> Bool {
-    let economy: ref<XUtilsJson> = GarageData.Get().Section(location.id, "economy");
-    let limit: Int32 = GarageEntry.TierRank(IsDefined(economy) ? economy.GetString("maxVehicleTier", "") : "");
+    let limit: Int32 = GarageEntry.TierRank(location.economy.maxVehicleTier);
     return limit == 0 || GarageEntry.TierRank(NameToString(schema.tier)) <= limit;
   }
 

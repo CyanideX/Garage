@@ -62,6 +62,8 @@ public class DoorController extends ScriptableSystem {
   private static func ResealInterval() -> Float { return 2.0; }
   private static func ResealMaxTries() -> Int32 { return 30; }
 
+  private func Log() -> ref<XUtilsLog> { return XUtils.Mod("Garage").Log("Door"); }
+
   public static func Get() -> ref<DoorController> {
     return GameInstance.GetScriptableSystemsContainer(GetGameInstance()).Get(n"Garage.World.DoorController") as DoorController;
   }
@@ -70,7 +72,7 @@ public class DoorController extends ScriptableSystem {
   /// questFact a unique fact name. Takes precedence over a door in the location file. False if any is empty.
   public func RegisterDoor(garageId: String, nodeRefPath: String, questFact: CName) -> Bool {
     if StrLen(garageId) == 0 || StrLen(nodeRefPath) == 0 || !IsNameValid(questFact) {
-      FTLog(s"[Garage] RegisterDoor needs a garage id, a node path and a quest fact: \(garageId), \(nodeRefPath)");
+      this.Log().Warn(s"RegisterDoor needs a garage id, a node path and a quest fact: \(garageId), \(nodeRefPath)");
       return false;
     }
     let id: CName = StringToName(garageId);
@@ -87,7 +89,7 @@ public class DoorController extends ScriptableSystem {
   public func RegisterLocationDoor(garageId: CName, nodeRef: String, entityHash: String) -> Bool {
     let hash: Uint64 = DoorController.ParseHash(entityHash);
     if StrLen(nodeRef) == 0 && hash == 0ul {
-      FTLog(s"[Garage] door for \(NameToString(garageId)) has no node path or hash: \(entityHash)");
+      this.Log().Warn(s"\(NameToString(garageId)) has no node path or hash: \(entityHash)");
       return false;
     }
     let reg: ref<DoorRegistration> = this.Find(garageId);
@@ -157,7 +159,7 @@ public class DoorController extends ScriptableSystem {
     let door: ref<DoorControllerPS> = IsDefined(ps) ? ps.GetConstAccessToPSObject(reg.cachedPersistentID, n"DoorControllerPS") as DoorControllerPS : null;
     if !IsDefined(door) && !reg.pendingPS {
       reg.pendingPS = true;
-      FTLog(s"[Garage] door for \(NameToString(reg.garageId)) isn't streamed in, retrying");
+      this.Log().Info(s"\(NameToString(reg.garageId)) isn't streamed in, retrying");
     }
     if IsDefined(door) { reg.pendingPS = false; }
     return door;
@@ -246,7 +248,7 @@ public class DoorController extends ScriptableSystem {
     }
     if reg.retryTries >= reg.retryMax {
       reg.retryActive = false;
-      FTLog(s"[Garage] door for \(NameToString(reg.garageId)): gave up, the next ring tries again");
+      this.Log().Warn(s"\(NameToString(reg.garageId)): gave up, the next ring tries again");
       return;
     }
     this.QueueRetry(reg);
@@ -343,6 +345,7 @@ public class DoorController extends ScriptableSystem {
     if state == -1 {
       ps.QueuePSEvent(id, n"DoorControllerPS", door.ActionQuestForceUnlock());
     }
+    this.Log().Debug(s"\(NameToString(reg.garageId)) to state \(state)");
     if state == -1 {
       reg.doorState = EnumInt(DoorState.Closed);
       return true;

@@ -96,11 +96,12 @@ public class GarageData extends IScriptable {
     return "";
   }
 
-  // Everyone past here can count on zone, audio and camera being there
+  // Everyone past here can count on zone, audio, camera and economy being there
   private func FillDefaults(location: ref<GarageLocation>, json: ref<XUtilsJson>) -> Void {
     if !IsDefined(location.zone) { location.zone = new GarageZone(); }
     if !IsDefined(location.camera) { location.camera = new GarageCameraData(); }
     if !IsDefined(location.audio) { location.audio = new GarageAudio(); }
+    if !IsDefined(location.economy) { location.economy = new GarageEconomyData(); }
     let audio: ref<XUtilsJson> = json.Has("audio") ? json.Get("audio") : null;
     let deck: ref<GarageSpot> = location.deck;
     if !IsDefined(audio) || !audio.Has("x") { location.audio.x = deck.x; }
@@ -152,7 +153,7 @@ public class GarageData extends IScriptable {
     return best;
   }
 
-  /// A part of the file with no class yet, like economy. Null when it isn't there.
+  /// A part of the file with no class, like app. Null when it isn't there.
   public func Section(id: CName, key: String) -> ref<XUtilsJson> {
     let at: Int32 = this.IndexOf(id);
     return at >= 0 && this.m_raw[at].Has(key) ? this.m_raw[at].Get(key) : null;
@@ -167,8 +168,6 @@ public class GarageData extends IScriptable {
   }
 
   public func BrokenCount() -> Int32 { return this.m_broken; }
-
-  public func SetLogLevel(level: XUtilsLogLevel) -> Void { this.m_log.SetLevel(level); }
 
   // Debug Logging on only: it reads every cloud and path
   public func LogContents() -> Void {

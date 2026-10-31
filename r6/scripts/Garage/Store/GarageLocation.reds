@@ -54,7 +54,33 @@ public class GarageCameraData extends IScriptable {
   public let maxIdleSeconds: Float = 6.0;
 }
 
-/// One garage, as its file has it. Economy has no class until phase 6: GarageData keeps the file's JSON, so it survives a save.
+public class GarageSurcharge extends IScriptable {
+  public let vehicleClass: CName;
+  public let multiplier: Float = 1.0;
+}
+
+/// Game seconds. With a min and a max it's random between them, otherwise the formula scaled by multiplier.
+public class GarageSaleDelay extends IScriptable {
+  public let min: Int32;
+  public let max: Int32;
+  public let multiplier: Float = 1.0;
+}
+
+public class GarageEconomyData extends IScriptable {
+  public let tier: CName = n"Standard";
+  public let serviceMultiplier: Float = 1.0;
+  public let maxVehicleTier: String;
+  /// 0 picks one from the tier's range
+  public let maxPool: Int32;
+  public let cooldownMultiplier: Float = 1.0;
+  public let blockedClasses: array<CName>;
+  public let surcharges: array<ref<GarageSurcharge>>;
+  /// Empty is the tier's list
+  public let services: array<CName>;
+  public let saleDelay: ref<GarageSaleDelay>;
+}
+
+/// One garage, as its file has it. GarageData keeps the file's JSON too, so sections with no class survive a save
 public class GarageLocation extends IScriptable {
   public let format: String = "garage.location";
   public let version: Int32 = 1;
@@ -68,6 +94,7 @@ public class GarageLocation extends IScriptable {
   public let playerSpawn: ref<GarageSpot>;
   public let audio: ref<GarageAudio>;
   public let camera: ref<GarageCameraData>;
+  public let economy: ref<GarageEconomyData>;
 }
 
 /// What a save did. path and id are set when it worked, error when it didn't. replaced is the garage within 10 m it took over.

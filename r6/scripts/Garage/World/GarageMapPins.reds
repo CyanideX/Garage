@@ -36,6 +36,7 @@ public class GarageMapPins extends IScriptable {
       system.SetMappinActive(id, true);
       ArrayPush(this.m_ids, id);
     }
+    this.m_xu.Log("World").Info(IntToString(ArraySize(this.m_ids)) + " map pins");
   }
 
   public func Stop() -> Void {
@@ -77,6 +78,15 @@ protected final func ApplyGarageIcon(minimap: Bool) -> Void {
   inkImageRef.SetTexturePart(this.iconWidget, closed ? n"garage_closed" : n"garage");
   let scale: Float = minimap ? 0.60 : 0.65;
   inkWidgetRef.SetScale(this.iconWidget, new Vector2(scale, scale));
+}
+
+// The minimap only gives this kind of pin a widget while it's tracked
+@wrapMethod(MinimapContainerController)
+public func CreateMappinUIProfile(mappin: wref<IMappin>, mappinVariant: gamedataMappinVariant, customData: ref<MappinControllerCustomData>) -> MappinUIProfile {
+  if Equals(mappinVariant, gamedataMappinVariant.CPO_PingLootVariant) && StrBeginsWith(mappin.GetDisplayName(), "Garage|") {
+    return MappinUIProfile.Create(r"base\\gameplay\\gui\\widgets\\minimap\\minimap_poi_mappin.inkwidget", t"MappinUISpawnProfile.ShortRange", t"MinimapMappinUIProfile.Default");
+  }
+  return wrappedMethod(mappin, mappinVariant, customData);
 }
 
 @wrapMethod(MinimapPOIMappinController)
