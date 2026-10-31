@@ -212,6 +212,12 @@ public class EconomyEngine extends ScriptableSystem {
     return this.m_tiers[0];
   }
 
+  /// Position in the order tiers go up in, Standard being 1. 0 for anything else.
+  public static func TierRank(tier: CName) -> Int32 {
+    let ranks: array<CName> = [n"Standard", n"Classic", n"Sport", n"Premium", n"Exotic", n"Hyper"];
+    return ArrayFindFirst(ranks, tier) + 1;
+  }
+
   // --- Setup
 
   /// Runs for every garage each session and when a location's saved. The pool and reputation carry over.

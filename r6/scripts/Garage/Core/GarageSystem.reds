@@ -3,6 +3,7 @@ module Garage
 import Garage.Data.*
 import Garage.Economy.*
 import Garage.Services.*
+import Garage.UI.*
 import Garage.Vehicle.*
 import Garage.World.*
 
@@ -19,6 +20,9 @@ public class GarageSystem extends ScriptableService {
   private let m_appearances: ref<GarageAppearances>;
   private let m_panel: ref<GarageEconomyPanel>;
   private let m_claim: ref<GarageClaimTimer>;
+  private let m_requester: wref<inkGameController>;
+  private let m_garageOpen: Bool;
+  private let m_closeRequested: Bool;
   private let m_addons: array<ref<GarageAddon>>;
   private let m_started: array<Bool>;
   private let m_inSession: Bool;
@@ -83,6 +87,62 @@ public class GarageSystem extends ScriptableService {
 
   public func Parts() -> ref<GarageParts> { return this.m_parts; }
 
+  public func Requester() -> wref<inkGameController> { return this.m_requester; }
+
+  public func SetRequester(requester: wref<inkGameController>) -> Void { this.m_requester = requester; }
+
+  public func IsGarageOpen() -> Bool { return this.m_garageOpen; }
+
+  /// A service that's finished and wants the garage shut.
+  public func RequestClose() -> Void { this.m_closeRequested = true; }
+
+  public func TakeCloseRequest() -> Bool {
+    let was: Bool = this.m_closeRequested;
+    this.m_closeRequested = false;
+    return was;
+  }
+
+  public func RegisterScreens(screens: ref<ScreenManager>, frame: ref<GarageFrame>) -> Void {
+    let i: Int32 = 0;
+    while i < ArraySize(this.m_addons) {
+      if this.m_started[i] { this.m_addons[i].RegisterScreens(screens, frame); }
+      i += 1;
+    }
+  }
+
+  public func OnGarageOpen(location: ref<GarageLocation>, vehicle: wref<VehicleObject>) -> Void {
+    this.m_garageOpen = true;
+    this.m_closeRequested = false;
+    this.m_visited = true;
+    this.m_world.SetGarageOpen(true);
+    this.m_panel.Show(location);
+    this.m_xu.Hold(XUtilsHold.HideHud, "garage");
+    let context: ref<GarageContext> = this.m_parts.Context();
+    let data: ref<GarageVisitData> = new GarageVisitData();
+    data.garageId = location.id;
+    data.garageName = location.name;
+    data.vehicle = vehicle;
+    data.vehicleRecord = context.vehicleRecord;
+    data.vehicleDisplayName = context.vehicleDisplayName;
+    data.tier = location.economy.tier;
+    data.hasSchema = context.hasSchema;
+    this.m_xu.Emit(GarageEvents.GarageOpen(), data);
+  }
+
+  public func OnGarageClose(location: ref<GarageLocation>) -> Void {
+    this.m_garageOpen = false;
+    this.m_xu.Release(XUtilsHold.HideHud);
+    this.m_appearances.ClearCache();
+    this.m_panel.Hide();
+    this.m_parts.PostExitSummary();
+    this.m_parts.End();
+    this.m_world.SetGarageOpen(false);
+    let data: ref<GarageEventData> = new GarageEventData();
+    data.garageId = location.id;
+    data.garageName = location.name;
+    this.m_xu.Emit(GarageEvents.GarageClose(), data);
+  }
+
   public func Swap() -> ref<GarageEntitySwap> { return this.m_swap; }
 
   public func Appearances() -> ref<GarageAppearances> { return this.m_appearances; }
@@ -132,6 +192,7 @@ public class GarageSystem extends ScriptableService {
   public func OnSessionEnd(e: ref<XUtilsEvent>) -> Void {
     this.m_inSession = false;
     this.m_visited = false;
+    this.m_garageOpen = false;
     this.m_parts.End();
     this.m_swap.Abort();
     this.m_appearances.ClearCache();
@@ -202,8 +263,6 @@ public class GarageSystem extends ScriptableService {
     }
     return out;
   }
-
-  public func MarkVisited() -> Void { this.m_visited = true; }
 
   // Read and clear in one call, so a visit only triggers one reload
   public func TakeVisited() -> Bool {

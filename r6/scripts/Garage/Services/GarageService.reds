@@ -1,6 +1,7 @@
 module Garage.Services
 
 import Garage.*
+import Garage.UI.*
 
 /// What a service sees when it's asked about the car and the garage it's in.
 public class GarageContext extends IScriptable {
@@ -13,6 +14,8 @@ public class GarageContext extends IScriptable {
   public let isOwned: Bool;
   /// VehicleCore has a schema for the car
   public let hasSchema: Bool;
+  /// What Open pushes your screen on.
+  public let screens: wref<ScreenManager>;
 }
 
 /// When a hub button shows. Every condition you fill in has to pass. Empty or 0 means no restriction.
@@ -53,6 +56,10 @@ public abstract class GarageService extends IScriptable {
   /// False shows LockReason on the button
   public func IsAvailable(ctx: ref<GarageContext>) -> Bool { return true; }
   public func LockReason(ctx: ref<GarageContext>) -> String { return ""; }
+  /// Greyed red, for when the service has nothing to do right now. It stays clickable so its screen can say why.
+  public func IsMuted(ctx: ref<GarageContext>) -> Bool { return false; }
+  /// A gold pulse, for when it's urgent.
+  public func IsHighlighted(ctx: ref<GarageContext>) -> Bool { return false; }
   public func Open(ctx: ref<GarageContext>) -> Void {}
 }
 
@@ -68,4 +75,6 @@ public abstract class GarageAddon extends IScriptable {
     let none: array<ref<GarageService>>;
     return none;
   }
+  /// Runs when the garage opens, to add your screens: make one, frame.AddScreen(it), screens.RegisterScreen(name, it).
+  public func RegisterScreens(screens: ref<ScreenManager>, frame: ref<GarageFrame>) -> Void {}
 }

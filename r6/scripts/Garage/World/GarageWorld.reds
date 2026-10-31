@@ -94,6 +94,7 @@ public class GarageWorld extends IScriptable {
   private let m_wasInVehicle: Bool;
   private let m_listening: Bool;
   private let m_pins: ref<GarageMapPins>;
+  private let m_garageOpen: Bool;
 
   public func Setup(xu: ref<XUtilsMod>) -> Void {
     this.m_xu = xu;
@@ -102,6 +103,13 @@ public class GarageWorld extends IScriptable {
   }
 
   public func Pins() -> ref<GarageMapPins> { return this.m_pins; }
+
+  /// The prompt and readout are off while the garage's open. Doors get checked on the way out, when someone's about to use one.
+  public func SetGarageOpen(open: Bool) -> Void {
+    this.m_garageOpen = open;
+    if !open { this.ReassertDoors(); }
+    this.Refresh();
+  }
 
   /// Null for a garage with zone.events off, or none by that id.
   public func Site(id: CName) -> ref<GarageSite> {
@@ -310,7 +318,7 @@ public class GarageWorld extends IScriptable {
 
   private func Refresh() -> Void {
     let state: ref<XUtilsState> = this.m_xu.State();
-    let open: Bool = IsDefined(this.m_active) && !GarageLocks.IsBanned(this.m_active.location.id);
+    let open: Bool = IsDefined(this.m_active) && !this.m_garageOpen && !GarageLocks.IsBanned(this.m_active.location.id);
     let prompt: Bool = open && !state.Is(XUtilsStateField.IsInVehicle);
     if IsDefined(this.m_press) {
       if prompt && !this.m_press.IsArmed() {

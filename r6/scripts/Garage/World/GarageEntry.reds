@@ -3,6 +3,7 @@ module Garage.World
 import Garage.*
 import Garage.Data.*
 import Garage.Economy.*
+import Garage.UI.*
 import VehicleCore.*
 import VehicleCore.Schema.*
 
@@ -28,9 +29,8 @@ public abstract class GarageEntry {
         return;
       }
     }
-    // The scene comes in phase 7
-    xu.Log("World").Info("entry allowed at " + NameToString(site.location.id));
-    xu.Screen().Notify("Garage: entry allowed", SimpleMessageType.Neutral, 3.0, true);
+    xu.Log("World").Info("entering " + NameToString(site.location.id));
+    GaragePopup.Open(vehicle, site.location);
   }
 
   private static func Check(xu: ref<XUtilsMod>, site: ref<GarageSite>, out vehicle: wref<VehicleObject>, out schema: ref<VehicleSchema>) -> String {

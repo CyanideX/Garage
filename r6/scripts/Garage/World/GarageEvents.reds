@@ -20,6 +20,10 @@ public abstract class GarageEvents {
   public static func SaleCompleted() -> CName { return n"Garage.SaleCompleted"; }
   /// A sale's wait is over, whichever way it went.
   public static func LockdownExpired() -> CName { return n"Garage.LockdownExpired"; }
+  /// The garage UI opened. e.data is a GarageVisitData.
+  public static func GarageOpen() -> CName { return n"Garage.GarageOpen"; }
+  /// The garage UI closed.
+  public static func GarageClose() -> CName { return n"Garage.GarageClose"; }
   public static func GarageBanned() -> CName { return n"Garage.GarageBanned"; }
   public static func GarageUnbanned() -> CName { return n"Garage.GarageUnbanned"; }
   /// Money moved through GarageTransactions. e.data is a GarageTransactionData.
@@ -31,6 +35,14 @@ public abstract class GarageEvents {
 public class GarageEventData extends XUtilsEventData {
   public let garageId: CName;
   public let garageName: String;
+}
+
+public class GarageVisitData extends GarageEventData {
+  public let vehicle: wref<VehicleObject>;
+  public let vehicleRecord: TweakDBID;
+  public let vehicleDisplayName: String;
+  public let tier: CName;
+  public let hasSchema: Bool;
 }
 
 public class GarageImportData extends GarageEventData {

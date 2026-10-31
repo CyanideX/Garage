@@ -3,6 +3,7 @@ module Garage.Vehicle
 import Garage.*
 import Garage.Data.*
 import Garage.Economy.*
+import Garage.Services.*
 import Garage.World.*
 import VehicleCore.*
 import VehicleCore.Features.*
@@ -76,6 +77,7 @@ public class GarageParts extends IScriptable {
   private let m_effects: array<ref<GaragePreviewEffect>>;
   private let m_purchases: ref<GarageChoices>;
   private let m_totals: ref<GarageVisitTotals>;
+  private let m_context: ref<GarageContext>;
 
   /// False for a car with no schema, which only gets the trade services.
   public func Begin(vehicle: wref<VehicleObject>, location: ref<GarageLocation>) -> Bool {
@@ -88,6 +90,7 @@ public class GarageParts extends IScriptable {
     let schemas: ref<VehicleSchemas> = VehicleSchemas.Get();
     this.m_schema = IsDefined(schemas) && IsDefined(vehicle) ? schemas.GetSchemaByRecord(vehicle.GetRecordID()) : null;
     this.m_system = VCSystem.Get(GetGameInstance());
+    this.m_context = this.BuildContext(vehicle, location);
     if !IsDefined(this.m_schema) || !IsDefined(this.m_system) { return false; }
     this.m_constraints = GarageConstraints.For(this.m_schema);
     this.m_system.ClearPreview(this.m_schema.id);
@@ -99,6 +102,7 @@ public class GarageParts extends IScriptable {
     this.m_schema = null;
     this.m_constraints = null;
     this.m_location = null;
+    this.m_context = null;
     ArrayClear(this.m_effects);
   }
 
@@ -112,9 +116,49 @@ public class GarageParts extends IScriptable {
     XUtils.Mod("Garage").Screen().Notify(text, SimpleMessageType.Money, 5.0, false);
   }
 
+  private func BuildContext(vehicle: wref<VehicleObject>, location: ref<GarageLocation>) -> ref<GarageContext> {
+    let context: ref<GarageContext> = new GarageContext();
+    context.hasSchema = IsDefined(this.m_schema);
+    if IsDefined(location) {
+      context.locationId = location.id;
+      context.locationName = location.name;
+      context.garageTier = EconomyEngine.TierRank(location.economy.tier);
+    }
+    if IsDefined(vehicle) {
+      context.vehicle = vehicle;
+      context.vehicleRecord = vehicle.GetRecordID();
+      context.vehicleDisplayName = IsDefined(this.m_schema) ? this.m_schema.GetName() : GetLocalizedTextByKey(vehicle.GetRecord().DisplayName());
+      context.isOwned = GameInstance.GetVehicleSystem(GetGameInstance()).IsVehiclePlayerUnlocked(vehicle.GetRecordID());
+    }
+    return context;
+  }
+
+  /// What services get asked with, for this visit.
+  public func Context() -> ref<GarageContext> {
+    if !IsDefined(this.m_context) { this.m_context = new GarageContext(); }
+    return this.m_context;
+  }
+
   public func Schema() -> ref<VehicleSchema> { return this.m_schema; }
 
-  public func Cart() -> ref<GarageCart> { return this.m_cart; }
+  public func Cart() -> ref<GarageCart> {
+    if !IsDefined(this.m_cart) { this.m_cart = new GarageCart(); }
+    return this.m_cart;
+  }
+
+  /// Takes an entry out, along with what it's tied to, and puts those parts back to the planned car.
+  public func RemoveFromCart(category: CName) -> Void {
+    let removed: array<CName> = this.Cart().RemoveGroup(category);
+    this.RevertPreviews(removed);
+  }
+
+  /// Empties the cart and takes every preview off the car.
+  public func DiscardCart() -> Void {
+    this.Cart().Clear();
+    this.RevertAll();
+    let vehicle: wref<VehicleObject> = this.m_vehicle;
+    if IsDefined(vehicle) { VehicleRefresh.Vehicle(vehicle); }
+  }
 
   public func Totals() -> ref<GarageVisitTotals> { return this.m_totals; }
 
@@ -521,7 +565,8 @@ public class GarageParts extends IScriptable {
   /// Drops every unbought preview. The caller refreshes the car.
   public func RevertAll() -> Void {
     if IsDefined(this.m_schema) { this.m_system.ClearPreview(this.m_schema.id); }
-    this.m_purchases = new GarageChoices();
+    ArrayClear(this.m_purchases.categories);
+    ArrayClear(this.m_purchases.choices);
     ArrayClear(this.m_effects);
   }
 
@@ -535,12 +580,12 @@ public class GarageParts extends IScriptable {
     this.m_cart.Add(category, choice, definition.GetName() + " - " + definition.GetChoiceName(choice), price, this.ServiceFee(category), status, source);
   }
 
-  /// Puts a pick in the cart at the price it shows, then whatever it forces, and drops anything it leaves impossible.
+  /// Puts a pick in the cart, free if V already has it or it's stock, then whatever it forces, and drops anything it leaves impossible.
   public func AddToCart(id: CName, choice: CName, name: String, price: Int32, serviceFee: Int32, status: EGaragePartStatus) -> Void {
     if !IsDefined(this.m_schema) { return; }
     let forced: ref<GarageChoices> = this.ForcedBy(id, choice);
     this.SplitGroupFor(id);
-    this.m_cart.Add(id, choice, name, price, serviceFee, status);
+    this.m_cart.Add(id, choice, name, Equals(status, EGaragePartStatus.Unowned) ? price : 0, serviceFee, status);
     this.AddForced(id, choice, forced);
   }
 

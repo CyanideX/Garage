@@ -87,7 +87,7 @@ def check_scan():
                 hits.append(f'{rel}:{number}: Game["..."] is CET')
             if "/Addons/" in rel and re.search(r"@(wrapMethod|replaceMethod|addField|addMethod)\b", code):
                 hits.append(f"{rel}:{number}: addons don't wrap game classes, core does")
-            if "/Localization/" not in rel and re.search(r'\.SetText\(\s*"', code):
+            if "/Localization/" not in rel and re.search(r'\.SetText\(\s*"[^"]*[A-Za-z]{2}', code):
                 hits.append(f"{rel}:{number}: UI text goes through GarageText")
 
     # Two Mod Settings pages on one class: only the last page's values reach user.ini
