@@ -1,0 +1,48 @@
+# Custom mappin variant for garage pins.
+# Uses CPO_PingLootVariant as backing enum (unused in vanilla map context).
+
+Mappins.GarageVariant:
+  $type: gamedataMappinVariant_Record
+  enumName: CPO_PingLootVariant
+
+WorldMap.GarageFilter:
+  $type: gamedataWorldMapFilter_Record
+  enumName: CustomFilter
+
+WorldMap.GarageFilterGroup:
+  $type: gamedataMappinUIFilterGroup_Record
+  filterName: Garage-MapFilter-Garages
+  filterType: WorldMap.GarageFilter
+  mappins:
+    - Mappins.GarageVariant
+  shouldCollectMappins: false
+
+Mappins.GarageMappinDefinition:
+  $type: gamedataMappinDefinition_Record
+  showInWorld: true
+  showOnMap: true
+  showOnMinimap: true
+  visibilityRange: 80.0
+  possibleVariants:
+    - Mappins.GarageVariant
+
+WorldMappinUIProfile.Garage:
+  $base: WorldMappinUIProfile.Quest
+
+WorldMap.WorldMapCustomFiltersList.list:
+  - !append-once WorldMap.GarageFilterGroup
+
+WorldMap.WorldMapQuickFiltersList.list:
+  - !append-once WorldMap.GarageFilterGroup
+
+WorldMap.ZoomLevelImportant.mappinFilterGroups:
+  - !append-once WorldMap.GarageFilterGroup
+
+WorldMap.ZoomLevelAllMappins.mappinFilterGroups:
+  - !append-once WorldMap.GarageFilterGroup
+
+WorldMap.ZoomLevelExtraMappins.mappinFilterGroups:
+  - !append-once WorldMap.GarageFilterGroup
+
+WorldMap.ZoomLevelSubDistricts.mappinFilterGroups:
+  - !append-once WorldMap.GarageFilterGroup

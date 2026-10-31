@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<bindings>
+    <!-- The enter prompt. Both keys rebind through Mod Settings, under the names in overridableUI. The hold time and hold
+         events are what make its icon fill on the game's hint bar. -->
+    <mapping name="Garage_Enter_Button" type="Button">
+        <button id="IK_G" overridableUI="Garage_Enter_Key" />
+        <button id="IK_Pad_LeftThumb" overridableUI="Garage_Enter_Pad_Key" />
+    </mapping>
+    <context name="Garage_Enter">
+        <action name="Garage_Enter" map="Garage_Enter_Button" />
+    </context>
+    <hold action="Garage_Enter" timeout="0.5" />
+    <acceptedEvents action="Garage_Enter">
+        <event name="BUTTON_HOLD_COMPLETE" />
+        <event name="BUTTON_HOLD_PROGRESS" />
+        <event name="BUTTON_PRESSED" />
+        <event name="BUTTON_RELEASED" />
+    </acceptedEvents>
+    <context name="Exploration" append="true">
+        <include name="Garage_Enter" />
+    </context>
+    <context name="Combat" append="true">
+        <include name="Garage_Enter" />
+    </context>
+    <context name="Locomotion" append="true">
+        <include name="Garage_Enter" />
+    </context>
+</bindings>

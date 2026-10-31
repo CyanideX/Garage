@@ -3,6 +3,9 @@ import Codeware.Localization.*
 
 public class GarageChinese extends ModLocalizationPackage {
   protected func DefineTexts() -> Void {
+    this.Text("Garage-Prompt-Enter", "进入车库");
+    this.Text("Garage-Map-Description", "车辆服务");
+
     this.Text("Garage-Category-Title", "选择类别");
     this.Text("Garage-Category-Subtitle", "选择调校类别以浏览可用零件");
     this.Text("Garage-Category-Hint", "选择类别");

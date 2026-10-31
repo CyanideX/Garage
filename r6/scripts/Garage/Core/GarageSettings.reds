@@ -7,6 +7,20 @@ public enum GarageDofMode {
 
 public class GarageSettings extends ScriptableService {
   @runtimeProperty("ModSettings.mod", "Garage")
+  @runtimeProperty("ModSettings.category", "General")
+  @runtimeProperty("ModSettings.category.order", "10")
+  @runtimeProperty("ModSettings.displayName", "Enter Garage Key")
+  @runtimeProperty("ModSettings.description", "Hold it near a garage's deck to enter.")
+  public let Garage_Enter_Key: EInputKey = EInputKey.IK_G;
+
+  @runtimeProperty("ModSettings.mod", "Garage")
+  @runtimeProperty("ModSettings.category", "General")
+  @runtimeProperty("ModSettings.category.order", "10")
+  @runtimeProperty("ModSettings.displayName", "Enter Garage Key (Controller)")
+  @runtimeProperty("ModSettings.description", "Hold it near a garage's deck to enter.")
+  public let Garage_Enter_Pad_Key: EInputKey = EInputKey.IK_Pad_LeftThumb;
+
+  @runtimeProperty("ModSettings.mod", "Garage")
   @runtimeProperty("ModSettings.category", "Services")
   @runtimeProperty("ModSettings.category.order", "20")
   @runtimeProperty("ModSettings.displayName", "Aftermarket")

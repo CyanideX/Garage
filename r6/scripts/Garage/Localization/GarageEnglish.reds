@@ -3,6 +3,9 @@ import Codeware.Localization.*
 
 public class GarageEnglish extends ModLocalizationPackage {
   protected func DefineTexts() -> Void {
+    this.Text("Garage-Prompt-Enter", "Enter Garage");
+    this.Text("Garage-Map-Description", "Vehicle Services");
+
     this.Text("Garage-Category-Title", "SELECT CATEGORY");
     this.Text("Garage-Category-Subtitle", "Choose a tuning category to browse available parts");
     this.Text("Garage-Category-Hint", "Select Category");

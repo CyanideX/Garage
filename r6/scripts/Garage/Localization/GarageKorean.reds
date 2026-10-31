@@ -3,6 +3,9 @@ import Codeware.Localization.*
 
 public class GarageKorean extends ModLocalizationPackage {
   protected func DefineTexts() -> Void {
+    this.Text("Garage-Prompt-Enter", "차고 들어가기");
+    this.Text("Garage-Map-Description", "차량 서비스");
+
     this.Text("Garage-Category-Title", "카테고리 선택");
     this.Text("Garage-Category-Subtitle", "튜닝 카테고리를 선택하여 사용 가능한 부품을 둘러보세요");
     this.Text("Garage-Category-Hint", "카테고리 선택");

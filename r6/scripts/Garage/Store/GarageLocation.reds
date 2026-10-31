@@ -49,8 +49,8 @@ public class GarageAudio extends IScriptable {
 }
 
 public class GarageCameraData extends IScriptable {
-  public let idleShake: String;
-  public let partViewShake: String;
+  public let idleShake: String = "timeline";
+  public let partViewShake: String = "showroom";
   public let maxIdleSeconds: Float = 6.0;
 }
 
@@ -70,11 +70,13 @@ public class GarageLocation extends IScriptable {
   public let camera: ref<GarageCameraData>;
 }
 
-/// What a save did. path is set when it worked, error when it didn't.
+/// What a save did. path and id are set when it worked, error when it didn't. replaced is the garage within 10 m it took over.
 public class GarageSaveResult extends IScriptable {
   public let ok: Bool;
   public let path: String;
   public let error: String;
+  public let id: CName;
+  public let replaced: CName;
 
   public static func Failed(error: String) -> ref<GarageSaveResult> {
     let result: ref<GarageSaveResult> = new GarageSaveResult();

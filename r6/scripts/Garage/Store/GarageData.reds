@@ -56,11 +56,16 @@ public class GarageData extends IScriptable {
       this.Broken(where, XUtilsJson.LastParseError());
       return;
     }
-    if !json.ToObject(location) || !IsDefined(location.deck) || !IsNameValid(location.id) {
-      this.Broken(where, "not a location, it needs an id and a deck");
+    let missing: String = GarageData.MissingField(json);
+    if StrLen(missing) > 0 {
+      this.Broken(where, "it has no " + missing);
       return;
     }
-    if !IsDefined(location.zone) { location.zone = new GarageZone(); }
+    if !json.ToObject(location) || !IsDefined(location.deck) || !IsNameValid(location.id) {
+      this.Broken(where, "not a location");
+      return;
+    }
+    this.FillDefaults(location, json);
     let at: Int32 = this.IndexOf(location.id);
     if at < 0 {
       ArrayPush(this.m_locations, location);
@@ -76,6 +81,40 @@ public class GarageData extends IScriptable {
     this.m_locations[at] = location;
     this.m_raw[at] = json;
     this.m_user[at] = user;
+  }
+
+  private static func MissingField(json: ref<XUtilsJson>) -> String {
+    let required: array<String> = ["id", "name", "region", "deck"];
+    for key in required {
+      if !json.Has(key) { return key; }
+    }
+    let deck: ref<XUtilsJson> = json.Get("deck");
+    let fields: array<String> = ["x", "y", "z", "yaw"];
+    for field in fields {
+      if !deck.Has(field) { return "deck." + field; }
+    }
+    return "";
+  }
+
+  // Everyone past here can count on zone, audio and camera being there
+  private func FillDefaults(location: ref<GarageLocation>, json: ref<XUtilsJson>) -> Void {
+    if !IsDefined(location.zone) { location.zone = new GarageZone(); }
+    if !IsDefined(location.camera) { location.camera = new GarageCameraData(); }
+    if !IsDefined(location.audio) { location.audio = new GarageAudio(); }
+    let audio: ref<XUtilsJson> = json.Has("audio") ? json.Get("audio") : null;
+    let deck: ref<GarageSpot> = location.deck;
+    if !IsDefined(audio) || !audio.Has("x") { location.audio.x = deck.x; }
+    if !IsDefined(audio) || !audio.Has("y") { location.audio.y = deck.y; }
+    if !IsDefined(audio) || !audio.Has("z") { location.audio.z = deck.z; }
+    // Half a spawn is no spawn
+    if IsDefined(location.playerSpawn) {
+      let spawn: ref<XUtilsJson> = json.Get("playerSpawn");
+      if !spawn.Has("x") || !spawn.Has("y") || !spawn.Has("z") || !spawn.Has("yaw") { location.playerSpawn = null; }
+    }
+    let limits: ref<GarageLimits> = location.limits;
+    if IsDefined(limits) && (limits.width < 0.0 || limits.length < 0.0 || limits.height < 0.0) {
+      this.m_log.Warn("a size limit of " + NameToString(location.id) + " is negative, so it's ignored");
+    }
   }
 
   private func Broken(where: String, why: String) -> Void {
@@ -99,18 +138,24 @@ public class GarageData extends IScriptable {
     return at >= 0 ? this.m_locations[at] : null;
   }
 
-  /// The closest garage within maxDistance of pos, measured to its deck. Null when there's none.
-  public func FindNearest(pos: Vector4, maxDistance: Float) -> ref<GarageLocation> {
+  /// The closest garage to pos, measured to its deck. Give maxDistance to limit how far it looks. Null when there's none.
+  public func FindNearest(pos: Vector4, opt maxDistance: Float) -> ref<GarageLocation> {
     let best: ref<GarageLocation>;
-    let bestDistance: Float = maxDistance;
+    let bestDistance: Float = 0.0;
     for location in this.m_locations {
       let distance: Float = Vector4.Distance(pos, location.deck.Position());
-      if distance <= bestDistance {
+      if (maxDistance <= 0.0 || distance <= maxDistance) && (!IsDefined(best) || distance < bestDistance) {
         bestDistance = distance;
         best = location;
       }
     }
     return best;
+  }
+
+  /// A part of the file with no class yet, like economy. Null when it isn't there.
+  public func Section(id: CName, key: String) -> ref<XUtilsJson> {
+    let at: Int32 = this.IndexOf(id);
+    return at >= 0 && this.m_raw[at].Has(key) ? this.m_raw[at].Get(key) : null;
   }
 
   public func LocationCount() -> Int32 { return ArraySize(this.m_locations); }
@@ -144,11 +189,13 @@ public class GarageData extends IScriptable {
     }
   }
 
-  /// Writes it to the user's folder and reloads. A garage already within 10 m keeps its id, so a re-export replaces it.
-  public func SaveLocation(location: ref<GarageLocation>) -> ref<GarageSaveResult> {
+  /// Writes it to the user's folder and reloads, then the rings and pins catch up and Garage.LocationImported goes out.
+  /// A garage already within 10 m on the map keeps its id, so a re-export replaces it. source is passed on in the event.
+  public func SaveLocation(location: ref<GarageLocation>, opt source: String) -> ref<GarageSaveResult> {
     if !IsDefined(location) || !IsDefined(location.deck) { return GarageSaveResult.Failed("no deck"); }
-    let near: ref<GarageLocation> = this.FindNearest(location.deck.Position(), 10.0);
-    if IsDefined(near) { location.id = near.id; }
+    if StrLen(location.name) == 0 { return GarageSaveResult.Failed("no name"); }
+    let replaced: CName = this.GarageWithin10m(location);
+    if IsNameValid(replaced) { location.id = replaced; }
     if !IsNameValid(location.id) { return GarageSaveResult.Failed("no id"); }
     let json: ref<XUtilsJson> = XUtilsJson.FromObject(location);
     if !IsDefined(json) { return GarageSaveResult.Failed("couldn't write it as JSON"); }
@@ -156,8 +203,23 @@ public class GarageData extends IScriptable {
     if at >= 0 { GarageData.KeepMissing(json, this.m_raw[at]); }
     let path: String = "garages/locations/" + NameToString(location.id) + ".json";
     let result: ref<GarageSaveResult> = this.Write(path, json);
-    if result.ok { this.Reload(); }
+    if result.ok {
+      result.id = location.id;
+      result.replaced = replaced;
+      this.Reload();
+      GarageSystem.Get().OnLocationSaved(location.id, at >= 0, source);
+    }
     return result;
+  }
+
+  // Flat, so a garage stacked above another one still counts
+  private func GarageWithin10m(location: ref<GarageLocation>) -> CName {
+    for other in this.m_locations {
+      let dx: Float = other.deck.x - location.deck.x;
+      let dy: Float = other.deck.y - location.deck.y;
+      if dx * dx + dy * dy < 100.0 && !Equals(other.id, location.id) { return other.id; }
+    }
+    return n"";
   }
 
   // Sections with no class yet (economy, app) come through a save from the file they were read from

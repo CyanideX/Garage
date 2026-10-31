@@ -2,12 +2,14 @@ module Garage
 
 import Garage.Data.*
 import Garage.Services.*
+import Garage.World.*
 
 // A service, so it outlives every load and session events start and stop the addons
 public class GarageSystem extends ScriptableService {
   private let m_xu: ref<XUtilsMod>;
   private let m_log: ref<XUtilsLog>;
   private let m_data: ref<GarageData>;
+  private let m_world: ref<GarageWorld>;
   private let m_addons: array<ref<GarageAddon>>;
   private let m_started: array<Bool>;
   private let m_inSession: Bool;
@@ -23,6 +25,8 @@ public class GarageSystem extends ScriptableService {
     this.m_log = this.m_xu.Log("Core");
     this.m_data = new GarageData();
     this.m_data.Setup(this.m_xu);
+    this.m_world = new GarageWorld();
+    this.m_world.Setup(this.m_xu);
     this.FindAddons();
     this.m_xu.On(XUtilsEventType.PlayerReady, this, n"OnPlayerReady");
     this.m_xu.On(XUtilsEventType.SessionEnd, this, n"OnSessionEnd");
@@ -33,6 +37,8 @@ public class GarageSystem extends ScriptableService {
   public func Log() -> ref<XUtilsLog> { return this.m_log; }
 
   public func Data() -> ref<GarageData> { return this.m_data; }
+
+  public func World() -> ref<GarageWorld> { return this.m_world; }
 
   // Third parties subclass GarageAddon, there's no registration call
   private func FindAddons() -> Void {
@@ -53,6 +59,7 @@ public class GarageSystem extends ScriptableService {
     this.ApplySettings();
     this.m_data.Reload();
     this.m_data.LogContents();
+    this.m_world.Start(this.m_data);
     this.m_log.Info("Garage up: " + IntToString(ArraySize(this.m_addons)) + " addons, " + IntToString(this.m_data.LocationCount()) + " garages ("
                     + IntToString(this.m_data.UserLocationCount()) + " user's, " + IntToString(this.m_data.BrokenCount()) + " broken), "
                     + IntToString(this.m_data.BoxCount()) + " boxes");
@@ -65,10 +72,23 @@ public class GarageSystem extends ScriptableService {
   // XU has already dropped the mod's holds, watchers and spawns by now
   public func OnSessionEnd(e: ref<XUtilsEvent>) -> Void {
     this.m_inSession = false;
+    this.m_visited = false;
+    this.m_world.Stop();
     this.SyncAddons();
   }
 
   public func OnSettingsChanged() -> Void { this.ApplySettings(); }
+
+  public func OnLocationSaved(id: CName, isUpdate: Bool, source: String) -> Void {
+    if this.m_inSession { this.m_world.OnLocationSaved(id, this.m_data); }
+    let location: ref<GarageLocation> = this.m_data.GetLocation(id);
+    let data: ref<GarageImportData> = new GarageImportData();
+    data.garageId = id;
+    data.garageName = IsDefined(location) ? location.name : "";
+    data.source = source;
+    data.isUpdate = isUpdate;
+    this.m_xu.Emit(GarageEvents.LocationImported(), data);
+  }
 
   private func ApplySettings() -> Void {
     let settings: ref<GarageSettings> = GarageSettings.Get();
