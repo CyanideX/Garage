@@ -209,6 +209,10 @@ public class GarageKorean extends ModLocalizationPackage {
     this.Text("Garage-Notify-HolsterWeapon", "거래하려면 무기를 넣으세요.");
     this.Text("Garage-Notify-HeatTooHigh", "수배 단계가 너무 높음. 니 알아서 하세요~");
     this.Text("Garage-Notify-Banned", "이 차고에서 영구 차단되었습니다.");
+    this.Text("Garage-Sale-NotCleared", "아직 차량 처리가 끝나지 않았어. 끝나면 연락할게.");
+    this.Text("Garage-Sale-Cancelled", "판매가 취소됐어. 이 차고에서 영구 출입 금지야.");
+    this.Text("Garage-Sale-FellThrough", "%s 판매 무산. 차고에서 대금을 마련하지 못했어. 차량은 돌려줬어.");
+    this.Text("Garage-Sale-Cleared", "%s 처리 완료. 거래 즐거웠어.");
     this.Text("Garage-Notify-DependencyOutdated", "차고를 이용하려면 %s %s 이상이 필요합니다 (설치됨: %s).");
     this.Text("Garage-Notify-NamesMissing", "차고를 사용할 수 없습니다: 게임 레코드 이름을 불러오지 못했습니다. 게임을 다시 시작하세요.");
     this.Text("Garage-Notify-LockdownFallback", "봉쇄");

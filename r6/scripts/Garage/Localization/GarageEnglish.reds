@@ -209,6 +209,10 @@ public class GarageEnglish extends ModLocalizationPackage {
     this.Text("Garage-Notify-HolsterWeapon", "Holster your weapon if you want to do business.");
     this.Text("Garage-Notify-HeatTooHigh", "Heat level too high. You're on your own!");
     this.Text("Garage-Notify-Banned", "You've been permanently banned from this garage.");
+    this.Text("Garage-Sale-NotCleared", "We haven't cleared the vehicle yet. We'll get back to you once it's done.");
+    this.Text("Garage-Sale-Cancelled", "Sale cancelled. Permanently banned from this garage.");
+    this.Text("Garage-Sale-FellThrough", "%s sale fell through. The garage couldn't cover it. Vehicle returned.");
+    this.Text("Garage-Sale-Cleared", "%s cleared. Nice doin' business.");
     this.Text("Garage-Notify-DependencyOutdated", "Garage needs %s %s or newer (installed: %s).");
     this.Text("Garage-Notify-NamesMissing", "Garage unavailable: the game's record names failed to load. Restart the game.");
     this.Text("Garage-Notify-LockdownFallback", "Lockdown");

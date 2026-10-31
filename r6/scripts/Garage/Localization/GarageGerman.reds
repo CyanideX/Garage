@@ -209,6 +209,10 @@ public class GarageGerman extends ModLocalizationPackage {
     this.Text("Garage-Notify-HolsterWeapon", "Steck deine Waffe weg, wenn du Geschäfte machen willst.");
     this.Text("Garage-Notify-HeatTooHigh", "Fahndungsstufe zu hoch. Du bist auf dich allein gestellt!");
     this.Text("Garage-Notify-Banned", "Du wurdest dauerhaft aus dieser Garage verbannt.");
+    this.Text("Garage-Sale-NotCleared", "Wir haben das Fahrzeug noch nicht abgewickelt. Wir melden uns, sobald es erledigt ist.");
+    this.Text("Garage-Sale-Cancelled", "Verkauf abgebrochen. Du hast in dieser Garage dauerhaft Hausverbot.");
+    this.Text("Garage-Sale-FellThrough", "Verkauf von %s geplatzt. Die Garage konnte nicht zahlen. Fahrzeug zurückgegeben.");
+    this.Text("Garage-Sale-Cleared", "%s abgewickelt. War nett, mit dir Geschäfte zu machen.");
     this.Text("Garage-Notify-DependencyOutdated", "Die Garage braucht %s %s oder neuer (installiert: %s).");
     this.Text("Garage-Notify-NamesMissing", "Garage nicht verfügbar: Die Datensatznamen des Spiels wurden nicht geladen. Starte das Spiel neu.");
     this.Text("Garage-Notify-LockdownFallback", "Sperrung");

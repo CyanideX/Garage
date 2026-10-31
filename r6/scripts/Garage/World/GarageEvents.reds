@@ -12,6 +12,14 @@ public abstract class GarageEvents {
   public static func ProximityLeave() -> CName { return n"Garage.ProximityLeave"; }
   /// A location was saved or imported. e.data is a GarageImportData. Pins and rings have already caught up.
   public static func LocationImported() -> CName { return n"Garage.LocationImported"; }
+  /// V walked off with a sale agreed, so its wait has started.
+  public static func SaleExitDistance() -> CName { return n"Garage.SaleExitDistance"; }
+  /// The garage couldn't pay when the time came, so V got the car back.
+  public static func SaleFailure() -> CName { return n"Garage.SaleFailure"; }
+  /// Paid, and the car's gone.
+  public static func SaleCompleted() -> CName { return n"Garage.SaleCompleted"; }
+  /// A sale's wait is over, whichever way it went.
+  public static func LockdownExpired() -> CName { return n"Garage.LockdownExpired"; }
   public static func GarageBanned() -> CName { return n"Garage.GarageBanned"; }
   public static func GarageUnbanned() -> CName { return n"Garage.GarageUnbanned"; }
   /// Money moved through GarageTransactions. e.data is a GarageTransactionData.

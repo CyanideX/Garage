@@ -11,6 +11,7 @@ public class GarageSystem extends ScriptableService {
   private let m_log: ref<XUtilsLog>;
   private let m_data: ref<GarageData>;
   private let m_world: ref<GarageWorld>;
+  private let m_sales: ref<GarageSales>;
   private let m_addons: array<ref<GarageAddon>>;
   private let m_started: array<Bool>;
   private let m_inSession: Bool;
@@ -28,6 +29,8 @@ public class GarageSystem extends ScriptableService {
     this.m_data.Setup(this.m_xu);
     this.m_world = new GarageWorld();
     this.m_world.Setup(this.m_xu);
+    this.m_sales = new GarageSales();
+    this.m_sales.Setup(this.m_xu);
     this.FindAddons();
     this.m_xu.On(XUtilsEventType.PlayerReady, this, n"OnPlayerReady");
     this.m_xu.On(XUtilsEventType.SessionEnd, this, n"OnSessionEnd");
@@ -54,6 +57,8 @@ public class GarageSystem extends ScriptableService {
   public func Data() -> ref<GarageData> { return this.m_data; }
 
   public func World() -> ref<GarageWorld> { return this.m_world; }
+
+  public func Sales() -> ref<GarageSales> { return this.m_sales; }
 
   // Third parties subclass GarageAddon, there's no registration call
   private func FindAddons() -> Void {
@@ -90,6 +95,7 @@ public class GarageSystem extends ScriptableService {
   public func OnSessionEnd(e: ref<XUtilsEvent>) -> Void {
     this.m_inSession = false;
     this.m_visited = false;
+    this.m_sales.Stop();
     this.m_world.Stop();
     let engine: ref<EconomyEngine> = EconomyEngine.Get();
     if IsDefined(engine) { engine.Stop(); }

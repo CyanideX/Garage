@@ -209,6 +209,10 @@ public class GarageChinese extends ModLocalizationPackage {
     this.Text("Garage-Notify-HolsterWeapon", "想做生意就收起武器。");
     this.Text("Garage-Notify-HeatTooHigh", "通缉等级太高，你自生自灭吧！");
     this.Text("Garage-Notify-Banned", "你已被该车库永久封禁。");
+    this.Text("Garage-Sale-NotCleared", "车辆还没处理完。处理好后我们会联系你。");
+    this.Text("Garage-Sale-Cancelled", "交易取消。你已被该车库永久封禁。");
+    this.Text("Garage-Sale-FellThrough", "%s 的交易告吹。车库付不起这笔钱，车辆已退还。");
+    this.Text("Garage-Sale-Cleared", "%s 已处理完毕。合作愉快。");
     this.Text("Garage-Notify-DependencyOutdated", "车库需要 %s %s 或更高版本（已安装：%s）。");
     this.Text("Garage-Notify-NamesMissing", "车库不可用：游戏记录名称加载失败。请重启游戏。");
     this.Text("Garage-Notify-LockdownFallback", "封锁");

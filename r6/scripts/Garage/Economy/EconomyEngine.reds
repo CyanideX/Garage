@@ -576,8 +576,8 @@ public class EconomyEngine extends ScriptableSystem {
     for state in this.m_garages {
       if this.IsSalePending(state) && state.pendingSale.deadlineGameSeconds <= now {
         state.pendingSale.active = false;
-        // The payout and the car come with the sale flow
         if IsDefined(this.m_log) { this.m_log.Info("sale due at " + NameToString(state.garageId)); }
+        GarageSystem.Get().Sales().Complete(state.pendingSale);
       }
     }
   }
