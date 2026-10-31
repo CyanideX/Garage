@@ -9,6 +9,34 @@ public abstract class GarageVehicles {
     return GameInstance.GetVehicleSystem(GetGameInstance()).EnablePlayerVehicle(name, enable, despawn);
   }
 
+  /// 0 to 1. A car it can't read counts as undamaged, so nobody's sold a scrap price by mistake.
+  public static func Health(vehicle: ref<VehicleObject>) -> Float {
+    if !IsDefined(vehicle) { return 1.0; }
+    let pools: ref<StatPoolsSystem> = GameInstance.GetStatPoolsSystem(GetGameInstance());
+    if !IsDefined(pools) { return 1.0; }
+    let id: StatsObjectID = Cast<StatsObjectID>(vehicle.GetEntityID());
+    let health: Float = pools.GetStatPoolValue(id, gamedataStatPoolType.Health, true);
+    // No Health pool reads 0 while undamaged: bikes always, and some modded cars
+    if health <= 0.0 && (vehicle.IsA(n"vehicleBikeBaseObject") || !pools.IsStatPoolAdded(id, gamedataStatPoolType.Health)) { return 1.0; }
+    return ClampF(health / 100.0, 0.0, 1.0);
+  }
+
+  public static func HealthPercent(vehicle: ref<VehicleObject>) -> Int32 { return RoundF(GarageVehicles.Health(vehicle) * 100.0); }
+
+  public static func IsFullHealth(vehicle: ref<VehicleObject>) -> Bool { return GarageVehicles.HealthPercent(vehicle) >= 100; }
+
+  /// Gives V the car. A record named after this one and the appearance wins if a mod made one, otherwise the appearance is set
+  /// on the record itself.
+  public static func Unlock(record: TweakDBID, opt appearance: CName) -> Bool {
+    if !IsNameValid(appearance) { return GarageVehicles.SetEnabled(record, true); }
+    let combined: TweakDBID = record + TDBID.Create("_" + NameToString(appearance));
+    if IsDefined(TweakDBInterface.GetVehicleRecord(combined)) { return GarageVehicles.SetEnabled(combined, true); }
+    let done: Bool = GarageVehicles.SetEnabled(record, true);
+    TweakDBManager.SetFlat(record + t".appearanceName", appearance);
+    TweakDBManager.UpdateRecord(record);
+    return done;
+  }
+
   /// A string the game takes for this record. It isn't the record's real name, so it's no good for showing anyone.
   /// "" for a record whose name is under 7 characters, which no vehicle's is.
   // EnablePlayerVehicle only wants a name, and without CET nothing turns an id back into one. But it just hashes what it's

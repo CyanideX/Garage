@@ -3,6 +3,17 @@ module Garage
 public abstract class GarageText {
   public static func Get(key: CName) -> String { return GetLocalizedTextByKey(key); }
 
+  /// 12345 as "12,345".
+  public static func Price(amount: Int32) -> String {
+    let digits: String = IntToString(amount);
+    let text: String = "";
+    while StrLen(digits) > 3 {
+      text = "," + StrRight(digits, 3) + text;
+      digits = StrLeft(digits, StrLen(digits) - 3);
+    }
+    return digits + text;
+  }
+
   // Each %s or %d takes the next arg, in order
   public static func Format(key: CName, args: array<String>) -> String {
     let text: String = GetLocalizedTextByKey(key);

@@ -231,7 +231,7 @@ public class DoorController extends ScriptableSystem {
   /// doorState only knows what we sent. The game can shut a door by itself, and no ring would open it again.
   public func Reassert(garageId: CName) -> Void {
     let reg: ref<DoorRegistration> = this.Find(garageId);
-    if !IsDefined(reg) || reg.lastZoneState < 2 || reg.doorState != EnumInt(DoorState.Open) || GarageLocks.IsBanned(garageId) { return; }
+    if !IsDefined(reg) || reg.lastZoneState < 2 || reg.doorState != EnumInt(DoorState.Open) || (GarageLocks.IsBanned(garageId) && !reg.letOut) { return; }
     let door: ref<DoorControllerPS> = this.GetDoorPS(reg);
     if !IsDefined(door) || (door.IsOpen() && !door.IsLocked()) { return; }
     reg.doorState = EnumInt(DoorState.Closed);
@@ -259,7 +259,7 @@ public class DoorController extends ScriptableSystem {
   // Banned: V inside gets let out, then it seals and stays sealed
   private func Target(reg: ref<DoorRegistration>) -> Int32 {
     let wanted: Int32 = reg.wantOpen ? EnumInt(DoorState.Open) : EnumInt(DoorState.Closed);
-    if !GarageLocks.IsBanned(reg.garageId) || (reg.letOut && reg.lastZoneState >= 2) { return wanted; }
+    if !GarageLocks.IsBanned(reg.garageId) || reg.letOut { return wanted; }
     if reg.doorState == EnumInt(DoorState.Sealed) || reg.lastZoneState < 2 { return EnumInt(DoorState.Sealed); }
     return wanted;
   }

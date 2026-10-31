@@ -234,7 +234,8 @@ public class GarageWorld extends IScriptable {
       if IsDefined(doors) { doors.OnZoneChanged(id, zone); }
     }
     this.Announce(site, was, zone);
-    if zone < 2 && GarageLocks.IsBanned(id) { this.Retire(site); }
+    // Rings come in one at a time after a load, so V passes zone 1 on the way in. Only going out counts
+    if zone < was && zone < 2 && GarageLocks.IsBanned(id) { this.Retire(site); }
     this.Update();
   }
 
