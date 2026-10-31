@@ -270,6 +270,11 @@ public class GarageData extends IScriptable {
     return this.Cloud("garage/" + text, "garages/clouds/" + text + ".json", "Garage", "data/garages/clouds/" + text + ".json");
   }
 
+  /// What a garage with no cloud of its own gets.
+  public func GetDefaultCloud() -> ref<XUtilsPointCloud> {
+    return this.Cloud("default", "", "Garage", "data/defaults/cloud.json");
+  }
+
   /// The user's capture, else the one the car's mod ships. Null when it has neither.
   public func GetVehicleCloud(vehicleId: CName) -> ref<XUtilsPointCloud> {
     let text: String = NameToString(vehicleId);
@@ -284,7 +289,7 @@ public class GarageData extends IScriptable {
     }
     let motion: ref<XUtilsMotion> = this.m_xu.Motion();
     let cloud: ref<XUtilsPointCloud>;
-    if this.m_xu.Files().Exists(userPath) {
+    if StrLen(userPath) > 0 && this.m_xu.Files().Exists(userPath) {
       cloud = motion.LoadPointCloud(userPath);
     }
     if !IsDefined(cloud) && StrLen(mod) > 0 {
@@ -315,6 +320,11 @@ public class GarageData extends IScriptable {
     return this.Paths("garage/" + text + "/", "garages/paths/" + text, "Garage", "data/garages/paths/" + text);
   }
 
+  /// What a garage and car with no paths of their own get.
+  public func GetDefaultPaths() -> array<ref<XUtilsPath>> {
+    return this.Paths("default/", "", "Garage", "data/defaults/paths");
+  }
+
   /// The user's paths if there are any, else what the car's mod ships.
   public func GetVehiclePaths(vehicleId: CName) -> array<ref<XUtilsPath>> {
     let text: String = NameToString(vehicleId);
@@ -331,9 +341,11 @@ public class GarageData extends IScriptable {
     if ArraySize(found) > 0 { return found; }
     let files: ref<XUtilsFiles> = this.m_xu.Files();
     let motion: ref<XUtilsMotion> = this.m_xu.Motion();
-    let own: array<String> = files.List(userFolder, ".json");
-    for name in own {
-      this.AddPath(found, key, name, motion.LoadPath(userFolder + "/" + name));
+    if StrLen(userFolder) > 0 {
+      let own: array<String> = files.List(userFolder, ".json");
+      for name in own {
+        this.AddPath(found, key, name, motion.LoadPath(userFolder + "/" + name));
+      }
     }
     if ArraySize(found) > 0 || StrLen(mod) == 0 { return found; }
     let shipped: array<String> = files.ListShared(mod, shippedFolder, ".json");

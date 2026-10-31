@@ -1,5 +1,8 @@
 module Garage.UI
 
+@if(ModuleExists("XOS"))
+import XOS.*
+
 import Codeware.UI.*
 import Garage.*
 import Garage.Data.*
@@ -164,7 +167,15 @@ public class GaragePopup extends InGamePopup {
     this.m_cartWidget.RefreshDisplay();
   }
 
+  // These come in whichever popup's on top. While the overlay's up the keys are its, and 0.3 s of Esc would count as hold to leave
+  @if(ModuleExists("XOS"))
+  private func OverlayOpen() -> Bool { return XOS.IsOpen(); }
+
+  @if(!ModuleExists("XOS"))
+  private func OverlayOpen() -> Bool { return false; }
+
   protected cb func OnButtonPress(evt: ref<inkPointerEvent>) {
+    if this.OverlayOpen() { return; }
     if evt.IsAction(n"cancel") || evt.IsAction(n"back") || evt.IsAction(n"one_click_confirm") {
       this.m_holding = true;
       this.CancelTimer(this.m_holdTimer);
@@ -173,13 +184,15 @@ public class GaragePopup extends InGamePopup {
   }
 
   protected cb func OnButtonRelease(evt: ref<inkPointerEvent>) {
-    if evt.IsAction(n"UI_MoveUp") || evt.IsAction(n"popup_moveUp") || evt.IsAction(n"scroll_up") {
-      this.m_screens.ScrollUp();
-      return;
-    }
-    if evt.IsAction(n"UI_MoveDown") || evt.IsAction(n"popup_moveDown") || evt.IsAction(n"scroll_down") {
-      this.m_screens.ScrollDown();
-      return;
+    if !this.OverlayOpen() {
+      if evt.IsAction(n"UI_MoveUp") || evt.IsAction(n"popup_moveUp") || evt.IsAction(n"scroll_up") {
+        this.m_screens.ScrollUp();
+        return;
+      }
+      if evt.IsAction(n"UI_MoveDown") || evt.IsAction(n"popup_moveDown") || evt.IsAction(n"scroll_down") {
+        this.m_screens.ScrollDown();
+        return;
+      }
     }
     if this.m_holding {
       this.m_holding = false;
@@ -192,6 +205,7 @@ public class GaragePopup extends InGamePopup {
     this.m_holdTimer = 0ul;
     if !this.m_holding { return; }
     this.m_holding = false;
+    if this.OverlayOpen() { return; }
     let cart: ref<GarageCart> = GarageSystem.Get().Parts().Cart();
     if cart.Count() > 0 {
       this.m_holdCompleted = true;

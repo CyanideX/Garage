@@ -1,7 +1,9 @@
 module Garage
 
+import VehicleCore.Schema.*
 import Garage.Data.*
 import Garage.Economy.*
+import Garage.Scene.*
 import Garage.Services.*
 import Garage.UI.*
 import Garage.Vehicle.*
@@ -20,6 +22,7 @@ public class GarageSystem extends ScriptableService {
   private let m_appearances: ref<GarageAppearances>;
   private let m_panel: ref<GarageEconomyPanel>;
   private let m_claim: ref<GarageClaimTimer>;
+  private let m_scene: ref<GarageScene>;
   private let m_requester: wref<inkGameController>;
   private let m_garageOpen: Bool;
   private let m_closeRequested: Bool;
@@ -53,6 +56,8 @@ public class GarageSystem extends ScriptableService {
     this.m_panel.Setup(this.m_xu);
     this.m_claim = new GarageClaimTimer();
     this.m_claim.Setup(this.m_xu);
+    this.m_scene = new GarageScene();
+    this.m_scene.Setup(this.m_xu);
     this.m_xu.OnCustom(GarageEvents.Transaction(), this, n"OnTransaction");
     this.FindAddons();
     this.m_xu.On(XUtilsEventType.PlayerReady, this, n"OnPlayerReady");
@@ -117,6 +122,7 @@ public class GarageSystem extends ScriptableService {
     this.m_world.SetGarageOpen(true);
     this.m_panel.Show(location);
     this.m_xu.Hold(XUtilsHold.HideHud, "garage");
+    this.m_scene.Open(location, vehicle, this.m_parts.Schema());
     let context: ref<GarageContext> = this.m_parts.Context();
     let data: ref<GarageVisitData> = new GarageVisitData();
     data.garageId = location.id;
@@ -131,6 +137,7 @@ public class GarageSystem extends ScriptableService {
 
   public func OnGarageClose(location: ref<GarageLocation>) -> Void {
     this.m_garageOpen = false;
+    this.m_scene.Close();
     this.m_xu.Release(XUtilsHold.HideHud);
     this.m_appearances.ClearCache();
     this.m_panel.Hide();
@@ -150,6 +157,8 @@ public class GarageSystem extends ScriptableService {
   public func EconomyPanel() -> ref<GarageEconomyPanel> { return this.m_panel; }
 
   public func ClaimTimer() -> ref<GarageClaimTimer> { return this.m_claim; }
+
+  public func Scene() -> ref<GarageScene> { return this.m_scene; }
 
   public func OnTransaction(e: ref<XUtilsEvent>) -> Void {
     let data: ref<GarageTransactionData> = e.data as GarageTransactionData;
@@ -194,6 +203,7 @@ public class GarageSystem extends ScriptableService {
     this.m_visited = false;
     this.m_garageOpen = false;
     this.m_parts.End();
+    this.m_scene.Close();
     this.m_swap.Abort();
     this.m_appearances.ClearCache();
     this.m_panel.Hide();
@@ -205,7 +215,10 @@ public class GarageSystem extends ScriptableService {
     this.SyncAddons();
   }
 
-  public func OnSettingsChanged() -> Void { this.ApplySettings(); }
+  public func OnSettingsChanged() -> Void {
+    this.ApplySettings();
+    if this.m_garageOpen { this.m_scene.ApplyLens(); }
+  }
 
   public func OnLocationSaved(id: CName, isUpdate: Bool, source: String) -> Void {
     let location: ref<GarageLocation> = this.m_data.GetLocation(id);
@@ -224,7 +237,7 @@ public class GarageSystem extends ScriptableService {
     let settings: ref<GarageSettings> = GarageSettings.Get();
     if IsDefined(settings) {
       let level: XUtilsLogLevel = settings.debugLogging ? XUtilsLogLevel.Debug : XUtilsLogLevel.Info;
-      let categories: array<String> = ["Core", "Data", "World", "Economy", "Door"];
+      let categories: array<String> = ["Core", "Data", "World", "Economy", "Door", "Scene", "UI", "Vehicle"];
       for category in categories { this.m_xu.Log(category).SetLevel(level); }
     }
     this.SyncAddons();

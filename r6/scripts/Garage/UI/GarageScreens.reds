@@ -1,5 +1,6 @@
 module Garage.UI
 
+import Garage.Scene.*
 import Codeware.UI.*
 import Garage.*
 import Garage.Data.*
@@ -55,6 +56,16 @@ public class ScreenManager {
             return;
         }
 
+        let scene = GarageSystem.Get().Scene();
+        if Equals(name, n"hub") {
+            scene.ReleasePath();
+        } else {
+            let services = GarageSystem.Get().Services();
+            for service in services {
+                if Equals(service.Id(), name) && StrLen(service.TimelinePreset()) > 0 { scene.PlayPath(service.TimelinePreset()); }
+            }
+        }
+
         if NotEquals(this.m_currentScreen, n"") {
             ArrayPush(this.m_screenHistory, this.m_currentScreen);
         }
@@ -91,6 +102,11 @@ public class ScreenManager {
 
         let previousScreen = this.m_screenHistory[historySize - 1];
         ArrayErase(this.m_screenHistory, historySize - 1);
+
+        // Only let the camera go back when the service is really being left
+        if Equals(previousScreen, n"hub") {
+            GarageSystem.Get().Scene().ReleasePath();
+        }
 
         this.ShowScreenInternal(previousScreen);
     }

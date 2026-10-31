@@ -20,7 +20,7 @@ public class GarageEconomyPanel extends IScriptable {
     let engine: ref<EconomyEngine> = EconomyEngine.Get();
     if !IsDefined(engine) { return; }
     this.m_garage = garage.id;
-    let spec: ref<XUtilsPanelSpec> = XUtilsPanelSpec.Create().Header(garage.name).Corner(XUtilsScreenAnchor.BottomRight)
+    let spec: ref<XUtilsPanelSpec> = XUtilsPanelSpec.Create().Header(garage.name).Corner(XUtilsScreenAnchor.BottomRight).Layer(XUtilsScreenLayer.Scene)
       .Row(n"cash", GarageText.Get(n"Garage-HUD-Cash"), XUtilsRowKind.Text)
       .Row(n"tier", GarageText.Get(n"Garage-HUD-Tier"), XUtilsRowKind.Text);
     this.m_panel = this.m_xu.Screen().Panel(spec);
@@ -65,7 +65,7 @@ public class GarageClaimTimer extends IScriptable {
     this.m_garage = garage;
     let options: ref<XUtilsCountdownOptions> = XUtilsCountdownOptions.Create().Seconds(GarageClaimTimer.Seconds()).Format(XUtilsTimeFormat.MinSecTenths)
       .Stage(5.0, new HDRColor(1.176, 0.2, 0.2, 1.0), 2.0)
-      .OnZero(XUtilsCountdownEnd.Create().Hold(5.0).Blink(3).FadeOut(1.0));
+      .OnZero(XUtilsCountdownEnd.Create().Hold(5.0).Blink(3).FadeOut(1.0)).Layer(XUtilsScreenLayer.Scene);
     this.m_countdown = this.m_xu.Screen().Countdown(options);
     this.m_countdown.On(XUtilsEventType.CountdownComplete, this, n"OnExpired");
     this.m_countdown.Start();

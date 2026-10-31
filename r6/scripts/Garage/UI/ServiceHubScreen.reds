@@ -1,5 +1,6 @@
 module Garage.UI
 
+import Garage.Scene.*
 import Codeware.UI.*
 import Garage.*
 import Garage.Data.*
@@ -183,6 +184,7 @@ public class ServiceHubScreen extends GarageScreen {
             this.m_screenManager.ShowUnavailable(service.Label(), service.LockReason(context));
             return true;
         }
+        GarageSystem.Get().Scene().GoTo(service.CameraPosition());
         service.Open(context);
         return true;
     }
