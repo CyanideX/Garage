@@ -12,8 +12,34 @@ public class GaragePriceRule extends IScriptable {
 
 public class GarageAppearanceRule extends IScriptable {
   public let match: String;
+  /// Multiplies the VIN scrub, since that's the work a hot car makes harder
   public let claim: Float = 1.0;
   public let sell: Float = 1.0;
+}
+
+/// A claim's price and how it got there. total = (base x rate + scrub) x market
+public class GarageClaimQuote extends IScriptable {
+  public let base: Int32;
+  public let rate: Float;
+  public let scrub: Int32;
+  public let scrubMultiplier: Float = 1.0;
+  public let market: Float = 1.0;
+  public let total: Int32;
+}
+
+/// What a sale pays and how it got there. total = (base x risk x appearance x grade x type x special + parts) x condition x tier x market
+public class GarageSaleQuote extends IScriptable {
+  public let base: Int32;
+  public let risk: Float = 1.0;
+  public let appearance: Float = 1.0;
+  public let grade: Float = 1.0;
+  public let type: Float = 1.0;
+  public let special: Float = 1.0;
+  public let parts: Int32;
+  public let condition: Float = 1.0;
+  public let tier: Float = 1.0;
+  public let market: Float = 1.0;
+  public let total: Int32;
 }
 
 /// data/addons/prices.json, or the user's addons/prices.json in place of it.
@@ -23,6 +49,7 @@ public class GaragePrices extends IScriptable {
   public let defaultBasePrice: Int32 = 5000;
   public let defaultServiceFee: Int32 = 250;
   public let healthSellFloor: Float = 0.3;
+  public let partsResaleRate: Float = 0.5;
   public let minServiceFeeRate: Float = 0.15;
   public let customizationFeeRate: Float = 0.08;
   public let gradeMultipliers: array<ref<GaragePriceRule>>;
@@ -81,7 +108,7 @@ public class GaragePricing extends IScriptable {
     return ArrayContains(tags, tag);
   }
 
-  /// True when the price comes from the game or the car's mod, not a fallback. Such a car sells without the multipliers.
+  /// True when the price comes from the game or the car's mod, not a fallback. It already knows what kind of car it is, so a sale skips grade, type and special.
   public func IsGamePriced(record: TweakDBID) -> Bool {
     return TweakDBInterface.GetInt(record + t".dealerPrice", 0) > 0 || this.AssignedPrice(record) > 0;
   }
@@ -112,15 +139,50 @@ public class GaragePricing extends IScriptable {
   // --- Prices
 
   public func ClaimPrice(record: TweakDBID, appearance: CName, tier: CName) -> Int32 {
-    let prices: ref<GaragePrices> = this.Prices();
-    let baseClaim: Int32 = FloorF(Cast<Float>(this.BaseValue(record)) * this.TierValue(prices.claimRates, tier, 0.7));
-    let vinScrub: Int32 = RoundF(Cast<Float>(baseClaim) * this.TierValue(prices.vinScrubRates, tier, 0.1));
-    let rule: ref<GarageAppearanceRule> = this.AppearanceRule(NameToString(appearance));
-    let multiplier: Float = IsDefined(rule) ? rule.claim : 1.0;
-    return Max(FloorF(Cast<Float>(baseClaim + vinScrub) * multiplier), 1);
+    return this.QuoteClaim(record, appearance, tier).total;
   }
 
-  /// Every multiplier applies here, whatever the price's source. health is 0 to 1.
+  /// What claiming costs. A cop car isn't worth 20 times as much, but its VIN is that much harder to scrub.
+  public func QuoteClaim(record: TweakDBID, appearance: CName, tier: CName) -> ref<GarageClaimQuote> {
+    let prices: ref<GaragePrices> = this.Prices();
+    let settings: ref<GarageSettings> = GarageSettings.Get();
+    let rule: ref<GarageAppearanceRule> = this.AppearanceRule(NameToString(appearance));
+    let quote: ref<GarageClaimQuote> = new GarageClaimQuote();
+    quote.base = this.BaseValue(record);
+    quote.rate = this.TierValue(prices.claimRates, tier, 0.7);
+    quote.scrubMultiplier = IsDefined(rule) ? rule.claim : 1.0;
+    quote.market = IsDefined(settings) ? settings.claimPriceMultiplier : 1.0;
+    let baseClaim: Int32 = FloorF(Cast<Float>(quote.base) * quote.rate);
+    quote.scrub = RoundF(Cast<Float>(baseClaim) * this.TierValue(prices.vinScrubRates, tier, 0.1) * quote.scrubMultiplier);
+    quote.total = Max(FloorF(Cast<Float>(baseClaim + quote.scrub) * quote.market), 1);
+    return quote;
+  }
+
+  /// What a garage pays for a car. Parts fetch a share of what they cost and suffer the car's condition with it. health is 0 to 1.
+  public func QuoteSale(record: TweakDBID, appearance: CName, tier: CName, health: Float, partsCost: Int32) -> ref<GarageSaleQuote> {
+    let prices: ref<GaragePrices> = this.Prices();
+    let settings: ref<GarageSettings> = GarageSettings.Get();
+    let name: String = NameToString(appearance);
+    let rule: ref<GarageAppearanceRule> = this.AppearanceRule(name);
+    let quote: ref<GarageSaleQuote> = new GarageSaleQuote();
+    quote.base = this.BaseValue(record);
+    quote.risk = IsDefined(rule) ? rule.sell : 1.0;
+    quote.appearance = this.Stacked(prices.appearanceFlags, name);
+    if !this.IsGamePriced(record) {
+      quote.grade = this.Longest(prices.gradeMultipliers, name, 1.0);
+      quote.type = this.TypeMultiplier(record);
+      quote.special = this.FlagMultiplier(record);
+    }
+    quote.parts = FloorF(Cast<Float>(Max(partsCost, 0)) * prices.partsResaleRate);
+    quote.condition = prices.healthSellFloor + (1.0 - prices.healthSellFloor) * ClampF(health, 0.0, 1.0);
+    quote.tier = this.TierValue(prices.tierSellPct, tier, 0.6);
+    quote.market = IsDefined(settings) ? settings.salePriceMultiplier : 1.0;
+    let car: Float = Cast<Float>(quote.base) * quote.risk * quote.appearance * quote.grade * quote.type * quote.special;
+    quote.total = Max(FloorF((car + Cast<Float>(quote.parts)) * quote.condition * quote.tier * quote.market), 0);
+    return quote;
+  }
+
+  /// What Swap compares two looks by. Every multiplier applies, whatever the price's source. health is 0 to 1.
   public func SellValue(record: TweakDBID, appearance: CName, tier: CName, health: Float, partsCost: Int32) -> Int32 {
     let prices: ref<GaragePrices> = this.Prices();
     let name: String = NameToString(appearance);
@@ -158,16 +220,22 @@ public class GaragePricing extends IScriptable {
   // --- Rules
 
   private func TagMultiplier(record: TweakDBID) -> Float {
+    return this.TypeMultiplier(record) * this.FlagMultiplier(record);
+  }
+
+  private func TypeMultiplier(record: TweakDBID) -> Float {
+    let prices: ref<GaragePrices> = this.Prices();
+    let tags: array<String> = this.Tags(record);
+    for rule in prices.typeMultipliers {
+      if ArrayContains(tags, rule.tag) { return rule.value; }
+    }
+    return 1.0;
+  }
+
+  private func FlagMultiplier(record: TweakDBID) -> Float {
     let prices: ref<GaragePrices> = this.Prices();
     let tags: array<String> = this.Tags(record);
     let result: Float = 1.0;
-    let typed: Bool = false;
-    for rule in prices.typeMultipliers {
-      if !typed && ArrayContains(tags, rule.tag) {
-        result *= rule.value;
-        typed = true;
-      }
-    }
     for rule in prices.flagMultipliers {
       if ArrayContains(tags, rule.tag) { result *= rule.value; }
     }

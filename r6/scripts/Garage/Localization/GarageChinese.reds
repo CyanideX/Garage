@@ -117,6 +117,7 @@ public class GarageChinese extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AlreadyOwned", "已在名下");
     this.Text("Garage-ChopShop-CannotBeSold", "该车辆无法出售");
     this.Text("Garage-ChopShop-CannotBeClaimed", "该车辆无法认领");
+    this.Text("Garage-ChopShop-HeatBlocked", "被通缉时无法交易");
     this.Text("Garage-ChopShop-ConditionLabel", "状况：");
 
     // QuickConfirmScreen
@@ -200,6 +201,7 @@ public class GarageChinese extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AppearanceLabel", "外观：");
     this.Text("Garage-ChopShop-DamageLabel", "损伤：");
     this.Text("Garage-ChopShop-TierLabel", "等级：");
+    this.Text("Garage-ChopShop-MarketLabel", "市场：");
     this.Text("Garage-ChopShop-PartsLabel", "零件：");
 
     // Notify
@@ -214,6 +216,7 @@ public class GarageChinese extends ModLocalizationPackage {
     this.Text("Garage-Sale-Cancelled", "交易取消。你已被该车库永久封禁。");
     this.Text("Garage-Sale-FellThrough", "%s 的交易告吹。车库付不起这笔钱，车辆已退还。");
     this.Text("Garage-Sale-Cleared", "%s 已处理完毕。合作愉快。");
+    this.Text("Garage-Sale-Started", "等 %s 的手续办妥，我们就把钱打给你。");
     this.Text("Garage-Notify-DependencyOutdated", "车库需要 %s %s 或更高版本（已安装：%s）。");
     this.Text("Garage-Notify-NamesMissing", "车库不可用：游戏记录名称加载失败。请重启游戏。");
     this.Text("Garage-Notify-LockdownFallback", "封锁");
@@ -235,7 +238,7 @@ public class GarageChinese extends ModLocalizationPackage {
     this.Text("Garage-Transaction-InsufficientFunds", "艾迪不足，无法认领该车辆。");
     this.Text("Garage-Transaction-DeductFailed", "交易失败：无法扣除艾迪。");
     this.Text("Garage-Transaction-UnlockFailed", "认领失败：无法解锁车辆，已退款。");
-    this.Text("Garage-Transaction-ClaimSuccess", "认领成功");
+    this.Text("Garage-Transaction-ClaimSuccess", "已认领 %s，花费 €$%s。");
     this.Text("Garage-Transaction-InsufficientFundsState", "余额不足");
     this.Text("Garage-Transaction-ClaimFailedState", "认领失败");
 

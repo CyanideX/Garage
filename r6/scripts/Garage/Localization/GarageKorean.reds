@@ -117,6 +117,7 @@ public class GarageKorean extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AlreadyOwned", "이미 보유 중인 차량");
     this.Text("Garage-ChopShop-CannotBeSold", "판매할 수 없는 차량");
     this.Text("Garage-ChopShop-CannotBeClaimed", "인수할 수 없는 차량");
+    this.Text("Garage-ChopShop-HeatBlocked", "수배 중에는 거래 불가");
     this.Text("Garage-ChopShop-ConditionLabel", "상태:");
 
     // QuickConfirmScreen
@@ -200,6 +201,7 @@ public class GarageKorean extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AppearanceLabel", "외형: ");
     this.Text("Garage-ChopShop-DamageLabel", "손상: ");
     this.Text("Garage-ChopShop-TierLabel", "등급: ");
+    this.Text("Garage-ChopShop-MarketLabel", "시세: ");
     this.Text("Garage-ChopShop-PartsLabel", "부품: ");
 
     // Notify
@@ -214,6 +216,7 @@ public class GarageKorean extends ModLocalizationPackage {
     this.Text("Garage-Sale-Cancelled", "판매가 취소됐어. 이 차고에서 영구 출입 금지야.");
     this.Text("Garage-Sale-FellThrough", "%s 판매 무산. 차고에서 대금을 마련하지 못했어. 차량은 돌려줬어.");
     this.Text("Garage-Sale-Cleared", "%s 처리 완료. 거래 즐거웠어.");
+    this.Text("Garage-Sale-Started", "%s 명의 정리가 끝나면 에디를 보내줄게.");
     this.Text("Garage-Notify-DependencyOutdated", "차고를 이용하려면 %s %s 이상이 필요합니다 (설치됨: %s).");
     this.Text("Garage-Notify-NamesMissing", "차고를 사용할 수 없습니다: 게임 레코드 이름을 불러오지 못했습니다. 게임을 다시 시작하세요.");
     this.Text("Garage-Notify-LockdownFallback", "봉쇄");
@@ -235,7 +238,7 @@ public class GarageKorean extends ModLocalizationPackage {
     this.Text("Garage-Transaction-InsufficientFunds", "이 차량을 인수할 자금이 부족합니다.");
     this.Text("Garage-Transaction-DeductFailed", "거래 실패: 자금을 차감할 수 없습니다.");
     this.Text("Garage-Transaction-UnlockFailed", "인수 실패: 차량 잠금을 해제할 수 없습니다. 환불되었습니다.");
-    this.Text("Garage-Transaction-ClaimSuccess", "인수 완료");
+    this.Text("Garage-Transaction-ClaimSuccess", "%s 인수 완료, €$%s.");
     this.Text("Garage-Transaction-InsufficientFundsState", "잔액 부족");
     this.Text("Garage-Transaction-ClaimFailedState", "인수 실패");
 

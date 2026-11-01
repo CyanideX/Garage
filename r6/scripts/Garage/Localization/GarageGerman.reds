@@ -117,6 +117,7 @@ public class GarageGerman extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AlreadyOwned", "BEREITS IN DEINEM BESITZ");
     this.Text("Garage-ChopShop-CannotBeSold", "FAHRZEUG KANN NICHT VERKAUFT WERDEN");
     this.Text("Garage-ChopShop-CannotBeClaimed", "FAHRZEUG KANN NICHT BEANSPRUCHT WERDEN");
+    this.Text("Garage-ChopShop-HeatBlocked", "NICHT, SOLANGE DU GESUCHT WIRST");
     this.Text("Garage-ChopShop-ConditionLabel", "Zustand:");
 
     // QuickConfirmScreen
@@ -200,6 +201,7 @@ public class GarageGerman extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AppearanceLabel", "Aussehen: ");
     this.Text("Garage-ChopShop-DamageLabel", "Schaden: ");
     this.Text("Garage-ChopShop-TierLabel", "Stufe: ");
+    this.Text("Garage-ChopShop-MarketLabel", "Markt: ");
     this.Text("Garage-ChopShop-PartsLabel", "Teile: ");
 
     // Notify
@@ -214,6 +216,7 @@ public class GarageGerman extends ModLocalizationPackage {
     this.Text("Garage-Sale-Cancelled", "Verkauf abgebrochen. Du hast in dieser Garage dauerhaft Hausverbot.");
     this.Text("Garage-Sale-FellThrough", "Verkauf von %s geplatzt. Die Garage konnte nicht zahlen. Fahrzeug zurückgegeben.");
     this.Text("Garage-Sale-Cleared", "%s abgewickelt. War nett, mit dir Geschäfte zu machen.");
+    this.Text("Garage-Sale-Started", "Wir überweisen dir die Eddies, sobald die Papiere für %s sauber sind.");
     this.Text("Garage-Notify-DependencyOutdated", "Die Garage braucht %s %s oder neuer (installiert: %s).");
     this.Text("Garage-Notify-NamesMissing", "Garage nicht verfügbar: Die Datensatznamen des Spiels wurden nicht geladen. Starte das Spiel neu.");
     this.Text("Garage-Notify-LockdownFallback", "Sperrung");
@@ -235,7 +238,7 @@ public class GarageGerman extends ModLocalizationPackage {
     this.Text("Garage-Transaction-InsufficientFunds", "Nicht genug Eddies, um dieses Fahrzeug zu beanspruchen.");
     this.Text("Garage-Transaction-DeductFailed", "Transaktion fehlgeschlagen: Eddies konnten nicht abgebucht werden.");
     this.Text("Garage-Transaction-UnlockFailed", "Beanspruchung fehlgeschlagen: Fahrzeug konnte nicht freigeschaltet werden. Erstattung erfolgt.");
-    this.Text("Garage-Transaction-ClaimSuccess", "Beansprucht");
+    this.Text("Garage-Transaction-ClaimSuccess", "%s für €$%s beansprucht.");
     this.Text("Garage-Transaction-InsufficientFundsState", "Nicht genug Eddies");
     this.Text("Garage-Transaction-ClaimFailedState", "Beanspruchung fehlgeschlagen");
 

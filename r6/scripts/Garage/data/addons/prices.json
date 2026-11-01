@@ -3,6 +3,7 @@
   "version": 1,
   "defaultBasePrice": 5000,
   "healthSellFloor": 0.3,
+  "partsResaleRate": 0.5,
   "minServiceFeeRate": 0.15,
   "customizationFeeRate": 0.08,
   "gradeMultipliers": [

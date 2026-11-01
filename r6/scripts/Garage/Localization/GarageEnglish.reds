@@ -117,6 +117,7 @@ public class GarageEnglish extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AlreadyOwned", "ALREADY ON YOUR TITLE");
     this.Text("Garage-ChopShop-CannotBeSold", "VEHICLE CANNOT BE SOLD");
     this.Text("Garage-ChopShop-CannotBeClaimed", "VEHICLE CANNOT BE CLAIMED");
+    this.Text("Garage-ChopShop-HeatBlocked", "NOT WITH HEAT ON YOU");
     this.Text("Garage-ChopShop-ConditionLabel", "Condition:");
 
     // QuickConfirmScreen
@@ -200,6 +201,7 @@ public class GarageEnglish extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AppearanceLabel", "Appearance: ");
     this.Text("Garage-ChopShop-DamageLabel", "Damage: ");
     this.Text("Garage-ChopShop-TierLabel", "Tier: ");
+    this.Text("Garage-ChopShop-MarketLabel", "Market: ");
     this.Text("Garage-ChopShop-PartsLabel", "Parts: ");
 
     // Notify
@@ -214,6 +216,7 @@ public class GarageEnglish extends ModLocalizationPackage {
     this.Text("Garage-Sale-Cancelled", "Sale cancelled. Permanently banned from this garage.");
     this.Text("Garage-Sale-FellThrough", "%s sale fell through. The garage couldn't cover it. Vehicle returned.");
     this.Text("Garage-Sale-Cleared", "%s cleared. Nice doin' business.");
+    this.Text("Garage-Sale-Started", "We'll wire you the eddies once we've cleared the title on %s.");
     this.Text("Garage-Notify-DependencyOutdated", "Garage needs %s %s or newer (installed: %s).");
     this.Text("Garage-Notify-NamesMissing", "Garage unavailable: the game's record names failed to load. Restart the game.");
     this.Text("Garage-Notify-LockdownFallback", "Lockdown");
@@ -235,7 +238,7 @@ public class GarageEnglish extends ModLocalizationPackage {
     this.Text("Garage-Transaction-InsufficientFunds", "Insufficient funds to claim this vehicle.");
     this.Text("Garage-Transaction-DeductFailed", "Transaction failed: could not deduct funds.");
     this.Text("Garage-Transaction-UnlockFailed", "Claim failed: could not unlock vehicle. You have been refunded.");
-    this.Text("Garage-Transaction-ClaimSuccess", "Claimed");
+    this.Text("Garage-Transaction-ClaimSuccess", "Claimed %s for €$%s.");
     this.Text("Garage-Transaction-InsufficientFundsState", "Insufficient funds");
     this.Text("Garage-Transaction-ClaimFailedState", "Claim failed");
 

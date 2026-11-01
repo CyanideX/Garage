@@ -33,7 +33,7 @@ public class GarageSettings extends ScriptableService {
   @runtimeProperty("ModSettings.category", "Services")
   @runtimeProperty("ModSettings.category.order", "20")
   @runtimeProperty("ModSettings.displayName", "Chop Shop")
-  @runtimeProperty("ModSettings.description", "Sell vehicles at garages.\nWhen off, it costs nothing.")
+  @runtimeProperty("ModSettings.description", "Claim and sell vehicles at garages.\nWhen off, it costs nothing.")
   public let chopShopEnabled: Bool = true;
 
   @runtimeProperty("ModSettings.mod", "Garage")
@@ -195,6 +195,26 @@ public class GarageSettings extends ScriptableService {
   @runtimeProperty("ModSettings.mod", "Garage")
   @runtimeProperty("ModSettings.category", "Pricing")
   @runtimeProperty("ModSettings.category.order", "50")
+  @runtimeProperty("ModSettings.displayName", "Claim Price")
+  @runtimeProperty("ModSettings.description", "Multiplies what claiming a vehicle costs.\nAddons/prices.json has the rates behind it, like how much harder a cop car's VIN is to scrub.")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.1")
+  @runtimeProperty("ModSettings.max", "4.0")
+  public let claimPriceMultiplier: Float = 1.0;
+
+  @runtimeProperty("ModSettings.mod", "Garage")
+  @runtimeProperty("ModSettings.category", "Pricing")
+  @runtimeProperty("ModSettings.category.order", "50")
+  @runtimeProperty("ModSettings.displayName", "Sale Payout")
+  @runtimeProperty("ModSettings.description", "Multiplies what garages pay for a vehicle.")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.1")
+  @runtimeProperty("ModSettings.max", "4.0")
+  public let salePriceMultiplier: Float = 1.0;
+
+  @runtimeProperty("ModSettings.mod", "Garage")
+  @runtimeProperty("ModSettings.category", "Pricing")
+  @runtimeProperty("ModSettings.category.order", "50")
   @runtimeProperty("ModSettings.displayName", "Classic Multiplier")
   @runtimeProperty("ModSettings.description", "Service fee multiplier for Classic tier vehicles.")
   @runtimeProperty("ModSettings.step", "0.1")
@@ -268,6 +288,13 @@ public class GarageSettings extends ScriptableService {
   @runtimeProperty("ModSettings.min", "0.1")
   @runtimeProperty("ModSettings.max", "2.0")
   public let saleDelayMultiplier: Float = 1.0;
+
+  @runtimeProperty("ModSettings.mod", "Garage")
+  @runtimeProperty("ModSettings.category", "Economy")
+  @runtimeProperty("ModSettings.category.order", "60")
+  @runtimeProperty("ModSettings.displayName", "Block Chop Shop With Any Heat")
+  @runtimeProperty("ModSettings.description", "Garages won't claim or buy vehicles while you have any heat.")
+  public let chopShopBlockAnyHeat: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "Garage")
   @runtimeProperty("ModSettings.category", "Economy")
