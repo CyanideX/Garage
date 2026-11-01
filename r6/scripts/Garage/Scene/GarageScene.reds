@@ -18,7 +18,6 @@ public class GarageScene extends IScriptable {
   private let m_placed: ref<GaragePlacedScene>;
   private let m_timeline: ref<XUtilsTimeline>;
   private let m_cloudCamera: ref<XUtilsPointCloudCamera>;
-  private let m_playbacks: array<ref<XUtilsPlayback>>;
   private let m_bars: ref<XUtilsBars>;
   private let m_driverListen: Uint64;
   private let m_lens: ref<XUtilsLensRequest>;
@@ -143,7 +142,6 @@ public class GarageScene extends IScriptable {
     this.m_hasSpot = false;
     this.m_timeline = null;
     this.m_cloudCamera = null;
-    ArrayClear(this.m_playbacks);
     this.m_placed = null;
     this.m_location = null;
     this.m_lastPosition = n"";
@@ -214,7 +212,7 @@ public class GarageScene extends IScriptable {
     let idleShake: String = settings.shakeEnabled && settings.cinematicShakeEnabled ? this.m_location.camera.idleShake : "";
     for entry in entries {
       let playback: ref<XUtilsPlayback> = camera.Play(entry.path);
-      ArrayPush(this.m_playbacks, playback);
+      entry.playback = playback;
       if StrLen(idleShake) > 0 {
         let shake: ref<XUtilsShake> = camera.Shake(StringToName(idleShake));
         shake.SetStrength(entry.shakeIntensity);
@@ -460,13 +458,12 @@ public class GarageScene extends IScriptable {
   /// Plays one idle path by name, for a service with its own camera move. False if there's no such path.
   public func PlayPath(name: String) -> Bool {
     if !IsDefined(this.m_placed) { return false; }
-    let i: Int32 = 0;
-    while i < ArraySize(this.m_placed.entries) {
-      if Equals(this.m_placed.entries[i].name, name) {
-        this.m_playbacks[i].Drive(GarageScene.Cross(0.5, 0.5));
+    let entries: array<ref<GarageIdleEntry>> = this.m_placed.entries;
+    for entry in entries {
+      if Equals(entry.name, name) {
+        entry.playback.Drive(GarageScene.Cross(0.5, 0.5));
         return true;
       }
-      i += 1;
     }
     this.m_log.Warn("no idle path called " + name);
     return false;

@@ -62,7 +62,6 @@ public class GarageMover extends IScriptable {
     let rx: Float = dx * this.m_cosR - dy * this.m_sinR;
     let ry: Float = dx * this.m_sinR + dy * this.m_cosR;
     if !this.scaled { return new Vector4(this.target.X + rx, this.target.Y + ry, this.target.Z + p.Z - this.source.Z, 1.0); }
-    // Into the car's frame, scale, back out
     let lx: Float = (rx * this.m_cosY + ry * this.m_sinY) * this.scaleX;
     let ly: Float = (-rx * this.m_sinY + ry * this.m_cosY) * this.scaleY;
     let z: Float = this.target.Z + (p.Z - this.source.Z) * this.scaleZ;
@@ -73,6 +72,7 @@ public class GarageMover extends IScriptable {
 public class GarageIdleEntry extends IScriptable {
   public let name: String;
   public let path: ref<XUtilsPath>;
+  public let playback: ref<XUtilsPlayback>;
   public let title: Bool;
   public let shakeIntensity: Float = 1.0;
   public let shakeFrequency: Float = 1.0;
@@ -92,8 +92,8 @@ public class GaragePlacedScene extends IScriptable {
   public let slots: ref<XUtilsJson>;
 }
 
-/// Fits camera data to the car on the deck: car data moves rigidly, generic data scales to fit, and everything's kept out of
-/// walls and the floor. Static garage paths stay where they were authored.
+/// Fits camera data to the car on the deck. Car data moves rigidly, generic data scales, nothing ends up in a wall or the floor.
+/// Static garage paths stay where they were authored.
 public abstract class ScenePlacer {
   private static func AdaptiveBoost() -> Float { return 1.08; }
   private static func ZDamping() -> Float { return 0.5; }
@@ -375,9 +375,10 @@ public abstract class ScenePlacer {
     if ArraySize(carPaths) > 0 {
       for path in carPaths {
         let json: ref<XUtilsJson> = path.ToJson();
-        ScenePlacer.MoveList(json, "keys", ScenePlacer.PathMover(json, frame, center, yaw, 1.0, 1.0, 1.0, groundZ, false));
+        let rigid: ref<GarageMover> = ScenePlacer.PathMover(json, frame, center, yaw, 1.0, 1.0, 1.0, groundZ, false);
+        ScenePlacer.MoveList(json, "keys", rigid);
         ScenePlacer.FinishPath(xu, json, center, yaw, geometry, groundZ, true);
-        ScenePlacer.AddEntry(xu, placed, seen, path, json, ScenePlacer.PathMover(json, frame, center, yaw, 1.0, 1.0, 1.0, groundZ, false));
+        ScenePlacer.AddEntry(xu, placed, seen, path, json, rigid);
       }
       return;
     }
@@ -409,8 +410,8 @@ public abstract class ScenePlacer {
     return mover;
   }
 
-  // Rigid keeps a path's arc height through the pull-in. A car's path skips the floor clamp, since a bad ground reading isn't
-  // worth bending authored data over
+  // PreserveZ keeps a path's arc height through the pull-in
+  // A car's path skips the floor clamp, a bad ground reading isn't worth bending authored data for
   private static func FinishPath(xu: ref<XUtilsMod>, json: ref<XUtilsJson>, center: Vector4, yaw: Float, geometry: ref<GarageMeasure>, groundZ: Float, isCar: Bool) -> Void {
     ScenePlacer.SafeguardList(xu, json, "keys", center, yaw, geometry, XUtilsSafeguardMode.Rigid, false);
     if !isCar { ScenePlacer.ClampFloor(json, "keys", groundZ); }

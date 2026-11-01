@@ -456,7 +456,7 @@ public class GarageParts extends IScriptable {
     return this.Forces(this.Context(id), choice);
   }
 
-  /// WouldForceOthers for a whole list, answers in the same order. A picker wants this: it shares one look at the car.
+  /// WouldForceOthers for a whole list, in the same order. One context for all of them, so pickers use this.
   public func WhichForceOthers(id: CName, choices: array<CName>) -> array<Bool> {
     let answers: array<Bool>;
     if !IsDefined(this.m_schema) {
