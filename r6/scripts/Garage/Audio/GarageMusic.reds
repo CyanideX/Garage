@@ -36,7 +36,7 @@ public abstract class GarageMusic {
   @if(ModuleExists("AudioXL"))
   public static func Stop() -> Void {
     let system: ref<GarageMusicSystem> = GarageMusicSystem.Get();
-    if IsDefined(system) { system.End(); }
+    if IsDefined(system) { system.EndSession(); }
   }
 
   @if(ModuleExists("AudioXL"))
@@ -79,7 +79,9 @@ public class GarageMusicZone extends IScriptable {
   public let emitter: CName;
   public let watcher: ref<XUtilsWatcher>;
   public let inRange: Bool;
-  // garage_{playlist}_{XX} without the routing type, and the row playing it, n"" when silent
+  // A playlist script assigned, n"" for none
+  public let assigned: CName;
+  // {playlist}_{XX}, and the garage_ row playing it, n"" when silent
   public let track: CName;
   public let row: CName;
   public let playingType: CName;
@@ -112,16 +114,14 @@ public class GarageMusicZone extends IScriptable {
 /// Garage music, one emitter per garage in range, playing from registered playlists through AudioXL.
 /// A music pack calls RegisterPlaylist once its own settings say it's on, and again each session:
 ///   GarageMusicSystem.Get().RegisterPlaylist(n"mypack", 12);
-/// Tracks are named {playlist}_{XX} from 01 up. Each needs an AudioXL row garage_{playlist}_{XX}_{type} for every routing
-/// type it should play as, with axl_music_3d or mod_sfx_occlusion there as the fallback.
+/// Tracks are named {playlist}_{XX} from 01 up.
+/// Each needs an AudioXL row garage_{playlist}_{XX}_{type} per routing type, with axl_music_3d or mod_sfx_occlusion as the fallback.
 @if(ModuleExists("AudioXL"))
 public class GarageMusicSystem extends ScriptableService {
   private let m_xu: ref<XUtilsMod>;
   private let m_log: ref<XUtilsLog>;
   private let m_zones: array<ref<GarageMusicZone>>;
   private let m_playlists: array<ref<GaragePlaylist>>;
-  private let m_overrideGarages: array<CName>;
-  private let m_overridePlaylists: array<CName>;
   private let m_restart: Uint64;
   private let m_defaultDuration: Float = 60.0;
 
@@ -151,18 +151,24 @@ public class GarageMusicSystem extends ScriptableService {
       if IsDefined(zone.watcher) { zone.watcher.Destroy(); }
     }
     ArrayClear(this.m_zones);
-    ArrayClear(this.m_overrideGarages);
-    ArrayClear(this.m_overridePlaylists);
     if this.m_restart != 0ul && IsDefined(this.m_xu) { this.m_xu.Cancel(this.m_restart); }
     this.m_restart = 0ul;
   }
 
+  // Packs register again each session, and their settings can change between them
+  public func EndSession() -> Void {
+    this.End();
+    ArrayClear(this.m_playlists);
+  }
+
   public func OnLocationSaved(id: CName, data: ref<GarageData>) -> Void {
     if !IsDefined(this.m_xu) { return; }
+    let assigned: CName = n"";
     let i: Int32 = 0;
     while i < ArraySize(this.m_zones) {
       if Equals(this.m_zones[i].location.id, id) {
         let zone: ref<GarageMusicZone> = this.m_zones[i];
+        assigned = zone.assigned;
         this.LeaveRange(zone);
         if IsDefined(zone.watcher) { zone.watcher.Destroy(); }
         ArrayErase(this.m_zones, i);
@@ -171,10 +177,10 @@ public class GarageMusicSystem extends ScriptableService {
       i += 1;
     }
     let location: ref<GarageLocation> = data.GetLocation(id);
-    if IsDefined(location) { this.AddZone(location); }
+    if IsDefined(location) { this.AddZone(location).assigned = assigned; }
   }
 
-  private func AddZone(location: ref<GarageLocation>) -> Void {
+  private func AddZone(location: ref<GarageLocation>) -> ref<GarageMusicZone> {
     let zone: ref<GarageMusicZone> = new GarageMusicZone();
     zone.location = location;
     zone.system = this;
@@ -186,6 +192,7 @@ public class GarageMusicSystem extends ScriptableService {
     zone.watcher.On(XUtilsEventType.ZoneEnter, zone, n"OnZoneEnter");
     zone.watcher.On(XUtilsEventType.ZoneExit, zone, n"OnZoneExit");
     ArrayPush(this.m_zones, zone);
+    return zone;
   }
 
   private func Find(id: CName) -> ref<GarageMusicZone> {
@@ -262,23 +269,18 @@ public class GarageMusicSystem extends ScriptableService {
 
   /// The playlist script assigned to a garage, n"" for none.
   public func GetGaragePlaylist(garage: CName) -> CName {
-    let i: Int32 = ArrayFindFirst(this.m_overrideGarages, garage);
-    return i >= 0 ? this.m_overridePlaylists[i] : n"";
+    let zone: ref<GarageMusicZone> = this.Find(garage);
+    return IsDefined(zone) ? zone.assigned : n"";
   }
 
   /// Makes a garage play one playlist. Wins over its file's own, lasts the session.
   public func SetGaragePlaylist(garage: CName, playlist: CName) -> Void {
-    if !IsDefined(this.Find(garage)) || !IsDefined(this.FindPlaylist(playlist)) {
+    let zone: ref<GarageMusicZone> = this.Find(garage);
+    if !IsDefined(zone) || !IsDefined(this.FindPlaylist(playlist)) {
       this.Warn("SetGaragePlaylist refused " + NameToString(garage) + ", " + NameToString(playlist));
       return;
     }
-    let i: Int32 = ArrayFindFirst(this.m_overrideGarages, garage);
-    if i >= 0 {
-      this.m_overridePlaylists[i] = playlist;
-      return;
-    }
-    ArrayPush(this.m_overrideGarages, garage);
-    ArrayPush(this.m_overridePlaylists, playlist);
+    zone.assigned = playlist;
   }
 
   private func FindPlaylist(name: CName) -> ref<GaragePlaylist> {
@@ -330,10 +332,9 @@ public class GarageMusicSystem extends ScriptableService {
     return IsDefined(last) ? this.Draw(last) : n"";
   }
 
-  // n"" draws from the pool
+  // Null draws from the pool
   private func PlaylistFor(zone: ref<GarageMusicZone>) -> ref<GaragePlaylist> {
-    let assigned: CName = this.GetGaragePlaylist(zone.location.id);
-    if IsNameValid(assigned) { return this.FindPlaylist(assigned); }
+    if IsNameValid(zone.assigned) { return this.FindPlaylist(zone.assigned); }
     let own: String = zone.location.audio.playlist;
     return Equals(own, "pool") ? null : this.FindPlaylist(StringToName(own));
   }
@@ -470,14 +471,22 @@ public class GarageMusicSystem extends ScriptableService {
     zone.timer = this.m_xu.After(duration + 1.0, zone, n"OnTrackEnd");
   }
 
-  // The timer can run ahead of the audio. IsPlaying goes by row and not by emitter, so the wait's capped in case another
-  // garage is on the same one
+  // The timer can run ahead of the audio
+  // IsPlaying goes by row, not emitter, so the wait's capped in case another garage is on it
   public func OnTrackEnded(zone: ref<GarageMusicZone>) -> Void {
     if !IsNameValid(zone.row) { return; }
-    if zone.endChecks < 10 && AudioXLAPI.IsPlaying(zone.row) {
-      zone.endChecks += 1;
-      zone.timer = this.m_xu.After(1.0, zone, n"OnTrackEnd");
-      return;
+    if AudioXLAPI.IsPlaying(zone.row) {
+      // XU timers run through a pause, so a track with plenty left just got held up
+      let left: Float = AudioXLNative.Duration(zone.row) - AudioXLAPI.Position(zone.row);
+      if left > 1.0 {
+        zone.timer = this.m_xu.After(left, zone, n"OnTrackEnd");
+        return;
+      }
+      if zone.endChecks < 10 {
+        zone.endChecks += 1;
+        zone.timer = this.m_xu.After(1.0, zone, n"OnTrackEnd");
+        return;
+      }
     }
     this.PlayNext(zone);
   }
@@ -535,8 +544,8 @@ public class GarageMusicSystem extends ScriptableService {
     return IsDefined(nearest) && this.StartGarageMusic(nearest.location.id);
   }
 
-  // A volume change goes on the row while it plays. Only a different routing type needs another row, and a restart from
-  // where the track is
+  // A volume change goes on the row while it plays
+  // Only a different routing type needs another row, restarted from where the track is
   private func Refresh(zone: ref<GarageMusicZone>) -> Void {
     if !IsNameValid(zone.row) { return; }
     let type: CName = this.RoutingType(zone);
