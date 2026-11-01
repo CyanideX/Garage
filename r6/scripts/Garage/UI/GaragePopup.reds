@@ -2,6 +2,7 @@ module Garage.UI
 
 import Codeware.UI.*
 import Garage.*
+import Garage.Audio.*
 import Garage.Data.*
 import Garage.Services.*
 import Garage.Vehicle.*
@@ -113,6 +114,7 @@ public class GaragePopup extends InGamePopup {
 
   protected cb func OnInitialize() {
     super.OnInitialize();
+    GarageSounds.PlayOpen();
     this.m_frame.SetHints(this.m_footer.GetHints());
     this.m_frame.RegisterToCallback(n"OnClosePopup", this, n"OnCloseRequest");
     this.m_frame.RegisterToCallback(n"OnScreenError", this, n"OnScreenError");

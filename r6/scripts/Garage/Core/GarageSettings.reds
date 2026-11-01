@@ -1,5 +1,7 @@
 module Garage
 
+import Garage.Audio.*
+
 public enum GarageDofMode {
   Both = 0,
   FarOnly = 1,
@@ -380,10 +382,15 @@ public class GarageMusicSettings extends ScriptableService {
   @if(ModuleExists("ModSettingsModule"))
   private func Listen() -> Void {
     ModSettings.RegisterListenerToClass(this);
+    ModSettings.RegisterListenerToModifications(this);
   }
 
   @if(!ModuleExists("ModSettingsModule"))
   private func Listen() -> Void {}
+
+  public cb func OnModSettingsChange() -> Void {
+    GarageMusic.SettingsChanged();
+  }
 
   public func GetVolume() -> Float { return Cast<Float>(this.musicVolume) / 100.0; }
 

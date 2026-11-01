@@ -10,7 +10,6 @@ import VehicleCore.Schema.*
 public class GarageScene extends IScriptable {
   private let m_xu: ref<XUtilsMod>;
   private let m_log: ref<XUtilsLog>;
-  private let m_visit: Int32;
   private let m_open: Bool;
   private let m_location: ref<GarageLocation>;
   private let m_vehicle: wref<VehicleObject>;
@@ -38,7 +37,6 @@ public class GarageScene extends IScriptable {
   public func Open(location: ref<GarageLocation>, vehicle: wref<VehicleObject>, schema: ref<VehicleSchema>) -> Void {
     this.Close();
     this.m_open = true;
-    this.m_visit += 1;
     this.m_location = location;
     this.m_vehicle = vehicle;
     this.m_schema = schema;

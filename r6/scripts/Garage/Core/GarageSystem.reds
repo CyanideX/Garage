@@ -1,6 +1,7 @@
 module Garage
 
 import VehicleCore.Schema.*
+import Garage.Audio.*
 import Garage.Data.*
 import Garage.Economy.*
 import Garage.Scene.*
@@ -133,6 +134,10 @@ public class GarageSystem extends ScriptableService {
     data.tier = location.economy.tier;
     data.hasSchema = context.hasSchema;
     this.m_xu.Emit(GarageEvents.GarageOpen(), data);
+    if IsDefined(vehicle) {
+      this.m_xu.Emit(GarageEvents.EntityResolved(), data);
+      this.m_xu.Emit(GarageEvents.HealthQueryable(), data);
+    }
   }
 
   public func OnGarageClose(location: ref<GarageLocation>) -> Void {
@@ -188,6 +193,7 @@ public class GarageSystem extends ScriptableService {
     let engine: ref<EconomyEngine> = EconomyEngine.Get();
     if IsDefined(engine) { engine.Start(this.m_xu, this.m_data); }
     this.m_world.Start(this.m_data);
+    GarageMusic.Start(this.m_xu, this.m_data);
     this.m_log.Info("Garage up: " + IntToString(ArraySize(this.m_addons)) + " addons, " + IntToString(this.m_data.LocationCount()) + " garages ("
                     + IntToString(this.m_data.UserLocationCount()) + " user's, " + IntToString(this.m_data.BrokenCount()) + " broken), "
                     + IntToString(this.m_data.BoxCount()) + " boxes");
@@ -210,6 +216,7 @@ public class GarageSystem extends ScriptableService {
     this.m_claim.Stop();
     this.m_sales.Stop();
     this.m_world.Stop();
+    GarageMusic.Stop();
     let engine: ref<EconomyEngine> = EconomyEngine.Get();
     if IsDefined(engine) { engine.Stop(); }
     this.SyncAddons();
@@ -224,7 +231,10 @@ public class GarageSystem extends ScriptableService {
     let location: ref<GarageLocation> = this.m_data.GetLocation(id);
     let engine: ref<EconomyEngine> = EconomyEngine.Get();
     if IsDefined(engine) && IsDefined(location) { engine.InitGarage(id, location.economy); }
-    if this.m_inSession { this.m_world.OnLocationSaved(id, this.m_data); }
+    if this.m_inSession {
+      this.m_world.OnLocationSaved(id, this.m_data);
+      GarageMusic.LocationSaved(id, this.m_data);
+    }
     let data: ref<GarageImportData> = new GarageImportData();
     data.garageId = id;
     data.garageName = IsDefined(location) ? location.name : "";
@@ -237,7 +247,7 @@ public class GarageSystem extends ScriptableService {
     let settings: ref<GarageSettings> = GarageSettings.Get();
     if IsDefined(settings) {
       let level: XUtilsLogLevel = settings.debugLogging ? XUtilsLogLevel.Debug : XUtilsLogLevel.Info;
-      let categories: array<String> = ["Core", "Data", "World", "Economy", "Door", "Scene", "UI", "Vehicle"];
+      let categories: array<String> = ["Core", "Data", "World", "Economy", "Door", "Scene", "UI", "Vehicle", "Audio"];
       for category in categories { this.m_xu.Log(category).SetLevel(level); }
     }
     this.SyncAddons();

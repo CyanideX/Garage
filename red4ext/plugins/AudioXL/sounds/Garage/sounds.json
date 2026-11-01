@@ -1,0 +1,18 @@
+{
+  "sounds": [
+    { "name": "garage_install_01", "type": "mod_sfx_2d", "file": "install_01.wav" },
+    { "name": "garage_install_02", "type": "mod_sfx_2d", "file": "install_02.wav" },
+    { "name": "garage_install_03", "type": "mod_sfx_2d", "file": "install_03.wav" },
+    { "name": "garage_install_04", "type": "mod_sfx_2d", "file": "install_04.wav" },
+    { "name": "garage_install_05", "type": "mod_sfx_2d", "file": "install_05.wav" },
+
+    { "name": "garage_paint_01",   "type": "mod_sfx_2d", "file": "paint_01.wav" },
+    { "name": "garage_paint_02",   "type": "mod_sfx_2d", "file": "paint_02.wav" },
+
+    { "name": "garage_fabric_01",  "type": "mod_sfx_2d", "file": "fabric_01.mp3" },
+    { "name": "garage_fabric_02",  "type": "mod_sfx_2d", "file": "fabric_02.mp3" },
+    { "name": "garage_fabric_03",  "type": "mod_sfx_2d", "file": "fabric_03.mp3" },
+
+    { "name": "garage_open_01",    "type": "mod_sfx_2d", "file": "open_01.wav" }
+  ]
+}

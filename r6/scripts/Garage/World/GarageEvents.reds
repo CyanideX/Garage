@@ -22,6 +22,10 @@ public abstract class GarageEvents {
   public static func LockdownExpired() -> CName { return n"Garage.LockdownExpired"; }
   /// The garage UI opened. e.data is a GarageVisitData.
   public static func GarageOpen() -> CName { return n"Garage.GarageOpen"; }
+  /// The visit's car is there to use, right after GarageOpen. e.data is a GarageVisitData.
+  public static func EntityResolved() -> CName { return n"Garage.EntityResolved"; }
+  /// The visit's car can be asked about its health, right after EntityResolved. e.data is a GarageVisitData.
+  public static func HealthQueryable() -> CName { return n"Garage.HealthQueryable"; }
   /// The garage UI closed.
   public static func GarageClose() -> CName { return n"Garage.GarageClose"; }
   public static func GarageBanned() -> CName { return n"Garage.GarageBanned"; }
