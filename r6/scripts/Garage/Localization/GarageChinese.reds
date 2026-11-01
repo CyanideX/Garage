@@ -44,6 +44,7 @@ public class GarageChinese extends ModLocalizationPackage {
     this.Text("Garage-Confirm-BalanceLabel", "你的艾迪：");
     this.Text("Garage-Confirm-ServiceFee", "服务费");
     this.Text("Garage-Confirm-Service", "工时");
+    this.Text("Garage-Confirm-Required", "必需部件");
     this.Text("Garage-Confirm-Equip", "装备");
     this.Text("Garage-Confirm-Install", "安装");
     this.Text("Garage-Confirm-BuyNow", "立即购买");

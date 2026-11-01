@@ -56,14 +56,30 @@ public abstract class GarageColors {
         return new HDRColor(0.263, 0.086, 0.086, 1.0);
     }
 
-    public static func ResolveSwatch(rgb: String, colorId: String) -> HDRColor {
-        if NotEquals(rgb, "") {
-            let c = StrSplit(rgb, ",");
+    // Schemas write #RRGGBB, an r,g,b in 0 to 1 still works
+    public static func ResolveSwatch(swatch: String, colorId: String) -> HDRColor {
+        if StrBeginsWith(swatch, "#") && StrLen(swatch) == 7 {
+            let r = GarageColors.HexByte(swatch, 1);
+            let g = GarageColors.HexByte(swatch, 3);
+            let b = GarageColors.HexByte(swatch, 5);
+            if r >= 0 && g >= 0 && b >= 0 {
+                return new HDRColor(Cast<Float>(r) / 255.0, Cast<Float>(g) / 255.0, Cast<Float>(b) / 255.0, 1.0);
+            }
+        } else if NotEquals(swatch, "") {
+            let c = StrSplit(swatch, ",");
             if ArraySize(c) == 3 {
                 return new HDRColor(StringToFloat(c[0]), StringToFloat(c[1]), StringToFloat(c[2]), 1.0);
             }
         }
+        if NotEquals(swatch, "") { XUtils.Mod("Garage").Log("UI").Warn("bad swatch " + swatch + " on " + colorId + ", expected #RRGGBB"); }
         return GarageColors.GetPaintColor(colorId);
+    }
+
+    private static func HexByte(text: String, at: Int32) -> Int32 {
+        let digits = "0123456789abcdef";
+        let high = StrFindFirst(digits, StrLower(StrMid(text, at, 1)));
+        let low = StrFindFirst(digits, StrLower(StrMid(text, at + 1, 1)));
+        return high >= 0 && low >= 0 ? high * 16 + low : -1;
     }
 
     public static func GetPaintColor(colorName: String) -> HDRColor {

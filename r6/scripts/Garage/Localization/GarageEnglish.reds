@@ -44,6 +44,7 @@ public class GarageEnglish extends ModLocalizationPackage {
     this.Text("Garage-Confirm-BalanceLabel", "YOUR EDDIES:");
     this.Text("Garage-Confirm-ServiceFee", "Service Fee");
     this.Text("Garage-Confirm-Service", "service");
+    this.Text("Garage-Confirm-Required", "required parts");
     this.Text("Garage-Confirm-Equip", "EQUIP");
     this.Text("Garage-Confirm-Install", "INSTALL");
     this.Text("Garage-Confirm-BuyNow", "BUY NOW");

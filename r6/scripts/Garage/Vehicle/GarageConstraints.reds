@@ -25,6 +25,12 @@ public class GarageChoices extends IScriptable {
     }
   }
 
+  /// Set, for a category you know isn't in here yet.
+  public func Push(category: CName, choice: CName) -> Void {
+    ArrayPush(this.categories, category);
+    ArrayPush(this.choices, choice);
+  }
+
   public func Copy() -> ref<GarageChoices> {
     let copy: ref<GarageChoices> = new GarageChoices();
     copy.categories = this.categories;
@@ -75,7 +81,7 @@ public class GarageConstraints extends IScriptable {
   }
 
   private static func Key(category: CName, choice: CName) -> Uint64 {
-    return Cast<Uint64>(StringToName(NameToString(category) + "." + NameToString(choice)));
+    return VC_PairKey(VC_CNameKey(category), VC_CNameKey(choice));
   }
 
   private func RulesFor(category: CName, choice: CName) -> ref<GarageConstraintRules> {
@@ -103,6 +109,11 @@ public class GarageConstraints extends IScriptable {
     for value in values {
       if !ArrayContains(entry.blocked, value) { ArrayPush(entry.blocked, value); }
     }
+  }
+
+  /// False means this pick can't push anything else off, whatever the car's on.
+  public func HasRules(category: CName, choice: CName) -> Bool {
+    return this.m_map.KeyExist(GarageConstraints.Key(category, choice));
   }
 
   /// What has to move if category goes to choice with these settings. resolve is n"" when nothing can.
@@ -176,7 +187,7 @@ public class GarageConstraints extends IScriptable {
         }
       }
     }
-    if iterations >= 10 { XUtils.Mod("Garage").Log("Vehicle").Warn("constraints on " + NameToString(this.m_schema.id) + " may be circular"); }
+    if ArraySize(queueCategories) > 0 { XUtils.Mod("Garage").Log("Vehicle").Warn("constraints on " + NameToString(this.m_schema.id) + " may be circular"); }
     return changes;
   }
 }

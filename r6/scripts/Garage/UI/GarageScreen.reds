@@ -267,26 +267,13 @@ public abstract class GarageScreen extends inkCustomController {
         return btn;
     }
 
-    // Button centered in a 50-tall slot. The slot sets the spacing, the button art overhangs it
-    protected func CreateSlottedButton(name: CName, text: String, width: Float, parent: ref<inkCompoundWidget>, callbackName: CName) -> ref<SimpleButton> {
-        let slot = new inkCanvas();
-        slot.SetName(StringToName(NameToString(name) + "Slot"));
-        slot.SetSize(new Vector2(width, 50.0));
-        slot.Reparent(parent);
-
-        let btn = this.CreateStandardButton(name, text, width, slot, callbackName);
-        let btnRoot = btn.GetRootWidget();
-        btnRoot.SetAnchor(inkEAnchor.Centered);
-        btnRoot.SetAnchorPoint(new Vector2(0.5, 0.5));
-        return btn;
-    }
-
-    protected func CreateBottomRow(root: ref<inkCanvas>, name: CName, bottomMargin: Float) -> ref<inkHorizontalPanel> {
+    // SimpleButton's 100 tall, so rows stack every 110. Level 0 is the pager's line
+    protected func CreateBottomRow(root: ref<inkCanvas>, name: CName, level: Int32) -> ref<inkHorizontalPanel> {
         let row = new inkHorizontalPanel();
         row.SetName(name);
         row.SetAnchor(inkEAnchor.BottomCenter);
         row.SetAnchorPoint(new Vector2(0.5, 1.0));
-        row.SetMargin(new inkMargin(0.0, 0.0, 0.0, bottomMargin));
+        row.SetMargin(new inkMargin(0.0, 0.0, 0.0, 50.0 + 110.0 * Cast<Float>(level)));
         row.SetChildMargin(new inkMargin(10.0, 0.0, 10.0, 0.0));
         row.Reparent(root);
         return row;
@@ -294,13 +281,8 @@ public abstract class GarageScreen extends inkCustomController {
 
     // Every paged screen gets the same pager in the same spot. The arrows route to NextPage/PrevPage
     protected func CreatePagination(root: ref<inkCanvas>, itemsPerPage: Int32) -> ref<PaginationHelper> {
-        let container = new inkHorizontalPanel();
-        container.SetName(n"paginationContainer");
-        container.SetAnchor(inkEAnchor.BottomCenter);
-        container.SetAnchorPoint(new Vector2(0.5, 1.0));
-        container.SetMargin(new inkMargin(0.0, 0.0, 0.0, 50.0));
+        let container = this.CreateBottomRow(root, n"paginationContainer", 0);
         container.SetChildMargin(new inkMargin(15.0, 0.0, 15.0, 0.0));
-        container.Reparent(root);
 
         let prevBtn = this.CreateStandardButton(n"prevPageBtn", "<", 200.0, container, n"OnPrevPageClick");
 

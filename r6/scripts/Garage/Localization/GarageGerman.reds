@@ -44,6 +44,7 @@ public class GarageGerman extends ModLocalizationPackage {
     this.Text("Garage-Confirm-BalanceLabel", "DEINE EDDIES:");
     this.Text("Garage-Confirm-ServiceFee", "Servicegebühr");
     this.Text("Garage-Confirm-Service", "Service");
+    this.Text("Garage-Confirm-Required", "erforderliche Teile");
     this.Text("Garage-Confirm-Equip", "AUSRÜSTEN");
     this.Text("Garage-Confirm-Install", "EINBAUEN");
     this.Text("Garage-Confirm-BuyNow", "KAUFEN");

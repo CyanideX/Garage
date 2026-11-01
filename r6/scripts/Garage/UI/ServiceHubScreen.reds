@@ -61,10 +61,10 @@ public class ServiceHubScreen extends GarageScreen {
         // 4 rows of 2 is all the hub has room for
         this.m_pagination = this.CreatePagination(root, 8);
 
-        let checkoutRow = this.CreateBottomRow(root, n"checkoutRow", 185.0);
+        let checkoutRow = this.CreateBottomRow(root, n"checkoutRow", 1);
         checkoutRow.SetVisible(false);
         this.m_checkoutRow = checkoutRow;
-        this.m_checkoutBtn = this.CreateSlottedButton(n"checkoutBtn", "", 700.0, checkoutRow, n"OnCheckoutClick");
+        this.m_checkoutBtn = this.CreateStandardButton(n"checkoutBtn", "", 700.0, checkoutRow, n"OnCheckoutClick");
     }
 
     public func Show() {

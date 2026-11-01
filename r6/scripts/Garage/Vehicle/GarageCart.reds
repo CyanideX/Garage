@@ -22,8 +22,12 @@ public class GarageCartItem extends IScriptable {
 /// Parts waiting to be bought, one per category. Clears when the garage closes.
 public class GarageCart extends IScriptable {
   private let m_items: array<ref<GarageCartItem>>;
+  private let m_revision: Int32;
   /// The Quick addon's heat rush is in this checkout, so it's a rush fee rather than parts.
   public let quickServicePending: Bool;
+
+  /// Goes up with every edit, so anything worked out from the cart can tell it's out of date.
+  public func Revision() -> Int32 { return this.m_revision; }
 
   /// Replaces what's in the category. False without a choice or a category.
   public func Add(category: CName, choice: CName, name: String, price: Int32, serviceFee: Int32, status: EGaragePartStatus, opt source: CName) -> Bool {
@@ -38,6 +42,7 @@ public class GarageCart extends IScriptable {
     item.status = status;
     item.source = source;
     ArrayPush(this.m_items, item);
+    this.m_revision += 1;
     return true;
   }
 
@@ -65,7 +70,9 @@ public class GarageCart extends IScriptable {
 
   public func Remove(category: CName) -> Bool {
     let item: ref<GarageCartItem> = this.ItemFor(category);
-    return IsDefined(item) && ArrayRemove(this.m_items, item);
+    if !IsDefined(item) { return false; }
+    this.m_revision += 1;
+    return ArrayRemove(this.m_items, item);
   }
 
   /// Drops everything this category's pick forced in, and returns how many.
@@ -79,7 +86,29 @@ public class GarageCart extends IScriptable {
       }
       i -= 1;
     }
+    if removed > 0 { this.m_revision += 1; }
     return removed;
+  }
+
+  /// Takes out a category's entry and what it forced, even if the entry itself has already gone. Returns the categories that came out.
+  public func RemoveWithForced(category: CName) -> array<CName> {
+    let removed: array<CName>;
+    for item in this.m_items {
+      if Equals(item.source, category) { ArrayPush(removed, item.category); }
+    }
+    this.RemoveForcedBy(category);
+    if this.Remove(category) { ArrayPush(removed, category); }
+    return removed;
+  }
+
+  /// Hands what one category forced over to another, n"" making them the player's own. Sources stay one level deep, which RemoveGroup relies on.
+  public func Reparent(from: CName, to: CName) -> Void {
+    for item in this.m_items {
+      if Equals(item.source, from) {
+        item.source = to;
+        this.m_revision += 1;
+      }
+    }
   }
 
   /// Removes an entry along with the pick that forced it and everything else that pick forced, since a forced rear rim
@@ -90,17 +119,12 @@ public class GarageCart extends IScriptable {
     if !IsDefined(item) { return removed; }
     let forcer: ref<GarageCartItem> = IsNameValid(item.source) ? this.ItemFor(item.source) : null;
     let root: CName = IsDefined(forcer) ? forcer.category : category;
-    for other in this.m_items {
-      if Equals(other.source, root) { ArrayPush(removed, other.category); }
-    }
-    this.RemoveForcedBy(root);
-    this.Remove(root);
-    ArrayPush(removed, root);
-    return removed;
+    return this.RemoveWithForced(root);
   }
 
   public func Clear() -> Void {
     ArrayClear(this.m_items);
     this.quickServicePending = false;
+    this.m_revision += 1;
   }
 }

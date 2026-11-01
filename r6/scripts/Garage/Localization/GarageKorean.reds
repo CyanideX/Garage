@@ -44,6 +44,7 @@ public class GarageKorean extends ModLocalizationPackage {
     this.Text("Garage-Confirm-BalanceLabel", "보유 에디:");
     this.Text("Garage-Confirm-ServiceFee", "서비스 수수료");
     this.Text("Garage-Confirm-Service", "인건비");
+    this.Text("Garage-Confirm-Required", "필수 부품");
     this.Text("Garage-Confirm-Equip", "장착");
     this.Text("Garage-Confirm-Install", "설치");
     this.Text("Garage-Confirm-BuyNow", "즉시 구매");

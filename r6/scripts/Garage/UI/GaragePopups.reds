@@ -23,7 +23,7 @@ public class ConstraintPopup extends inkCustomController {
     // State
     private let m_pendingSubcategoryId: String;
     private let m_pendingChoiceId: String;
-    private let m_pendingChanges: String;
+    private let m_pendingChanges: array<String>;
 
     private let m_parentScreen: wref<GarageScreen>;
 
@@ -98,6 +98,7 @@ public class ConstraintPopup extends inkCustomController {
         changes.SetFontSize(32);
         changes.SetTintColor(new HDRColor(0.8, 0.8, 0.8, 1.0));
         changes.SetOpacity(0.8);
+        changes.SetWrapping(true, 640.0);
         changes.SetHorizontalAlignment(textHorizontalAlignment.Center);
         changes.Reparent(contentPanel);
         this.m_changesText = changes;
@@ -129,42 +130,26 @@ public class ConstraintPopup extends inkCustomController {
         this.m_confirmBtn.RegisterToCallback(n"OnBtnClick", this, n"OnConfirmClick");
     }
 
-    public func Show(subcategoryId: String, choiceId: String, message: String, changes: String) {
-        this.Show(subcategoryId, choiceId, message, changes, n"Garage-Constraint-Update");
-    }
-
-    public func Show(subcategoryId: String, choiceId: String, message: String, changes: String, confirmKey: CName) {
+    /// Asks before a pick goes ahead. changes and kept are display names, and an empty one leaves its line out.
+    /// message and confirmKey are text keys, n"" for the defaults.
+    public func Show(subcategoryId: CName, choiceId: CName, message: CName, changes: array<String>, kept: array<String>, opt confirmKey: CName) {
         this.m_titleText.SetText(GetLocalizedTextByKey(n"Garage-Constraint-Title"));
         this.m_cancelBtn.SetText(GetLocalizedTextByKey(n"Garage-Constraint-Cancel"));
-        this.m_confirmBtn.SetText(GetLocalizedTextByKey(confirmKey));
+        this.m_confirmBtn.SetText(GetLocalizedTextByKey(IsNameValid(confirmKey) ? confirmKey : n"Garage-Constraint-Update"));
         FitButtonPair(this.m_cancelBtn, this.m_confirmBtn);
 
-        this.m_pendingSubcategoryId = subcategoryId;
-        this.m_pendingChoiceId = choiceId;
+        this.m_pendingSubcategoryId = NameToString(subcategoryId);
+        this.m_pendingChoiceId = NameToString(choiceId);
         this.m_pendingChanges = changes;
 
-        if IsDefined(this.m_messageText) {
-            if NotEquals(message, "") {
-                this.m_messageText.SetText(GetLocalizedTextByKey(StringToName(message)));
-            } else {
-                this.m_messageText.SetText(GetLocalizedTextByKey(n"Garage-Constraint-DefaultMessage"));
-            }
-        }
+        this.m_messageText.SetText(GetLocalizedTextByKey(IsNameValid(message) ? message : n"Garage-Constraint-DefaultMessage"));
 
-        if IsDefined(this.m_changesText) {
-            if NotEquals(changes, "") {
-                let formatted: String;
-                if StrContains(changes, ":") {
-                    formatted = this.FormatChanges(changes);
-                } else {
-                    formatted = this.FormatSiblings(changes);
-                }
-                this.m_changesText.SetText(formatted);
-                this.m_changesText.SetVisible(true);
-            } else {
-                this.m_changesText.SetVisible(false);
-            }
-        }
+        let lines = this.FormatLine(n"Garage-Constraint-SplitWillPreserve", kept);
+        let updates = this.FormatLine(n"Garage-Constraint-WillUpdate", changes);
+        if StrLen(lines) > 0 && StrLen(updates) > 0 { lines += "\n"; }
+        lines += updates;
+        this.m_changesText.SetText(lines);
+        this.m_changesText.SetVisible(StrLen(lines) > 0);
 
         let root = this.GetRootWidget();
         if IsDefined(root) {
@@ -176,56 +161,17 @@ public class ConstraintPopup extends inkCustomController {
         }
     }
 
-    private func FormatChanges(changes: String) -> String {
-
-        if Equals(changes, "") {
+    private func FormatLine(key: CName, names: array<String>) -> String {
+        if ArraySize(names) == 0 {
             return "";
         }
-
-        let parts = StrSplit(changes, "|");
-        let subcats: array<String>;
-
+        let result = GetLocalizedTextByKey(key) + " ";
         let i = 0;
-        while i < ArraySize(parts) {
-            let pair = parts[i];
-            let colonIdx = StrFindFirst(pair, ":");
-            if colonIdx >= 0 {
-                let subcatId = StrLeft(pair, colonIdx);
-                ArrayPush(subcats, subcatId);
-            }
-            i += 1;
-        }
-
-        if ArraySize(subcats) == 0 {
-            return "";
-        }
-
-        let result = GetLocalizedTextByKey(n"Garage-Constraint-WillUpdate") + " ";
-        let j = 0;
-        while j < ArraySize(subcats) {
-            if j > 0 {
-                result = result + ", ";
-            }
-            result = result + subcats[j];
-            j += 1;
-        }
-        return result;
-    }
-
-    // Pipe-separated display names (already resolved, no subcatId:choiceId format).
-    // For splitting a group, where the names are worked out already.
-    private func FormatSiblings(siblings: String) -> String {
-        if Equals(siblings, "") {
-            return "";
-        }
-        let parts = StrSplit(siblings, "|");
-        let result = GetLocalizedTextByKey(n"Garage-Constraint-SplitWillPreserve") + " ";
-        let i = 0;
-        while i < ArraySize(parts) {
+        while i < ArraySize(names) {
             if i > 0 {
                 result = result + ", ";
             }
-            result = result + parts[i];
+            result = result + names[i];
             i += 1;
         }
         return result;
@@ -243,7 +189,7 @@ public class ConstraintPopup extends inkCustomController {
 
         this.m_pendingSubcategoryId = "";
         this.m_pendingChoiceId = "";
-        this.m_pendingChanges = "";
+        ArrayClear(this.m_pendingChanges);
     }
 
     public func IsVisible() -> Bool {
@@ -279,7 +225,7 @@ public class ConstraintPopup extends inkCustomController {
         return this.m_pendingChoiceId;
     }
 
-    public func GetPendingChanges() -> String {
+    public func GetPendingChanges() -> array<String> {
         return this.m_pendingChanges;
     }
 }
