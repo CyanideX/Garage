@@ -75,6 +75,20 @@ public abstract class GaragePaint {
     return done;
   }
 
+  /// V's own cars near V may have spawned before the flats went back, so they're told directly.
+  public static func RefreshNearby() -> Void {
+    let player: ref<PlayerPuppet> = GetPlayer(GetGameInstance());
+    if !IsDefined(player) { return; }
+    let around: array<ref<Entity>> = player.GetEntitiesAroundObject(50.0);
+    for entity in around {
+      let car: wref<VehicleObject> = entity as VehicleObject;
+      if IsDefined(car) && car.IsPlayerVehicle() {
+        let look: CName = GaragePaint.GetOverride(car.GetRecordID());
+        if IsNameValid(look) && !Equals(look, car.GetCurrentAppearanceName()) { car.ScheduleAppearanceChange(look); }
+      }
+    }
+  }
+
   private static func Write(record: TweakDBID, appearance: CName) -> Bool {
     if !IsNameValid(GaragePaint.GetFlat(record)) { return false; }
     TweakDBManager.SetFlat(record + t".appearanceName", appearance);

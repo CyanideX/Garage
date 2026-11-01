@@ -37,8 +37,6 @@ public class GaragePartsMeta extends IScriptable {
 public class GarageVisitTotals extends IScriptable {
   public let parts: Int32;
   public let partsCost: Int32;
-  /// The only thing bought was the Quick addon's rush, which posts its own banner.
-  public let quickServiceOnly: Bool;
 }
 
 /// What never changes about a choice on a car. price is the whole group's for a group.
@@ -436,7 +434,7 @@ public class GarageParts extends IScriptable {
   /// The banner for leaving, if parts were bought. Services, claims, sales and rushes post their own.
   public func PostExitSummary() -> Void {
     let totals: ref<GarageVisitTotals> = this.m_totals;
-    if !IsDefined(totals) || totals.parts <= 0 || totals.quickServiceOnly { return; }
+    if !IsDefined(totals) || totals.parts <= 0 { return; }
     let cost: String = GarageText.Price(totals.partsCost);
     let text: String = totals.parts == 1 ? GarageText.Format(n"Garage-Notify-SinglePartPurchased", [cost])
                                          : GarageText.Format(n"Garage-Notify-MultiPartPurchased", [IntToString(totals.parts), cost]);

@@ -25,6 +25,7 @@ public abstract class GarageConfirmScreen extends GarageScreen {
   private let m_cancelBtn: wref<SimpleButton>;
   private let m_confirmBtn: wref<SimpleButton>;
   private let m_canConfirm: Bool;
+  private let m_pulse: ref<inkAnimProxy>;
 
   protected cb func OnCreate() {
     super.OnCreate();
@@ -156,11 +157,19 @@ public abstract class GarageConfirmScreen extends GarageScreen {
     this.Refresh();
   }
 
+  public func Hide() {
+    super.Hide();
+    this.SetStatusPulsing(false);
+  }
+
   /// Blanks the optional parts and fills the screen in again.
   public func Refresh() -> Void {
     this.SetPriceShown(true);
     this.m_refusal.SetVisible(false);
+    this.SetStatusPulsing(false);
     this.SetStatus("", GarageColors.AccentBlue());
+    this.m_cancelBtn.SetDisabled(false);
+    this.m_cancelBtn.GetRootWidget().SetOpacity(1.0);
     this.SetOption("", "");
     this.SetConfirmText(GarageText.Get(n"Garage-ChopShop-Confirm"));
     this.SetCanConfirm(true);
@@ -184,12 +193,36 @@ public abstract class GarageConfirmScreen extends GarageScreen {
     this.m_statusText.SetVisible(StrLen(text) > 0);
   }
 
+  /// Throbs the status line, for when it's bad news.
+  protected func SetStatusPulsing(on: Bool) -> Void {
+    if IsDefined(this.m_pulse) { this.m_pulse.Stop(); }
+    this.m_pulse = null;
+    this.m_statusText.SetOpacity(1.0);
+    if !on { return; }
+    let down: ref<inkAnimTransparency> = new inkAnimTransparency();
+    down.SetStartTransparency(1.0);
+    down.SetEndTransparency(0.4);
+    down.SetDuration(0.75);
+    let up: ref<inkAnimTransparency> = new inkAnimTransparency();
+    up.SetStartTransparency(0.4);
+    up.SetEndTransparency(1.0);
+    up.SetStartDelay(0.75);
+    up.SetDuration(0.75);
+    let anim: ref<inkAnimDef> = new inkAnimDef();
+    anim.AddInterpolator(down);
+    anim.AddInterpolator(up);
+    let options: inkAnimOptions;
+    options.loopType = inkanimLoopType.Cycle;
+    options.loopInfinite = true;
+    this.m_pulse = this.m_statusText.PlayAnimationWithOptions(anim, options);
+  }
+
   /// Which option's up, above the price. An empty name hides it.
   protected func SetOption(name: String, description: String) -> Void {
     this.m_optionName.SetText(name);
     this.m_optionDesc.SetText(description);
     this.m_optionName.SetVisible(StrLen(name) > 0);
-    this.m_optionDesc.SetVisible(StrLen(name) > 0);
+    this.m_optionDesc.SetVisible(StrLen(description) > 0);
   }
 
   /// breakdown is one line of the sum per \n.
@@ -215,8 +248,24 @@ public abstract class GarageConfirmScreen extends GarageScreen {
   protected func Refuse(reason: String) -> Void {
     this.SetPriceShown(false);
     this.m_refusal.SetText(reason);
+    this.m_refusal.SetTintColor(GarageColors.Error());
     this.m_refusal.SetVisible(true);
     this.SetCanConfirm(false);
+  }
+
+  /// A caution under the price, which stays. Whether Confirm stays on is up to you.
+  protected func SetWarning(text: String) -> Void {
+    this.m_refusal.SetText(text);
+    this.m_refusal.SetTintColor(GarageColors.Warning());
+    this.m_refusal.SetVisible(true);
+  }
+
+  /// The money's gone and the work's started, so neither button does anything until the popup closes.
+  protected func SetBusy(text: String) -> Void {
+    this.SetConfirmText(text);
+    this.SetCanConfirm(false);
+    this.m_cancelBtn.SetDisabled(true);
+    this.m_cancelBtn.GetRootWidget().SetOpacity(0.3);
   }
 
   protected func SetCanConfirm(can: Bool) -> Void {

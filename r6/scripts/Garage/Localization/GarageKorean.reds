@@ -251,6 +251,7 @@ public class GarageKorean extends ModLocalizationPackage {
 
     // Quick (notifications)
     this.Text("Garage-Quick-HeatTooHigh", "수배 단계가 너무 높음");
+    this.Text("Garage-Quick-AlreadyPaid", "이미 지불했어. 어서 출발해!");
     this.Text("Garage-Quick-PostPurchase", "외형이 변경되었습니다");
 
     // Miscellaneous

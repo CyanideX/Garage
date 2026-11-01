@@ -12,6 +12,35 @@ public class GarageAppearanceList extends IScriptable {
   public let names: array<CName>;
 }
 
+/// Trying looks on a car before paying. Revert puts back what it wore at Begin, Keep leaves on what's showing.
+public class GarageLookPreview extends IScriptable {
+  private let m_car: wref<VehicleObject>;
+  private let m_original: CName;
+  private let m_showing: CName;
+
+  public func Begin(car: wref<VehicleObject>) -> Void {
+    this.m_car = car;
+    this.m_original = IsDefined(car) ? car.GetCurrentAppearanceName() : n"";
+    this.m_showing = this.m_original;
+  }
+
+  public func Original() -> CName { return this.m_original; }
+
+  public func Show(look: CName) -> Void {
+    let car: wref<VehicleObject> = this.m_car;
+    if !IsDefined(car) || Equals(look, this.m_showing) { return; }
+    car.ScheduleAppearanceChange(look);
+    this.m_showing = look;
+  }
+
+  public func Revert() -> Void {
+    if IsNameValid(this.m_original) { this.Show(this.m_original); }
+    this.m_car = null;
+  }
+
+  public func Keep() -> Void { this.m_car = null; }
+}
+
 /// The looks a car can be swapped to, from data/paint/appearances.json. A car finds its list through its garageAppearanceKey
 /// flat, or failing that by the appearance it's wearing.
 public class GarageAppearances extends IScriptable {

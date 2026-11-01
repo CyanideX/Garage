@@ -6,6 +6,18 @@
   "partsResaleRate": 0.5,
   "minServiceFeeRate": 0.15,
   "customizationFeeRate": 0.08,
+  "rushFeeMultiplier": 3.0,
+  "rushHeatStep": 0.5,
+  "rushMinFee": 500,
+  "rushMaxHeat": 2,
+  "quickRepairMultiplier": 0.1,
+  "fullRepairMultiplier": 0.2,
+  "quickRepairFee": 500,
+  "fullRepairFee": 1500,
+  "repairCostMin": 100,
+  "repairCostMax": 50000,
+  "repairDelay": 1.5,
+  "repairFadeHold": 2.0,
   "gradeMultipliers": [
     {
       "match": "_country_poor",

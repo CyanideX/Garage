@@ -251,6 +251,7 @@ public class GarageChinese extends ModLocalizationPackage {
 
     // Quick (notifications)
     this.Text("Garage-Quick-HeatTooHigh", "通缉等级太高");
+    this.Text("Garage-Quick-AlreadyPaid", "已经付过了，快走！");
     this.Text("Garage-Quick-PostPurchase", "外观已更改");
 
     // Miscellaneous

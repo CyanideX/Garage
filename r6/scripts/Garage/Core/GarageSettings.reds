@@ -205,6 +205,16 @@ public class GarageSettings extends ScriptableService {
   @runtimeProperty("ModSettings.mod", "Garage")
   @runtimeProperty("ModSettings.category", "Pricing")
   @runtimeProperty("ModSettings.category.order", "50")
+  @runtimeProperty("ModSettings.displayName", "Repair Price")
+  @runtimeProperty("ModSettings.description", "Multiplies what a repair costs, before the service fee.")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0.1")
+  @runtimeProperty("ModSettings.max", "5.0")
+  public let repairPriceMultiplier: Float = 1.0;
+
+  @runtimeProperty("ModSettings.mod", "Garage")
+  @runtimeProperty("ModSettings.category", "Pricing")
+  @runtimeProperty("ModSettings.category.order", "50")
   @runtimeProperty("ModSettings.displayName", "Sale Payout")
   @runtimeProperty("ModSettings.description", "Multiplies what garages pay for a vehicle.")
   @runtimeProperty("ModSettings.step", "0.05")

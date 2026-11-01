@@ -251,6 +251,7 @@ public class GarageEnglish extends ModLocalizationPackage {
 
     // Quick
     this.Text("Garage-Quick-HeatTooHigh", "Heat level too high");
+    this.Text("Garage-Quick-AlreadyPaid", "You've paid. Get moving!");
     this.Text("Garage-Quick-PostPurchase", "Appearance changed");
 
     // Format

@@ -116,6 +116,12 @@ public class GarageSystem extends ScriptableService {
     if IsDefined(popup) { popup.RefreshHub(); }
   }
 
+  /// Shuts the popup now, cart or no cart. For a service whose work carries on behind it.
+  public func ClosePopup() -> Void {
+    let popup: ref<GaragePopup> = this.m_popup;
+    if IsDefined(popup) { popup.ForceClose(); }
+  }
+
   /// True while that addon's enabled and running.
   public func IsAddonUp(id: CName) -> Bool {
     let i: Int32 = 0;

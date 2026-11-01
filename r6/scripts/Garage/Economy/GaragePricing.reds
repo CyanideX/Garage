@@ -42,6 +42,19 @@ public class GarageSaleQuote extends IScriptable {
   public let total: Int32;
 }
 
+/// A heat rush's price. The fee scales with the labour it replaces and how hot V is.
+public class GarageRushQuote extends IScriptable {
+  public let look: Int32;
+  public let fee: Int32;
+  public let total: Int32;
+}
+
+public class GarageRepairQuote extends IScriptable {
+  public let base: Int32;
+  public let fee: Int32;
+  public let total: Int32;
+}
+
 /// data/addons/prices.json, or the user's addons/prices.json in place of it.
 public class GaragePrices extends IScriptable {
   public let format: String;
@@ -52,6 +65,18 @@ public class GaragePrices extends IScriptable {
   public let partsResaleRate: Float = 0.5;
   public let minServiceFeeRate: Float = 0.15;
   public let customizationFeeRate: Float = 0.08;
+  public let rushFeeMultiplier: Float = 3.0;
+  public let rushHeatStep: Float = 0.5;
+  public let rushMinFee: Int32 = 500;
+  public let rushMaxHeat: Int32 = 2;
+  public let quickRepairMultiplier: Float = 0.1;
+  public let fullRepairMultiplier: Float = 0.2;
+  public let quickRepairFee: Int32 = 500;
+  public let fullRepairFee: Int32 = 1500;
+  public let repairCostMin: Int32 = 100;
+  public let repairCostMax: Int32 = 50000;
+  public let repairDelay: Float = 1.5;
+  public let repairFadeHold: Float = 2.0;
   public let gradeMultipliers: array<ref<GaragePriceRule>>;
   public let appearanceMultipliers: array<ref<GarageAppearanceRule>>;
   public let appearanceFlags: array<ref<GaragePriceRule>>;
@@ -205,6 +230,31 @@ public class GaragePricing extends IScriptable {
     let sellTarget: Int32 = this.SellValue(record, target, tier, health, partsCost);
     let fee: Int32 = FloorF(Cast<Float>(sellTarget) * prices.customizationFeeRate);
     return baseCost + fee + Max(sellTarget - sellCurrent, 0);
+  }
+
+  /// look is what the new look costs, labour what the fee scales from. Heat 1 pays the plain multiplier, each level past it adds rushHeatStep.
+  public func QuoteRush(look: Int32, labour: Int32, heat: Int32) -> ref<GarageRushQuote> {
+    let prices: ref<GaragePrices> = this.Prices();
+    let hot: Float = 1.0 + Cast<Float>(Max(heat - 1, 0)) * prices.rushHeatStep;
+    let quote: ref<GarageRushQuote> = new GarageRushQuote();
+    quote.look = look;
+    quote.fee = Max(FloorF(Cast<Float>(labour) * prices.rushFeeMultiplier * hot), prices.rushMinFee);
+    quote.total = look + quote.fee;
+    return quote;
+  }
+
+  /// garage is that garage's service multiplier. health is 0 to 1.
+  public func QuoteRepair(record: TweakDBID, health: Float, full: Bool, garage: Float) -> ref<GarageRepairQuote> {
+    let prices: ref<GaragePrices> = this.Prices();
+    let settings: ref<GarageSettings> = GarageSettings.Get();
+    let market: Float = IsDefined(settings) ? settings.repairPriceMultiplier : 1.0;
+    let rate: Float = full ? prices.fullRepairMultiplier : prices.quickRepairMultiplier;
+    let damage: Float = 1.0 - ClampF(health, 0.0, 1.0);
+    let quote: ref<GarageRepairQuote> = new GarageRepairQuote();
+    quote.base = Max(prices.repairCostMin, Min(prices.repairCostMax, FloorF(Cast<Float>(this.BaseValue(record)) * damage * rate * garage * market)));
+    quote.fee = full ? prices.fullRepairFee : prices.quickRepairFee;
+    quote.total = quote.base + quote.fee;
+    return quote;
   }
 
   /// Labour for a part category. Charged on every part change.

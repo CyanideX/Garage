@@ -1,6 +1,14 @@
 module Garage.Vehicle
 
 import Garage.*
+import Garage.Data.*
+
+@addMethod(VehicleComponent)
+public func GarageClearDamage() -> Void {
+  this.m_damageLevel = 0;
+  this.m_bumperFrontState = 0;
+  this.m_bumperBackState = 0;
+}
 
 /// Enabling and disabling a player vehicle by its TweakDBID. Works for any car in Vehicle.vehicle_list, a modded one too.
 public abstract class GarageVehicles {
@@ -26,6 +34,51 @@ public abstract class GarageVehicles {
   public static func HealthPercent(vehicle: ref<VehicleObject>) -> Int32 { return RoundF(GarageVehicles.Health(vehicle) * 100.0); }
 
   public static func IsFullHealth(vehicle: ref<VehicleObject>) -> Bool { return GarageVehicles.HealthPercent(vehicle) >= 100; }
+
+  /// Where the car's sitting, for a swap to put its replacement.
+  public static func SpotOf(vehicle: wref<VehicleObject>) -> ref<GarageSpot> {
+    let spot: ref<GarageSpot> = new GarageSpot();
+    if !IsDefined(vehicle) { return spot; }
+    let at: Vector4 = vehicle.GetWorldPosition();
+    spot.x = at.X;
+    spot.y = at.Y;
+    spot.z = at.Z;
+    spot.yaw = vehicle.GetWorldYaw();
+    return spot;
+  }
+
+  /// Fixes it where it sits: damage, bumpers, tires, glass, health, doors and windows.
+  public static func RepairInPlace(vehicle: wref<VehicleObject>) -> Void {
+    if !IsDefined(vehicle) { return; }
+    let component: ref<VehicleComponent> = vehicle.GetVehicleComponent();
+    if IsDefined(component) { component.GarageClearDamage(); }
+    let inputs: array<CName> = [n"hood_destruction", n"wheel_f_l_destruction", n"wheel_f_r_destruction", n"bumper_b_destruction", n"bumper_f_destruction",
+                                n"door_f_l_destruction", n"door_f_r_destruction", n"trunk_destruction", n"bumper_b_destruction_side_2", n"bumper_f_destruction_side_2"];
+    for input in inputs { AnimationControllerComponent.SetInputFloat(vehicle, input, 0.0); }
+    let wheeled: wref<WheeledObject> = vehicle as WheeledObject;
+    if IsDefined(wheeled) && wheeled.GetFlatTireIndex() >= 0 {
+      let wheel: Int32 = 0;
+      while wheel < 4 {
+        wheeled.ToggleBrokenTire(Cast<Uint32>(wheel), false);
+        wheel += 1;
+      }
+    }
+    vehicle.DestructionResetGrid();
+    vehicle.DestructionResetGlass();
+    if IsDefined(component) {
+      component.UpdateDamageEngineEffects();
+      component.RepairVehicle();
+      component.VehicleVisualDestructionSetup();
+    }
+    // Condition and sale price read the pool, and RepairVehicle doesn't always fill it
+    GameInstance.GetStatPoolsSystem(GetGameInstance()).RequestSettingStatPoolMaxValue(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, GetPlayer(GetGameInstance()));
+    let ps: ref<VehicleComponentPS> = vehicle.GetVehiclePS();
+    if IsDefined(ps) {
+      ps.CloseAllVehDoors(true);
+      ps.CloseAllVehWindows();
+      ps.ForcePersistentStateChanged();
+    }
+  }
 
   /// Gives V the car. A record named after this one and the appearance wins if a mod made one, otherwise the appearance is set
   /// on the record itself.
