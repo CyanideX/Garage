@@ -137,6 +137,7 @@ public class ConstraintPopup extends inkCustomController {
         this.m_titleText.SetText(GetLocalizedTextByKey(n"Garage-Constraint-Title"));
         this.m_cancelBtn.SetText(GetLocalizedTextByKey(n"Garage-Constraint-Cancel"));
         this.m_confirmBtn.SetText(GetLocalizedTextByKey(confirmKey));
+        FitButtonPair(this.m_cancelBtn, this.m_confirmBtn);
 
         this.m_pendingSubcategoryId = subcategoryId;
         this.m_pendingChoiceId = choiceId;
@@ -470,6 +471,7 @@ public class ExitWarningPopup extends inkCustomController {
         this.m_titleText.SetText(GetLocalizedTextByKey(n"Garage-ExitWarning-Title"));
         this.m_noBtn.SetText(GetLocalizedTextByKey(n"Garage-ExitWarning-NoStay"));
         this.m_yesBtn.SetText(GetLocalizedTextByKey(yesKey));
+        FitButtonPair(this.m_noBtn, this.m_yesBtn);
         this.m_messageText.SetText(s"\(GetLocalizedTextByKey(n"Garage-ExitWarning-YouHave")) \(itemCount) \(GetLocalizedTextByKey(n"Garage-ExitWarning-ItemsWorth"))");
         this.m_valueText.SetText(GarageText.Price(totalValue));
 

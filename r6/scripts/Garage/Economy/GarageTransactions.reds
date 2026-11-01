@@ -51,6 +51,13 @@ public class GarageReceipt extends IScriptable {
 /// The one place the player's money moves for garage business. Every call moves the wallet and the garage's pool together
 /// and sends Garage.Transaction. meta is yours and comes through on the event. Free things pass through and report nothing.
 public abstract class GarageTransactions {
+  /// What V's carrying.
+  public static func Balance() -> Int32 {
+    let player: ref<PlayerPuppet> = GetPlayer(GetGameInstance());
+    let items: ref<TransactionSystem> = GameInstance.GetTransactionSystem(GetGameInstance());
+    return IsDefined(player) && IsDefined(items) ? items.GetItemQuantity(player, MarketSystem.Money()) : 0;
+  }
+
   /// Player to garage. n"" for garageId takes the money without paying a pool.
   public static func Charge(garageId: CName, amount: Int32, kind: EGarageTxKind, source: CName, opt meta: ref<IScriptable>) -> ref<GarageReceipt> {
     let receipt: ref<GarageReceipt> = GarageReceipt.Make(garageId, amount, kind, source, meta);

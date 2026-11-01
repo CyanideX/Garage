@@ -141,6 +141,7 @@ public class GarageWorld extends IScriptable {
   }
 
   public func Stop() -> Void {
+    this.m_garageOpen = false;
     for site in this.m_sites { site.Stop(); }
     ArrayClear(this.m_sites);
     this.SetActive(null);

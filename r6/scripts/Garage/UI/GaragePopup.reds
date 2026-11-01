@@ -9,7 +9,7 @@ import Garage.Vehicle.*
 import Garage.World.*
 import VehicleCore.Features.*
 
-/// The panel on the left of a garage. Esc and back go back a screen and close at the hub, holding them leaves from anywhere.
+/// The panel on the left of a garage. Esc and back go through ScreenManager.Back, holding them leaves from anywhere.
 public class GaragePopup extends InGamePopup {
   private let m_header: ref<InGamePopupHeader>;
   private let m_footer: ref<InGamePopupFooter>;
@@ -24,8 +24,11 @@ public class GaragePopup extends InGamePopup {
   private let m_holdTimer: Uint64;
   private let m_watchTimer: Uint64;
   private let m_keepAliveTimer: Uint64;
+  private let m_economyListen: Uint64;
   private let m_holding: Bool;
   private let m_holdCompleted: Bool;
+  private let m_closing: Bool;
+  private let m_abandoned: Bool;
 
   private static func HoldToExit() -> Float { return 0.3; }
 
@@ -76,16 +79,15 @@ public class GaragePopup extends InGamePopup {
     this.m_frame.Reparent(this.m_content);
 
     this.m_screens = ScreenManager.Create(this.m_frame);
+    this.m_screens.SetPopup(this);
 
     let hub: ref<ServiceHubScreen> = new ServiceHubScreen();
     hub.CreateInstance();
-    hub.SetScreenManager(this.m_screens);
     this.m_frame.AddScreen(hub);
     this.m_screens.RegisterScreen(n"hub", hub);
 
     let unavailable: ref<UnavailableScreen> = new UnavailableScreen();
     unavailable.CreateInstance();
-    unavailable.SetScreenManager(this.m_screens);
     this.m_frame.AddScreen(unavailable);
     this.m_screens.RegisterScreen(n"unavailable", unavailable);
 
@@ -105,6 +107,8 @@ public class GaragePopup extends InGamePopup {
     this.m_exitWarning.Reparent(this.GetRootCompoundWidget());
     this.m_cartWidget.SetExitWarningPopup(this.m_exitWarning);
 
+    system.Parts().Context().screens = this.m_screens;
+    system.SetPopup(this);
     system.OnGarageOpen(this.m_location, this.m_vehicle);
     this.m_screens.ShowScreen(n"hub");
     let vehicle: wref<VehicleObject> = this.m_vehicle;
@@ -124,43 +128,54 @@ public class GaragePopup extends InGamePopup {
     let xu: ref<XUtilsMod> = GarageSystem.Get().Xu();
     this.m_watchTimer = xu.Every(0.25, this, n"OnWatch");
     this.m_keepAliveTimer = xu.Every(3.0, this, n"OnKeepAlive");
+    this.m_economyListen = xu.OnCustom(GarageEvents.EconomyRefresh(), this, n"OnEconomyRefresh");
   }
 
   public func Close() {
+    if this.m_closing { return; }
     if !IsDefined(this.m_screens) {
-      super.Close();
+      this.ForceClose();
       return;
     }
-    if this.m_exitWarning.IsVisible() {
-      if this.m_holdCompleted {
-        this.m_holdCompleted = false;
-        return;
-      }
-      this.m_exitWarning.Hide();
-      return;
-    }
-    let current: CName = this.m_screens.GetCurrentScreen();
-    let screen: ref<GarageScreen> = this.m_screens.GetScreen(current);
-    if IsDefined(screen) && screen.OnBack() { return; }
-    if Equals(current, n"hub") {
-      let cart: ref<GarageCart> = GarageSystem.Get().Parts().Cart();
-      if cart.Count() > 0 {
-        this.m_exitWarning.Show(cart.Count(), cart.Total());
-        return;
-      }
-      super.Close();
-      return;
-    }
-    if this.m_screens.CanGoBack() {
-      this.m_screens.GoBack();
-    } else {
-      super.Close();
-    }
+    this.m_screens.Back();
   }
 
-  private func ForceClose() { super.Close(); }
+  public func DismissWarning() -> Bool {
+    if !this.m_exitWarning.IsVisible() { return false; }
+    if this.m_holdCompleted {
+      this.m_holdCompleted = false;
+    } else {
+      this.m_exitWarning.Hide();
+    }
+    return true;
+  }
+
+  public func WarnGoingBack(cart: ref<GarageCart>) -> Void { this.m_exitWarning.ShowForBackNavigation(cart.Count(), cart.Total()); }
+
+  public func WarnLeaving(cart: ref<GarageCart>) -> Void { this.m_exitWarning.Show(cart.Count(), cart.Total()); }
+
+  // A second close would detach twice and pop the game context twice
+  public func ForceClose() {
+    if this.m_closing { return; }
+    this.m_closing = true;
+    this.StopListening();
+    super.Close();
+  }
 
   public func ForceCloseFromWarning() -> Void { this.ForceClose(); }
+
+  // The session's going with us in it, so there's nothing to restore and no one to tell
+  public func Abandon() -> Void {
+    this.m_closing = true;
+    this.m_abandoned = true;
+    this.StopListening();
+  }
+
+  public func RefreshHub() -> Void {
+    if IsDefined(this.m_screens) { this.m_screens.RefreshHub(); }
+  }
+
+  public func OnEconomyRefresh(e: ref<XUtilsEvent>) -> Void { this.RefreshHub(); }
 
   protected cb func OnCartChanged(widget: wref<inkWidget>) {
     this.m_cartWidget.RefreshDisplay();
@@ -168,7 +183,7 @@ public class GaragePopup extends InGamePopup {
 
   // Global input reaches every popup, and 0.3 s of Esc meant for one above would count as hold to leave
   protected cb func OnButtonPress(evt: ref<inkPointerEvent>) {
-    if !this.IsTopPopup() { return; }
+    if this.m_closing || !this.IsTopPopup() { return; }
     if evt.IsAction(n"cancel") || evt.IsAction(n"back") || evt.IsAction(n"one_click_confirm") {
       this.m_holding = true;
       this.CancelTimer(this.m_holdTimer);
@@ -177,6 +192,7 @@ public class GaragePopup extends InGamePopup {
   }
 
   protected cb func OnButtonRelease(evt: ref<inkPointerEvent>) {
+    if this.m_closing { return; }
     if this.IsTopPopup() {
       if evt.IsAction(n"UI_MoveUp") || evt.IsAction(n"popup_moveUp") || evt.IsAction(n"scroll_up") {
         this.m_screens.ScrollUp();
@@ -196,31 +212,30 @@ public class GaragePopup extends InGamePopup {
 
   public func OnHoldComplete(e: ref<XUtilsEvent>) -> Void {
     this.m_holdTimer = 0ul;
-    if !this.m_holding { return; }
+    if !this.m_holding || this.m_closing { return; }
     this.m_holding = false;
     if !this.IsTopPopup() { return; }
     let cart: ref<GarageCart> = GarageSystem.Get().Parts().Cart();
     if cart.Count() > 0 {
       this.m_holdCompleted = true;
-      this.m_exitWarning.Show(cart.Count(), cart.Total());
+      this.WarnLeaving(cart);
     } else {
       this.ForceClose();
     }
   }
 
-  // The car can go away under us, and a service can ask to close
+  // The car can go away under us
   public func OnWatch(e: ref<XUtilsEvent>) -> Void {
+    if this.m_closing { return; }
     let vehicle: wref<VehicleObject> = this.m_vehicle;
-    let system: ref<GarageSystem> = GarageSystem.Get();
     if !IsDefined(vehicle) {
-      system.Xu().Log("UI").Warn("the car went away mid-visit, closing");
+      GarageSystem.Get().Xu().Log("UI").Warn("the car went away mid-visit, closing");
       this.ForceClose();
-      return;
     }
-    if system.TakeCloseRequest() { this.ForceClose(); }
   }
 
   public func OnKeepAlive(e: ref<XUtilsEvent>) -> Void {
+    if this.m_closing { return; }
     let vehicle: wref<VehicleObject> = this.m_vehicle;
     if IsDefined(vehicle) { VehicleStateHelper.PreventShutdown(vehicle); }
   }
@@ -237,12 +252,27 @@ public class GaragePopup extends InGamePopup {
     if timer != 0ul { GarageSystem.Get().Xu().Cancel(timer); }
   }
 
-  protected cb func OnUninitialize() {
+  private func StopListening() -> Void {
     this.CancelTimer(this.m_holdTimer);
     this.CancelTimer(this.m_watchTimer);
     this.CancelTimer(this.m_keepAliveTimer);
+    this.m_holdTimer = 0ul;
+    this.m_watchTimer = 0ul;
+    this.m_keepAliveTimer = 0ul;
+    this.m_holding = false;
+    if this.m_economyListen != 0ul { GarageSystem.Get().Xu().Off(this.m_economyListen); }
+    this.m_economyListen = 0ul;
+  }
+
+  protected cb func OnUninitialize() {
+    this.StopListening();
+    if this.m_abandoned {
+      super.OnUninitialize();
+      return;
+    }
     let system: ref<GarageSystem> = GarageSystem.Get();
     let vehicle: wref<VehicleObject> = this.m_vehicle;
+    system.EndVisit();
     system.Parts().RevertAll();
     if IsDefined(vehicle) {
       VehicleRefresh.Vehicle(vehicle);

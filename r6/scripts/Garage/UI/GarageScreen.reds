@@ -89,21 +89,47 @@ public static func CreatePriceRow(price: Int32, fontSize: Int32, tintColor: HDRC
 }
 
 // A label can be anything an addon or a translation hands us, and a button neither wraps nor clips
-public static func FitButtonText(btn: ref<SimpleButton>, text: String, width: Float) -> Void {
+public static func FittedButtonSize(text: String, width: Float) -> Int32 {
+    if StrLen(text) == 0 { return 50; }
+    return Min(50, RoundF((width - 40.0) / (Cast<Float>(StrLen(text)) * 0.52)));
+}
+
+public static func SetButtonFontSize(btn: ref<SimpleButton>, size: Int32) -> Void {
     let root = btn.GetRootWidget() as inkCompoundWidget;
     let label = IsDefined(root) ? root.GetWidgetByPathName(n"label") as inkText : null;
-    if !IsDefined(label) || StrLen(text) == 0 { return; }
-    label.SetFontSize(Min(50, RoundF((width - 40.0) / (Cast<Float>(StrLen(text)) * 0.52))));
+    if IsDefined(label) { label.SetFontSize(size); }
+}
+
+public static func FitButtonText(btn: ref<SimpleButton>, text: String, width: Float) -> Void {
+    if StrLen(text) > 0 { SetButtonFontSize(btn, FittedButtonSize(text, width)); }
+}
+
+// SetText on its own keeps the size the old label needed
+public static func SetButtonText(btn: ref<SimpleButton>, text: String) -> Void {
+    btn.SetText(text);
+    FitButtonText(btn, text, btn.GetRootWidget().GetWidth());
+}
+
+// Side by side they read as a set, so the longer label sets the size for both
+public static func FitButtonPair(a: ref<SimpleButton>, b: ref<SimpleButton>) -> Void {
+    let size: Int32 = Min(FittedButtonSize(a.GetText(), a.GetRootWidget().GetWidth()), FittedButtonSize(b.GetText(), b.GetRootWidget().GetWidth()));
+    SetButtonFontSize(a, size);
+    SetButtonFontSize(b, size);
 }
 
 public abstract class GarageScreen extends inkCustomController {
     protected let m_name: String;
     protected let m_garageFrame: wref<GarageFrame>;
+    protected let m_screenManager: wref<ScreenManager>;
     protected let m_container: wref<inkCanvas>;
     protected let m_isVisible: Bool;
     protected let m_backBtn: wref<SimpleButton>;
     protected let m_backContainer: wref<inkCanvas>;
     protected let m_titleText: wref<inkText>;
+
+    public func SetScreenManager(manager: ref<ScreenManager>) -> Void {
+        this.m_screenManager = manager;
+    }
 
     protected cb func OnAssign() {
         let namespace: String;
@@ -158,6 +184,9 @@ public abstract class GarageScreen extends inkCustomController {
     /// Esc or back on this screen. Return true if you dealt with it, like reverting a preview before going back yourself.
     public func OnBack() -> Bool { return false; }
 
+    /// True if Esc here should ask before going back with a cart, since the warning's yes empties it and goes to the hub.
+    public func WarnsOnBack() -> Bool { return false; }
+
     protected func UpdateHint(action: CName, label: String, active: Bool) {
         if active {
             this.m_garageFrame.GetHints().AddButtonHint(action, label);
@@ -200,6 +229,12 @@ public abstract class GarageScreen extends inkCustomController {
         this.m_backBtn.ToggleSounds(true);
         this.m_backBtn.Reparent(backContainer);
         this.m_backBtn.RegisterToCallback(n"OnBtnClick", this, n"OnBackClick");
+    }
+
+    protected cb func OnBackClick(widget: wref<inkWidget>) -> Bool {
+        let manager: ref<ScreenManager> = this.m_screenManager;
+        if IsDefined(manager) { manager.Back(); }
+        return false;
     }
 
     protected func CreateTitle(root: ref<inkCanvas>, text: String, marginTop: Float) -> ref<inkText> {

@@ -1,5 +1,7 @@
 module Garage.Vehicle
 
+import Garage.*
+
 /// Enabling and disabling a player vehicle by its TweakDBID. Works for any car in Vehicle.vehicle_list, a modded one too.
 public abstract class GarageVehicles {
   /// False when the car isn't in the vehicle list.
@@ -39,34 +41,65 @@ public abstract class GarageVehicles {
 
   /// A string the game takes for this record. It isn't the record's real name, so it's no good for showing anyone.
   /// "" for a record whose name is under 7 characters, which no vehicle's is.
-  // EnablePlayerVehicle only wants a name, and without CET nothing turns an id back into one. But it just hashes what it's
-  // given and looks that up, so a string with the same CRC32 and length gets the same car
   public static func NameFor(record: TweakDBID) -> String {
+    let system: ref<GarageSystem> = GarageSystem.Get();
+    let names: ref<GarageRecordNames> = IsDefined(system) ? system.RecordNames() : new GarageRecordNames();
+    return names.NameFor(record);
+  }
+
+  /// V owns this car. With an appearance, the record named after both counts too, since that's what Unlock can make.
+  public static func IsOwned(record: TweakDBID, opt appearance: CName) -> Bool {
+    let vehicles: ref<VehicleSystem> = GameInstance.GetVehicleSystem(GetGameInstance());
+    if IsNameValid(appearance) && vehicles.IsVehiclePlayerUnlocked(record + TDBID.Create("_" + NameToString(appearance))) { return true; }
+    return vehicles.IsVehiclePlayerUnlocked(record);
+  }
+}
+
+// EnablePlayerVehicle only wants a name, and without CET nothing turns an id back into one. But it just hashes what it's
+// given and looks that up, so a string with the same CRC32 and length gets the same car
+public class GarageRecordNames extends IScriptable {
+  private let m_table: array<Uint32>;
+  private let m_records: array<TweakDBID>;
+  private let m_names: array<String>;
+
+  public func NameFor(record: TweakDBID) -> String {
+    let at: Int32 = 0;
+    while at < ArraySize(this.m_records) {
+      if this.m_records[at] == record { return this.m_names[at]; }
+      at += 1;
+    }
+    let name: String = this.Forge(record);
+    ArrayPush(this.m_records, record);
+    ArrayPush(this.m_names, name);
+    return name;
+  }
+
+  private func Forge(record: TweakDBID) -> String {
     let number: Uint64 = TDBID.ToNumber(record);
     let hash: Uint32 = Cast<Uint32>(number % 4294967296ul);
     let length: Int32 = Cast<Int32>((number / 4294967296ul) % 256ul);
     if length < 7 { return ""; }
 
-    let table: array<Uint32> = GarageVehicles.CrcTable();
-    let lastIndex: array<Int32> = GarageVehicles.LastBytes(table, hash);
+    if ArraySize(this.m_table) == 0 { this.BuildTable(); }
+    let lastIndex: array<Int32> = this.LastBytes(hash);
     let state: Uint32 = 4294967295u;
     let i: Int32 = 0;
     while i < length - 7 {
-      state = GarageVehicles.Step(table, state, 97);
+      state = this.Step(state, 97);
       i += 1;
     }
     // The last 4 bytes are forced, and they have to come out as plain characters. 3 free ones find that in a few hundred tries
     let a: Int32 = 0;
     while a < 62 {
-      let stateA: Uint32 = GarageVehicles.Step(table, state, GarageVehicles.Alnum(a));
+      let stateA: Uint32 = this.Step(state, GarageRecordNames.Alnum(a));
       let b: Int32 = 0;
       while b < 62 {
-        let stateB: Uint32 = GarageVehicles.Step(table, stateA, GarageVehicles.Alnum(b));
+        let stateB: Uint32 = this.Step(stateA, GarageRecordNames.Alnum(b));
         let c: Int32 = 0;
         while c < 62 {
-          let tail: String = GarageVehicles.Tail(table, GarageVehicles.Step(table, stateB, GarageVehicles.Alnum(c)), lastIndex);
+          let tail: String = this.Tail(this.Step(stateB, GarageRecordNames.Alnum(c)), lastIndex);
           if StrLen(tail) == 4 {
-            let name: String = GarageVehicles.Filler(length - 7) + GarageVehicles.Char(a) + GarageVehicles.Char(b) + GarageVehicles.Char(c) + tail;
+            let name: String = GarageRecordNames.Filler(length - 7) + GarageRecordNames.Char(a) + GarageRecordNames.Char(b) + GarageRecordNames.Char(c) + tail;
             return TDBID.Create(name) == record ? name : "";
           }
           c += 1;
@@ -78,8 +111,7 @@ public abstract class GarageVehicles {
     return "";
   }
 
-  private static func CrcTable() -> array<Uint32> {
-    let table: array<Uint32>;
+  private func BuildTable() -> Void {
     let n: Uint32 = 0u;
     while n < 256u {
       let value: Uint32 = n;
@@ -88,19 +120,18 @@ public abstract class GarageVehicles {
         value = value % 2u == 1u ? (value / 2u) ^ 3988292384u : value / 2u;
         bit += 1;
       }
-      ArrayPush(table, value);
+      ArrayPush(this.m_table, value);
       n += 1u;
     }
-    return table;
   }
 
-  private static func Step(table: array<Uint32>, state: Uint32, byte: Int32) -> Uint32 {
+  private func Step(state: Uint32, byte: Int32) -> Uint32 {
     let index: Int32 = Cast<Int32>((state ^ Cast<Uint32>(byte)) % 256u);
-    return table[index] ^ (state / 256u);
+    return this.m_table[index] ^ (state / 256u);
   }
 
   // Which table entry each of the last 4 bytes has to land on, worked back from the hash
-  private static func LastBytes(table: array<Uint32>, hash: Uint32) -> array<Int32> {
+  private func LastBytes(hash: Uint32) -> array<Int32> {
     let result: array<Int32>;
     ArrayResize(result, 4);
     let register: Uint32 = hash ^ 4294967295u;
@@ -108,24 +139,24 @@ public abstract class GarageVehicles {
     while at >= 0 {
       let top: Uint32 = register / 16777216u;
       let index: Int32 = 0;
-      while table[index] / 16777216u != top { index += 1; }
+      while this.m_table[index] / 16777216u != top { index += 1; }
       result[at] = index;
-      register = ((register ^ table[index]) % 16777216u) * 256u;
+      register = ((register ^ this.m_table[index]) % 16777216u) * 256u;
       at -= 1;
     }
     return result;
   }
 
   // 4 characters, or "" if any byte isn't a plain one
-  private static func Tail(table: array<Uint32>, state: Uint32, lastIndex: array<Int32>) -> String {
+  private func Tail(state: Uint32, lastIndex: array<Int32>) -> String {
     let text: String = "";
     let at: Int32 = 0;
     while at < 4 {
       let byte: Int32 = Cast<Int32>((state ^ Cast<Uint32>(lastIndex[at])) % 256u);
-      let position: Int32 = GarageVehicles.AlnumIndex(byte);
+      let position: Int32 = GarageRecordNames.AlnumIndex(byte);
       if position < 0 { return ""; }
-      text += GarageVehicles.Char(position);
-      state = GarageVehicles.Step(table, state, byte);
+      text += GarageRecordNames.Char(position);
+      state = this.Step(state, byte);
       at += 1;
     }
     return text;

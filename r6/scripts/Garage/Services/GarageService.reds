@@ -53,7 +53,7 @@ public abstract class GarageService extends IScriptable {
     let conditions: ref<VisibilityConditions> = this.Conditions();
     return !IsDefined(conditions) || conditions.IsMet(ctx);
   }
-  /// False shows LockReason on the button
+  /// False sends a click to the Unavailable screen with LockReason, the button itself looks the same
   public func IsAvailable(ctx: ref<GarageContext>) -> Bool { return true; }
   public func LockReason(ctx: ref<GarageContext>) -> String { return ""; }
   /// Greyed red, for when the service has nothing to do right now. It stays clickable so its screen can say why.
@@ -71,10 +71,16 @@ public abstract class GarageAddon extends IScriptable {
   public func IsEnabled(settings: ref<GarageSettings>) -> Bool { return true; }
   public func Start(garage: ref<GarageSystem>) -> Void {}
   public func Stop() -> Void {}
+  /// Asked when the addon starts, and kept until it stops. A service's own state lasts as long.
   public func Services() -> array<ref<GarageService>> {
     let none: array<ref<GarageService>>;
     return none;
   }
-  /// Runs when the garage opens, to add your screens: make one, frame.AddScreen(it), screens.RegisterScreen(name, it).
+  /// Runs when the garage opens, to add your screens: make one, it.CreateInstance(), frame.AddScreen(it), screens.RegisterScreen(name, it).
   public func RegisterScreens(screens: ref<ScreenManager>, frame: ref<GarageFrame>) -> Void {}
+  /// The garage just opened, and your screens exist. ctx.screens is its ScreenManager.
+  public func OnVisitStart(ctx: ref<GarageContext>) -> Void {}
+  /// The garage is closing, however it's closing, before anything's torn down. Put previews back here.
+  /// ctx.vehicle can be gone already, if that's why it's closing or the session's ending.
+  public func OnVisitEnd(ctx: ref<GarageContext>) -> Void {}
 }

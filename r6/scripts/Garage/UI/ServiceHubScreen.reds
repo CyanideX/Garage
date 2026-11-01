@@ -12,8 +12,6 @@ import VehicleCore.*
 import VehicleCore.Features.*
 
 public class ServiceHubScreen extends GarageScreen {
-    private let m_screenManager: wref<ScreenManager>;
-
     private let m_buttonContainer: wref<inkVerticalPanel>;
     private let m_noServicesText: wref<inkText>;
     private let m_pagination: ref<PaginationHelper>;
@@ -24,11 +22,7 @@ public class ServiceHubScreen extends GarageScreen {
 
     private let m_isRendering: Bool;
     private let m_refreshPending: Bool;
-    private let m_pulseAnimProxy: ref<inkAnimProxy>;
-
-    public func SetScreenManager(manager: ref<ScreenManager>) -> Void {
-        this.m_screenManager = manager;
-    }
+    private let m_pulseProxies: array<ref<inkAnimProxy>>;
 
     public func NotifyStateChange() -> Void {
         if this.m_isRendering {
@@ -144,18 +138,13 @@ public class ServiceHubScreen extends GarageScreen {
         }
     }
 
-    // Priority order, stable for equal priorities
     private func VisibleServices(context: ref<GarageContext>) -> array<ref<GarageService>> {
-        let sorted: array<ref<GarageService>>;
+        let visible: array<ref<GarageService>>;
         let services = GarageSystem.Get().Services();
         for service in services {
-            if service.IsVisible(context) {
-                let at = 0;
-                while at < ArraySize(sorted) && sorted[at].Priority() <= service.Priority() { at += 1; }
-                ArrayInsert(sorted, at, service);
-            }
+            if service.IsVisible(context) { ArrayPush(visible, service); }
         }
-        return sorted;
+        return visible;
     }
 
     // Name carries the m_services index for OnServiceButtonClick
@@ -201,7 +190,7 @@ public class ServiceHubScreen extends GarageScreen {
         let cartCount = cart.Count();
         this.m_checkoutRow.SetVisible(cartCount > 0);
         if cartCount > 0 {
-            this.m_checkoutBtn.SetText(FormatCheckoutLabel(GetLocalizedTextByKey(n"Garage-Hub-Checkout"), cartCount, cart.Total()));
+            SetButtonText(this.m_checkoutBtn, FormatCheckoutLabel(GetLocalizedTextByKey(n"Garage-Hub-Checkout"), cartCount, cart.Total()));
         }
     }
 
@@ -236,7 +225,7 @@ public class ServiceHubScreen extends GarageScreen {
         options.loopType = inkanimLoopType.PingPong;
         options.loopInfinite = true;
 
-        this.m_pulseAnimProxy = overlay.PlayAnimationWithOptions(animDef, options);
+        ArrayPush(this.m_pulseProxies, overlay.PlayAnimationWithOptions(animDef, options));
     }
 
     private func AddActiveOverlay(parent: ref<inkCompoundWidget>, name: CName, opacity: Float) -> ref<inkImage> {
@@ -253,10 +242,10 @@ public class ServiceHubScreen extends GarageScreen {
     }
 
     private func StopPulseAnimation() -> Void {
-        if IsDefined(this.m_pulseAnimProxy) {
-            this.m_pulseAnimProxy.Stop();
-            this.m_pulseAnimProxy = null;
+        for proxy in this.m_pulseProxies {
+            if IsDefined(proxy) { proxy.Stop(); }
         }
+        ArrayClear(this.m_pulseProxies);
     }
 
     private func ApplyMutedStyle(btn: ref<SimpleButton>) -> Void {
@@ -342,7 +331,6 @@ public class ServiceHubScreen extends GarageScreen {
 }
 
 public class UnavailableScreen extends GarageScreen {
-    private let m_screenManager: wref<ScreenManager>;
     private let m_root: wref<inkCanvas>;
     private let m_vehicleNameText: wref<inkText>;
     private let m_divider: wref<inkRectangle>;
@@ -350,10 +338,6 @@ public class UnavailableScreen extends GarageScreen {
 
     private let m_title: String;
     private let m_message: String;
-
-    public func SetScreenManager(manager: ref<ScreenManager>) -> Void {
-        this.m_screenManager = manager;
-    }
 
     public func SetMessage(title: String, message: String) -> Void {
         this.m_title = title;
@@ -449,12 +433,5 @@ public class UnavailableScreen extends GarageScreen {
     public func Hide() -> Void {
         this.m_isVisible = false;
         this.m_root.SetVisible(false);
-    }
-
-    protected cb func OnBackClick(widget: wref<inkWidget>) -> Bool {
-        if IsDefined(this.m_screenManager) {
-            this.m_screenManager.GoBack();
-        }
-        return false;
     }
 }

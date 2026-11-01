@@ -21,6 +21,7 @@ public class GarageScene extends IScriptable {
   private let m_driverListen: Uint64;
   private let m_lens: ref<XUtilsLensRequest>;
   private let m_fade: ref<XUtilsFade>;
+  private let m_servicePath: ref<XUtilsPlayback>;
   private let m_settleTimer: Uint64;
   private let m_spot: XUtilsPose;
   private let m_hasSpot: Bool;
@@ -140,6 +141,7 @@ public class GarageScene extends IScriptable {
     this.m_hasSpot = false;
     this.m_timeline = null;
     this.m_cloudCamera = null;
+    this.m_servicePath = null;
     this.m_placed = null;
     this.m_location = null;
     this.m_lastPosition = n"";
@@ -206,8 +208,9 @@ public class GarageScene extends IScriptable {
     timeline.SetShuffle(settings.shufflePathsEnabled);
     timeline.SetResume(true);
     timeline.SetMaxEntrySeconds(MinF(6.0, this.m_location.camera.maxIdleSeconds));
-    if ArraySize(entries) > 1 { timeline.SetBetween(GarageScene.Cross(3.0, 3.0)); }
+    if ArraySize(entries) > 1 { timeline.SetBetween(GarageScene.Cross(2.75, 2.75)); }
     let idleShake: String = settings.shakeEnabled && settings.cinematicShakeEnabled ? this.m_location.camera.idleShake : "";
+    let titled: Bool = false;
     for entry in entries {
       let playback: ref<XUtilsPlayback> = camera.Play(entry.path);
       entry.playback = playback;
@@ -218,7 +221,9 @@ public class GarageScene extends IScriptable {
         if settings.perlinShakeEnabled { shake.SetNoise(XUtilsShakeNoise.Perlin); }
         playback.SetShake(shake);
       }
-      if entry.title {
+      // A timeline holds one title, the others just play in the queue
+      if entry.title && !titled {
+        titled = true;
         timeline.SetTitle(playback, entry.name);
       } else {
         timeline.Add(playback, entry.name);
@@ -302,7 +307,8 @@ public class GarageScene extends IScriptable {
 
   // A shared point's held by the engine, and waypoint focus runs off the path's own lens track
   public func OnEntryStart(e: ref<XUtilsEvent>) -> Void {
-    if !IsDefined(this.m_lens) { return; }
+    // A path can still roll over while the camera's on its way to a position, and that focus isn't ours to take
+    if !IsDefined(this.m_lens) || IsNameValid(this.m_lastPosition) { return; }
     let entries: array<ref<GarageIdleEntry>> = this.m_placed.entries;
     for entry in entries {
       if Equals(entry.name, e.text) {
@@ -318,26 +324,21 @@ public class GarageScene extends IScriptable {
 
   // --- Positions
 
-  /// Moves to a named cloud position, falling back to default. Going there from the idle paths fades across.
+  /// Moves to a named cloud position, falling back to default. From the idle paths it orbits in from wherever the path is.
   public func GoTo(name: String) -> Void {
     if !IsDefined(this.m_cloudCamera) || StrLen(name) == 0 { return; }
     let cloud: ref<XUtilsPointCloud> = this.m_placed.cloud;
     let target: CName = StringToName(StrLower(name));
-    if cloud.Find(target) < 0 {
-      if Equals(target, n"explode") && cloud.Find(n"checkout") >= 0 {
-        target = n"checkout";
-      } else {
-        target = n"default";
-      }
-    }
+    if cloud.Find(target) < 0 { target = n"default"; }
     let index: Int32 = cloud.Find(target);
     if index < 0 { return; }
 
     if this.m_cloudCamera.IsDriving() {
+      if Equals(target, this.m_lastPosition) { return; }
       this.m_cloudCamera.GoToName(target);
     } else {
       this.m_cloudCamera.SetStart(index);
-      this.m_cloudCamera.Drive(GarageScene.Cross(0.5, 0.5));
+      this.m_cloudCamera.Drive(XUtilsTransition.Orbit().Duration(0.75).Ease(XUtilsEase.SineInOut));
     }
     if IsDefined(this.m_lens) { this.m_lens.Focus(XUtilsFocus.Driver(this.m_cloudCamera)); }
     this.m_lastPosition = target;
@@ -346,9 +347,7 @@ public class GarageScene extends IScriptable {
   /// A parts category's position: the schema's override, its slot, the cloud's slot, then slots that stand in for it.
   public func GoToCategory(category: CName) -> Void {
     if !IsDefined(this.m_placed) { return; }
-    let target: CName = this.ResolveCategory(category);
-    if Equals(target, this.m_lastPosition) && IsDefined(this.m_cloudCamera) && this.m_cloudCamera.IsDriving() && !this.m_cloudCamera.IsMoving() { return; }
-    this.GoTo(NameToString(target));
+    this.GoTo(NameToString(this.ResolveCategory(category)));
   }
 
   /// Follows a hover, but never pulls the camera out of the idle paths.
@@ -442,7 +441,16 @@ public class GarageScene extends IScriptable {
     }
   }
 
-  public func Explode() -> Void { this.GoTo("explode"); }
+  /// The explode point, else checkout, else the camera stays where it is.
+  public func Explode() -> Void {
+    if !IsDefined(this.m_placed) || !IsDefined(this.m_cloudCamera) { return; }
+    let cloud: ref<XUtilsPointCloud> = this.m_placed.cloud;
+    if cloud.Find(n"explode") >= 0 {
+      this.GoTo("explode");
+    } else {
+      if cloud.Find(n"checkout") >= 0 { this.GoTo("checkout"); }
+    }
+  }
 
   public func ReturnToIdle() -> Void {
     this.m_lastPosition = n"";
@@ -459,11 +467,14 @@ public class GarageScene extends IScriptable {
     let entries: array<ref<GarageIdleEntry>> = this.m_placed.entries;
     for entry in entries {
       if Equals(entry.name, name) {
-        entry.playback.Drive(GarageScene.Cross(0.5, 0.5));
+        this.m_servicePath = this.m_xu.Camera().Play(entry.path);
+        this.m_servicePath.SetEnd(XUtilsEnd.Loop);
+        this.m_servicePath.Drive(GarageScene.Cross(0.5, 0.5));
         return true;
       }
     }
     this.m_log.Warn("no idle path called " + name);
+    this.ReleasePath();
     return false;
   }
 

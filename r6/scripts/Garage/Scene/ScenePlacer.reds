@@ -11,6 +11,8 @@ public class GarageMeasure extends IScriptable {
   public let offset: Vector4;
   // From a table or schema, tuned for framing rather than the mesh
   public let overridden: Bool;
+  // The ground came off the box's own corners, so it's worth bending a car's paths for
+  public let cornerGround: Bool;
 }
 
 // Where a data file was captured
@@ -253,6 +255,7 @@ public abstract class ScenePlacer {
     }
     let drop: XUtilsDropResult = ray.DropBox(at, measured.half, location.deck.yaw);
     if drop.hits == 0 { drop = ray.DropBox(at, measured.half, location.deck.yaw, XUtilsCollision.Static); }
+    measured.cornerGround = drop.hits > 0;
     return drop.hits > 0 ? drop.groundZ : fallback;
   }
 
@@ -273,6 +276,8 @@ public abstract class ScenePlacer {
     while i < list.Size() {
       let item: ref<XUtilsJson> = list.At(i);
       ScenePlacer.WritePoint(item, mover.Move(ScenePlacer.PointOf(item)));
+      // Files spell these any way they like, and screens ask in lower case
+      if item.Has("name") { item.SetString("name", StrLower(item.GetString("name", ""))); }
       item.SetFloat("yaw", item.GetFloat("yaw", 0.0) + mover.dYaw);
       if item.Has("lookAt") { item.Set("lookAt", ScenePlacer.VecJson(mover.Move(ScenePlacer.Vec(item.Get("lookAt"))))); }
       out.Push(item);
@@ -377,7 +382,7 @@ public abstract class ScenePlacer {
         let json: ref<XUtilsJson> = path.ToJson();
         let rigid: ref<GarageMover> = ScenePlacer.PathMover(json, frame, center, yaw, 1.0, 1.0, 1.0, groundZ, false);
         ScenePlacer.MoveList(json, "keys", rigid);
-        ScenePlacer.FinishPath(xu, json, center, yaw, geometry, groundZ, true);
+        ScenePlacer.FinishPath(xu, json, center, yaw, geometry, groundZ, measured.cornerGround);
         ScenePlacer.AddEntry(xu, placed, seen, path, json, rigid);
       }
       return;
@@ -391,7 +396,7 @@ public abstract class ScenePlacer {
       ScenePlacer.MoveList(json, "keys", pathMover);
       if larger { ScenePlacer.Clearance(json, "keys", center, yaw, measured); }
       ScenePlacer.ClampFloor(json, "keys", groundZ);
-      ScenePlacer.FinishPath(xu, json, center, yaw, geometry, groundZ, false);
+      ScenePlacer.FinishPath(xu, json, center, yaw, geometry, groundZ, true);
       ScenePlacer.AddEntry(xu, placed, seen, path, json, pathMover);
     }
   }
@@ -411,10 +416,10 @@ public abstract class ScenePlacer {
   }
 
   // PreserveZ keeps a path's arc height through the pull-in
-  // A car's path skips the floor clamp, a bad ground reading isn't worth bending authored data for
-  private static func FinishPath(xu: ref<XUtilsMod>, json: ref<XUtilsJson>, center: Vector4, yaw: Float, geometry: ref<GarageMeasure>, groundZ: Float, isCar: Bool) -> Void {
+  // A bad ground reading isn't worth bending a car's authored path for
+  private static func FinishPath(xu: ref<XUtilsMod>, json: ref<XUtilsJson>, center: Vector4, yaw: Float, geometry: ref<GarageMeasure>, groundZ: Float, clampFloor: Bool) -> Void {
     ScenePlacer.SafeguardList(xu, json, "keys", center, yaw, geometry, XUtilsSafeguardMode.Rigid, false);
-    if !isCar { ScenePlacer.ClampFloor(json, "keys", groundZ); }
+    if clampFloor { ScenePlacer.ClampFloor(json, "keys", groundZ); }
   }
 
   private static func AppGarage(path: ref<XUtilsPath>) -> ref<XUtilsJson> {

@@ -22,6 +22,7 @@ public class ScreenManager {
     private let m_screens: array<ref<ScreenEntry>>;
     private let m_currentScreen: CName;
     private let m_screenHistory: array<CName>;
+    private let m_popup: wref<GaragePopup>;
 
     public static func Create(garageFrame: ref<GarageFrame>) -> ref<ScreenManager> {
         let manager = new ScreenManager();
@@ -30,6 +31,11 @@ public class ScreenManager {
         return manager;
     }
 
+    public func SetPopup(popup: ref<GaragePopup>) -> Void {
+        this.m_popup = popup;
+    }
+
+    /// Hands the screen this manager and starts it hidden, since a switch only hides the one that's showing.
     public func RegisterScreen(name: CName, screen: ref<GarageScreen>) -> Bool {
         let i: Int32 = 0;
         while i < ArraySize(this.m_screens) {
@@ -43,6 +49,9 @@ public class ScreenManager {
         entry.name = name;
         entry.screen = screen;
         ArrayPush(this.m_screens, entry);
+        screen.SetScreenManager(this);
+        let root = screen.GetRootWidget();
+        if IsDefined(root) { root.SetVisible(false); }
         return true;
     }
 
@@ -75,13 +84,10 @@ public class ScreenManager {
 
     // Navigate without pushing to history (used by GoBack)
     private func ShowScreenInternal(name: CName) -> Void {
-        let i: Int32 = 0;
-        while i < ArraySize(this.m_screens) {
-            this.m_screens[i].screen.Hide();
-            i += 1;
-        }
+        let current = this.GetScreen(this.m_currentScreen);
+        if IsDefined(current) { current.Hide(); }
 
-        i = 0;
+        let i: Int32 = 0;
         while i < ArraySize(this.m_screens) {
             if Equals(this.m_screens[i].name, name) {
                 this.m_screens[i].screen.Show();
@@ -92,6 +98,40 @@ public class ScreenManager {
         }
 
         XUtils.Mod("Garage").Log("UI").Warn(s"Screen not found: \(NameToString(name))");
+    }
+
+    /// Esc and every "<" land here: cart warning, the screen's OnBack, then back a screen or close at the hub.
+    public func Back() -> Void {
+        let popup: ref<GaragePopup> = this.m_popup;
+        if IsDefined(popup) && popup.DismissWarning() {
+            return;
+        }
+        let cart = GarageSystem.Get().Parts().Cart();
+        let screen = this.GetScreen(this.m_currentScreen);
+        if IsDefined(screen) && screen.WarnsOnBack() && cart.Count() > 0 && IsDefined(popup) {
+            popup.WarnGoingBack(cart);
+            return;
+        }
+        if IsDefined(screen) && screen.OnBack() {
+            return;
+        }
+        if NotEquals(this.m_currentScreen, n"hub") && this.CanGoBack() {
+            this.GoBack();
+            return;
+        }
+        if !IsDefined(popup) {
+            return;
+        }
+        if cart.Count() > 0 {
+            popup.WarnLeaving(cart);
+        } else {
+            popup.ForceClose();
+        }
+    }
+
+    public func RefreshHub() -> Void {
+        let hub = this.GetScreen(n"hub") as ServiceHubScreen;
+        if IsDefined(hub) { hub.NotifyStateChange(); }
     }
 
     public func GoBack() -> Void {
@@ -109,6 +149,26 @@ public class ScreenManager {
         }
 
         this.ShowScreenInternal(previousScreen);
+    }
+
+    /// Back to a screen in the history, dropping everything after it. One that isn't there takes the current screen's place.
+    public func BackTo(name: CName) -> Void {
+        if Equals(name, this.m_currentScreen) || !IsDefined(this.GetScreen(name)) {
+            return;
+        }
+        let i: Int32 = ArraySize(this.m_screenHistory) - 1;
+        while i >= 0 {
+            if Equals(this.m_screenHistory[i], name) {
+                ArrayResize(this.m_screenHistory, i);
+                i = -1;
+            } else {
+                i -= 1;
+            }
+        }
+        if Equals(name, n"hub") {
+            GarageSystem.Get().Scene().ReleasePath();
+        }
+        this.ShowScreenInternal(name);
     }
 
     public func CanGoBack() -> Bool {

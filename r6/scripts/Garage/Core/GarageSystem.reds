@@ -26,9 +26,12 @@ public class GarageSystem extends ScriptableService {
   private let m_scene: ref<GarageScene>;
   private let m_requester: wref<inkGameController>;
   private let m_garageOpen: Bool;
-  private let m_closeRequested: Bool;
+  private let m_popup: wref<GaragePopup>;
+  private let m_visitLive: Bool;
   private let m_addons: array<ref<GarageAddon>>;
   private let m_started: array<Bool>;
+  private let m_services: array<ref<GarageService>>;
+  private let m_recordNames: ref<GarageRecordNames>;
   private let m_inSession: Bool;
   private let m_said: Bool;
   private let m_visited: Bool;
@@ -100,12 +103,32 @@ public class GarageSystem extends ScriptableService {
   public func IsGarageOpen() -> Bool { return this.m_garageOpen; }
 
   /// A service that's finished and wants the garage shut.
-  public func RequestClose() -> Void { this.m_closeRequested = true; }
+  public func RequestClose() -> Void {
+    let popup: ref<GaragePopup> = this.m_popup;
+    if IsDefined(popup) { popup.ForceClose(); }
+  }
 
-  public func TakeCloseRequest() -> Bool {
-    let was: Bool = this.m_closeRequested;
-    this.m_closeRequested = false;
-    return was;
+  public func SetPopup(popup: ref<GaragePopup>) -> Void { this.m_popup = popup; }
+
+  /// Redraws the hub if it's showing, for when a service's state changed under it.
+  public func RefreshHub() -> Void {
+    let popup: ref<GaragePopup> = this.m_popup;
+    if IsDefined(popup) { popup.RefreshHub(); }
+  }
+
+  /// True while that addon's enabled and running.
+  public func IsAddonUp(id: CName) -> Bool {
+    let i: Int32 = 0;
+    while i < ArraySize(this.m_addons) {
+      if this.m_started[i] && Equals(this.m_addons[i].Id(), id) { return true; }
+      i += 1;
+    }
+    return false;
+  }
+
+  public func RecordNames() -> ref<GarageRecordNames> {
+    if !IsDefined(this.m_recordNames) { this.m_recordNames = new GarageRecordNames(); }
+    return this.m_recordNames;
   }
 
   public func RegisterScreens(screens: ref<ScreenManager>, frame: ref<GarageFrame>) -> Void {
@@ -118,7 +141,6 @@ public class GarageSystem extends ScriptableService {
 
   public func OnGarageOpen(location: ref<GarageLocation>, vehicle: wref<VehicleObject>) -> Void {
     this.m_garageOpen = true;
-    this.m_closeRequested = false;
     this.m_visited = true;
     this.m_world.SetGarageOpen(true);
     this.m_panel.Show(location);
@@ -138,10 +160,28 @@ public class GarageSystem extends ScriptableService {
       this.m_xu.Emit(GarageEvents.EntityResolved(), data);
       this.m_xu.Emit(GarageEvents.HealthQueryable(), data);
     }
+    this.m_visitLive = true;
+    let i: Int32 = 0;
+    while i < ArraySize(this.m_addons) {
+      if this.m_started[i] { this.m_addons[i].OnVisitStart(context); }
+      i += 1;
+    }
+  }
+
+  public func EndVisit() -> Void {
+    if !this.m_visitLive { return; }
+    this.m_visitLive = false;
+    let context: ref<GarageContext> = this.m_parts.Context();
+    let i: Int32 = 0;
+    while i < ArraySize(this.m_addons) {
+      if this.m_started[i] { this.m_addons[i].OnVisitEnd(context); }
+      i += 1;
+    }
   }
 
   public func OnGarageClose(location: ref<GarageLocation>) -> Void {
     this.m_garageOpen = false;
+    this.m_popup = null;
     this.m_scene.Close();
     this.m_xu.Release(XUtilsHold.HideHud);
     this.m_appearances.ClearCache();
@@ -206,6 +246,10 @@ public class GarageSystem extends ScriptableService {
   // XU has already dropped the mod's holds, watchers and spawns by now
   public func OnSessionEnd(e: ref<XUtilsEvent>) -> Void {
     this.m_inSession = false;
+    let popup: ref<GaragePopup> = this.m_popup;
+    if IsDefined(popup) { popup.Abandon(); }
+    this.m_popup = null;
+    this.EndVisit();
     this.m_visited = false;
     this.m_garageOpen = false;
     this.m_parts.End();
@@ -255,6 +299,7 @@ public class GarageSystem extends ScriptableService {
 
   private func SyncAddons() -> Void {
     let settings: ref<GarageSettings> = GarageSettings.Get();
+    let changed: Bool = false;
     let i: Int32 = 0;
     while i < ArraySize(this.m_addons) {
       let addon: ref<GarageAddon> = this.m_addons[i];
@@ -262,30 +307,38 @@ public class GarageSystem extends ScriptableService {
       if wanted && !this.m_started[i] {
         this.m_started[i] = true;
         addon.Start(this);
+        changed = true;
         this.m_log.Info("started " + NameToString(addon.Id()));
       }
       if !wanted && this.m_started[i] {
         this.m_started[i] = false;
         addon.Stop();
+        changed = true;
         this.m_log.Info("stopped " + NameToString(addon.Id()));
+      }
+      i += 1;
+    }
+    if changed { this.CollectServices(); }
+  }
+
+  // Only what started addons bring, so an addon that's off leaves nothing in the hub. Priority order, stable for equal ones
+  private func CollectServices() -> Void {
+    ArrayClear(this.m_services);
+    let i: Int32 = 0;
+    while i < ArraySize(this.m_addons) {
+      if this.m_started[i] {
+        let services: array<ref<GarageService>> = this.m_addons[i].Services();
+        for service in services {
+          let at: Int32 = 0;
+          while at < ArraySize(this.m_services) && this.m_services[at].Priority() <= service.Priority() { at += 1; }
+          ArrayInsert(this.m_services, at, service);
+        }
       }
       i += 1;
     }
   }
 
-  // Only what started addons bring, so an addon that's off leaves nothing in the hub
-  public func Services() -> array<ref<GarageService>> {
-    let out: array<ref<GarageService>>;
-    let i: Int32 = 0;
-    while i < ArraySize(this.m_addons) {
-      if this.m_started[i] {
-        let services: array<ref<GarageService>> = this.m_addons[i].Services();
-        for service in services { ArrayPush(out, service); }
-      }
-      i += 1;
-    }
-    return out;
-  }
+  public func Services() -> array<ref<GarageService>> { return this.m_services; }
 
   // Read and clear in one call, so a visit only triggers one reload
   public func TakeVisited() -> Bool {
