@@ -53,6 +53,7 @@ public class GaragePopup extends InGamePopup {
   }
 
   protected cb func OnCreate() {
+    GarageSystem.Get().Xu().Screen().HoldStraight(n"inkGameNotificationsLayer", true);
     super.OnCreate();
     this.m_container.SetAnchor(inkEAnchor.CenterLeft);
     this.m_container.SetAnchorPoint(new Vector2(0.0, 0.5));
@@ -266,6 +267,7 @@ public class GaragePopup extends InGamePopup {
 
   protected cb func OnUninitialize() {
     this.StopListening();
+    GarageSystem.Get().Xu().Screen().HoldStraight(n"inkGameNotificationsLayer", false);
     if this.m_abandoned {
       super.OnUninitialize();
       return;
