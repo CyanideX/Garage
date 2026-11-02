@@ -300,6 +300,7 @@ public class GarageGerman extends ModLocalizationPackage {
     this.Text("Garage-Notify-ServiceDone", "%s - €$%s");
     this.Text("Garage-Notify-ServiceDetail", "%s: %s");
     this.Text("Garage-Notify-DesignApplied", "Design übernommen");
+    this.Text("Garage-Paint-RefundedFailed", "Design konnte nicht geändert werden. €$%s erstattet.");
     this.Text("Garage-Notify-TierBlocked", "Diese Garage kann diese Fahrzeugklasse nicht bedienen");
   }
 }

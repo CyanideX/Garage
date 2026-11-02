@@ -111,13 +111,6 @@ public class QuickHeatTimer extends GarageGetawayTimer {
     this.LockOut();
     this.m_xu.Screen().Notify(GarageText.Get(n"Garage-Notify-HeatCleared"), SimpleMessageType.Police, 5.0, true);
   }
-
-  protected func OnTooSlow() -> Void {
-    this.LockOut();
-    this.m_xu.Screen().Notify(GarageText.Get(n"Garage-Notify-ClaimLockdown"), SimpleMessageType.Negative, 5.0, true);
-  }
-
-  private func LockOut() -> Void { EconomyEngine.Get().LockGarage(this.m_garage, 86400, GarageLockReason.Lockdown()); }
 }
 
 public class QuickScreen extends GarageConfirmScreen {
@@ -130,18 +123,11 @@ public class QuickScreen extends GarageConfirmScreen {
 
   public func SetAddon(addon: ref<QuickAddon>) -> Void { this.m_addon = addon; }
 
-  // The camera only moves when this one really comes or goes
+  protected func UsesCheckoutCamera() -> Bool { return true; }
+
   public func Show() {
-    let wasVisible: Bool = this.m_isVisible;
     this.m_quote = null;
     super.Show();
-    if !wasVisible { GarageSystem.Get().Scene().Checkout(); }
-  }
-
-  public func Hide() {
-    let wasVisible: Bool = this.m_isVisible;
-    super.Hide();
-    if wasVisible { GarageSystem.Get().Scene().ExitCheckout(); }
   }
 
   protected func Fill() -> Void {
@@ -224,18 +210,11 @@ public class QuickScreen extends GarageConfirmScreen {
       this.Refresh();
       return;
     }
-    let receipt: ref<GarageReceipt> = GarageTransactions.Charge(ctx.locationId, quote.total, EGarageTxKind.Rush, n"quick");
-    if !receipt.ok {
-      system.Xu().Screen().Notify(GarageText.Get(n"Garage-Transaction-DeductFailed"), SimpleMessageType.Negative, 3.0, true);
-      this.Refresh();
-      return;
-    }
+    if !IsDefined(this.Charge(ctx.locationId, quote.total, EGarageTxKind.Rush, n"quick")) { return; }
     if ctx.hasSchema {
       system.Parts().Install(n"car_paint", this.m_look, this.m_status);
     } else {
-      this.m_preview.Keep();
-      // A stolen car keeps its new look, but writing the record would repaint every one in traffic
-      if ctx.isOwned { GaragePaint.Apply(ctx.vehicleRecord, this.m_look); }
+      this.m_preview.Keep(ctx.OwnedRecord());
     }
     this.Trigger(n"OnClosePopup");
   }

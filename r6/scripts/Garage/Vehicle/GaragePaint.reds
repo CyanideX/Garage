@@ -57,7 +57,7 @@ public abstract class GaragePaint {
 
   /// Sets the flat and saves it. False, with nothing saved, when the record has no appearance flat.
   public static func Apply(record: TweakDBID, appearance: CName) -> Bool {
-    if !IsNameValid(appearance) || !GaragePaint.Write(record, appearance) { return false; }
+    if !IsNameValid(appearance) || !GaragePaint.WriteFlat(record, appearance) { return false; }
     let overrides: ref<PaintOverrides> = PaintOverrides.Get();
     if IsDefined(overrides) { overrides.Set(record, appearance); }
     return true;
@@ -70,7 +70,7 @@ public abstract class GaragePaint {
     let done: Int32 = 0;
     let all: array<ref<PaintOverrideEntry>> = overrides.All();
     for entry in all {
-      if GaragePaint.Write(entry.recordId, entry.appearanceName) { done += 1; }
+      if GaragePaint.WriteFlat(entry.recordId, entry.appearanceName) { done += 1; }
     }
     return done;
   }
@@ -89,7 +89,8 @@ public abstract class GaragePaint {
     }
   }
 
-  private static func Write(record: TweakDBID, appearance: CName) -> Bool {
+  /// The flat only, the save doesn't hear about it. False when the record has no appearance flat.
+  public static func WriteFlat(record: TweakDBID, appearance: CName) -> Bool {
     if !IsNameValid(GaragePaint.GetFlat(record)) { return false; }
     TweakDBManager.SetFlat(record + t".appearanceName", appearance);
     TweakDBManager.UpdateRecord(record);

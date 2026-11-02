@@ -149,7 +149,7 @@ public class PartsFlow {
     return GarageText.Get(n"Garage-PartsList-Aftermarket") + " " + name + " " + GarageText.Get(n"Garage-PartsList-Upgrade");
   }
 
-  /// Camera, doors and lights for the slot, once per trip into it. Coming back to the list doesn't run this again.
+  /// Camera, doors and lights for the slot, once per trip into it.
   public func EnterSlot() -> Void {
     if Equals(this.m_open, this.slot) { return; }
     this.LeaveSlot();

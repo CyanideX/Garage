@@ -302,6 +302,7 @@ public class GarageEnglish extends ModLocalizationPackage {
     this.Text("Garage-Notify-ServiceDone", "%s - €$%s");
     this.Text("Garage-Notify-ServiceDetail", "%s: %s");
     this.Text("Garage-Notify-DesignApplied", "Design applied");
+    this.Text("Garage-Paint-RefundedFailed", "Couldn't change the look. Refunded €$%s.");
     this.Text("Garage-Notify-TierBlocked", "This garage cannot service this vehicle tier");
   }
 }

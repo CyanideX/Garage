@@ -16,6 +16,12 @@ public class GarageContext extends IScriptable {
   public let hasSchema: Bool;
   /// What Open pushes your screen on.
   public let screens: wref<ScreenManager>;
+
+  /// The record, or none for a stolen car, since those can't be summoned and their record is every one in traffic.
+  public func OwnedRecord() -> TweakDBID { return this.isOwned ? this.vehicleRecord : TDBID.None(); }
+
+  /// A stolen car with ChopShop up, so it has to be claimed before anyone works on it.
+  public func MustClaimFirst() -> Bool { return !this.isOwned && GarageSystem.Get().IsAddonUp(n"chopshop"); }
 }
 
 /// When a hub button shows. Every condition you fill in has to pass. Empty or 0 means no restriction.

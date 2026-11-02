@@ -57,7 +57,13 @@ public abstract class GarageGetawayTimer extends IScriptable {
   private static func LeaveDistance() -> Float { return 15.0; }
 
   protected func OnGotAway() -> Void {}
-  protected func OnTooSlow() -> Void {}
+
+  protected func OnTooSlow() -> Void {
+    this.LockOut();
+    this.m_xu.Screen().Notify(GarageText.Get(n"Garage-Notify-ClaimLockdown"), SimpleMessageType.Negative, 5.0, true);
+  }
+
+  protected func LockOut() -> Void { EconomyEngine.Get().LockGarage(this.m_garage, GarageLocks.Day(), GarageLockReason.Lockdown()); }
 
   public func Setup(xu: ref<XUtilsMod>) -> Void { this.m_xu = xu; }
 
@@ -107,9 +113,4 @@ public abstract class GarageGetawayTimer extends IScriptable {
 }
 
 /// A freshly claimed car has to get clear. Too slow locks the garage for a day.
-public class GarageClaimTimer extends GarageGetawayTimer {
-  protected func OnTooSlow() -> Void {
-    EconomyEngine.Get().LockGarage(this.m_garage, 86400, GarageLockReason.Lockdown());
-    this.m_xu.Screen().Notify(GarageText.Get(n"Garage-Notify-ClaimLockdown"), SimpleMessageType.Negative, 5.0, true);
-  }
-}
+public class GarageClaimTimer extends GarageGetawayTimer {}

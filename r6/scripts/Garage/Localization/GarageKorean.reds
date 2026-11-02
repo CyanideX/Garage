@@ -300,6 +300,7 @@ public class GarageKorean extends ModLocalizationPackage {
     this.Text("Garage-Notify-ServiceDone", "%s - €$%s");
     this.Text("Garage-Notify-ServiceDetail", "%s: %s");
     this.Text("Garage-Notify-DesignApplied", "디자인 적용 완료");
+    this.Text("Garage-Paint-RefundedFailed", "외관을 변경하지 못했습니다. €$%s 환불되었습니다.");
     this.Text("Garage-Notify-TierBlocked", "이 차고에서는 이 차량 등급을 정비할 수 없습니다");
   }
 }

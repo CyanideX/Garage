@@ -45,7 +45,7 @@ public class RepairService extends GarageService {
   public func Open(ctx: ref<GarageContext>) -> Void { ctx.screens.ShowScreen(n"repair_confirm"); }
 }
 
-/// One paid repair from Confirm to the banner. It keeps the car it was given, since the popup closes under it and takes the visit's car with it.
+/// One paid repair, Confirm to banner. Holds its own car since the popup takes the visit's with it.
 public class RepairJob extends GarageSwapListener {
   private let m_addon: wref<RepairAddon>;
   private let m_xu: ref<XUtilsMod>;
@@ -66,7 +66,7 @@ public class RepairJob extends GarageSwapListener {
 
   public func RunQuick(delay: Float) -> Void {
     this.m_timer = this.m_xu.After(delay, this, n"OnDelay");
-    GarageSystem.Get().ClosePopup();
+    GarageSystem.Get().RequestClose();
   }
 
   public func OnDelay(e: ref<XUtilsEvent>) -> Void {
@@ -74,13 +74,15 @@ public class RepairJob extends GarageSwapListener {
     this.Settle(this.FixHere());
   }
 
-  public func OnBlack() -> Void { GarageSystem.Get().ClosePopup(); }
+  public func OnBlack() -> Void { GarageSystem.Get().RequestClose(); }
 
   public func InPlace() -> CName { return this.FixHere(); }
 
   public func OnResult(reason: CName, car: wref<VehicleObject>) -> Void { this.m_reported = true; }
 
   public func OnClear(reason: CName, timedOut: Bool) -> Void { this.Settle(this.m_reported ? reason : n"timeout"); }
+
+  public func Refused() -> Void { this.Settle(n"busy"); }
 
   private func FixHere() -> CName {
     let car: wref<VehicleObject> = this.m_car;
@@ -149,10 +151,6 @@ public class RepairScreen extends GarageConfirmScreen {
     return this.m_full && GarageSystem.Get().Xu().State().Get(XUtilsStateField.WantedLevel) > 0;
   }
 
-  private func MustClaimFirst(ctx: ref<GarageContext>) -> Bool {
-    return !ctx.isOwned && GarageSystem.Get().IsAddonUp(n"chopshop");
-  }
-
   // Full swaps the car behind a fade, Quick only needs the car left alone
   private func CarIsFree() -> Bool {
     let swap: ref<GarageEntitySwap> = GarageSystem.Get().Swap();
@@ -169,7 +167,7 @@ public class RepairScreen extends GarageConfirmScreen {
       this.Refuse("");
       return;
     }
-    let health: Float = Cast<Float>(percent) / 100.0;
+    let health: Float = GarageVehicles.HealthShown(ctx.vehicle);
     this.SetStatus(IntToString(percent) + "% " + GarageText.Get(n"Garage-Repair-HealthSuffix"), this.ConditionTint(health));
     this.SetStatusPulsing(percent < 20);
     let name: String = GarageText.Get(this.m_full ? n"Garage-Repair-FullTier" : n"Garage-Repair-QuickTier");
@@ -182,7 +180,7 @@ public class RepairScreen extends GarageConfirmScreen {
     let balance: Int32 = GarageTransactions.Balance();
     this.SetBalance(GarageText.Get(n"Garage-Repair-BalanceLabel"), balance, balance >= quote.total);
     let blocked: Bool = this.IsHeatBlocked();
-    let unowned: Bool = this.MustClaimFirst(ctx);
+    let unowned: Bool = ctx.MustClaimFirst();
     if blocked { this.SetWarning(GarageText.Get(n"Garage-Repair-HeatWarning")); }
     if unowned {
       this.SetConfirmText(GarageText.Get(n"Garage-Paint-ClaimFirst"));
@@ -196,18 +194,13 @@ public class RepairScreen extends GarageConfirmScreen {
     let system: ref<GarageSystem> = GarageSystem.Get();
     let ctx: ref<GarageContext> = system.Parts().Context();
     let vehicle: wref<VehicleObject> = ctx.vehicle;
-    if !IsDefined(vehicle) || GarageVehicles.IsFullHealth(vehicle) || this.IsHeatBlocked() || this.MustClaimFirst(ctx) || !this.CarIsFree() {
+    if !IsDefined(vehicle) || GarageVehicles.IsFullHealth(vehicle) || this.IsHeatBlocked() || ctx.MustClaimFirst() || !this.CarIsFree() {
       this.Refresh();
       return;
     }
-    let health: Float = Cast<Float>(GarageVehicles.HealthPercent(vehicle)) / 100.0;
-    let quote: ref<GarageRepairQuote> = this.Quote(ctx, health);
-    let receipt: ref<GarageReceipt> = GarageTransactions.Charge(ctx.locationId, quote.total, EGarageTxKind.Service, n"repair");
-    if !receipt.ok {
-      system.Xu().Screen().Notify(GarageText.Get(n"Garage-Transaction-DeductFailed"), SimpleMessageType.Negative, 3.0, true);
-      this.Refresh();
-      return;
-    }
+    let quote: ref<GarageRepairQuote> = this.Quote(ctx, GarageVehicles.HealthShown(vehicle));
+    let receipt: ref<GarageReceipt> = this.Charge(ctx.locationId, quote.total, EGarageTxKind.Service, n"repair");
+    if !IsDefined(receipt) { return; }
     this.SetBusy(GarageText.Get(n"Garage-Repair-Repairing"));
     let job: ref<RepairJob> = new RepairJob();
     job.Setup(this.m_addon, system.Xu(), vehicle, receipt, this.m_full);
@@ -217,12 +210,10 @@ public class RepairScreen extends GarageConfirmScreen {
       job.RunQuick(prices.repairDelay);
       return;
     }
-    let options: ref<XUtilsFadeOptions> = XUtilsFadeOptions.Create().Out(0.75).In(0.75).MinHold(prices.repairFadeHold).MaxHold(17.0);
-    // An unowned car can't be summoned again, so it's fixed where it sits
-    let record: TweakDBID = ctx.isOwned ? ctx.vehicleRecord : TDBID.None();
-    if !system.Swap().BehindFade(options, record, vehicle.GetCurrentAppearanceName(), GarageVehicles.SpotOf(vehicle), vehicle, job) {
-      system.ClosePopup();
-      job.OnClear(n"busy", false);
+    let options: ref<XUtilsFadeOptions> = GarageEntitySwap.FadeOptions(prices.repairFadeHold);
+    if !system.Swap().BehindFade(options, ctx.OwnedRecord(), vehicle.GetCurrentAppearanceName(), GarageVehicles.SpotOf(vehicle), vehicle, job) {
+      system.RequestClose();
+      job.Refused();
     }
   }
 }

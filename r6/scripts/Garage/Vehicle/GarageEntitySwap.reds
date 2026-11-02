@@ -46,6 +46,12 @@ public class GarageEntitySwap extends IScriptable {
   private static func PollRadius() -> Float { return 50.0; }
   // Past PollRadius, or the poll finds the old car again
   private static func ParkOffset() -> Float { return 200.0; }
+  private static func Timeout() -> Float { return 15.0; }
+
+  /// A fade for BehindFade. It outlasts the swap's own timeout, so a failure reports before the screen clears.
+  public static func FadeOptions(minHold: Float) -> ref<XUtilsFadeOptions> {
+    return XUtilsFadeOptions.Create().Out(0.75).In(0.75).MinHold(minHold).MaxHold(GarageEntitySwap.Timeout() + 2.0);
+  }
 
   public func Setup(xu: ref<XUtilsMod>) -> Void {
     this.m_xu = xu;
@@ -82,16 +88,13 @@ public class GarageEntitySwap extends IScriptable {
       GameInstance.GetTeleportationFacility(GetGameInstance()).Teleport(old, parked, flat);
     }
     GarageVehicles.SetEnabled(record, true);
-    if IsNameValid(appearance) {
-      TweakDBManager.SetFlat(record + t".appearanceName", appearance);
-      TweakDBManager.UpdateRecord(record);
-    }
+    if IsNameValid(appearance) { GaragePaint.WriteFlat(record, appearance); }
     // Instant summon while it spawns. Finish flips it back on every way out
     vehicles.ToggleSummonMode();
     this.m_summonToggled = true;
     this.m_spawnTimer = this.m_xu.After(0.3, this, n"OnSpawn");
     this.m_pollTimer = this.m_xu.After(0.5, this, n"OnPoll");
-    this.m_timeoutTimer = this.m_xu.After(15.0, this, n"OnTimeout");
+    this.m_timeoutTimer = this.m_xu.After(GarageEntitySwap.Timeout(), this, n"OnTimeout");
     return true;
   }
 
@@ -193,8 +196,9 @@ public class GarageEntitySwap extends IScriptable {
     }
   }
 
-  /// The Repair and Swap pattern: fade out, do the work behind black, fade back in once the car's landed. With an invalid
-  /// record it runs listener.InPlace instead of respawning. False, with nothing run, if another swap or fade holds the screen.
+  /// The Repair and Swap pattern: fade out, do the work behind black, fade back in once the car's landed.
+  /// With an invalid record it runs listener.InPlace instead of respawning.
+  /// False, with nothing run, if another swap or fade holds the screen.
   public func BehindFade(options: ref<XUtilsFadeOptions>, record: TweakDBID, appearance: CName, spot: ref<GarageSpot>, old: wref<GameObject>, listener: ref<GarageSwapListener>) -> Bool {
     if !this.CanStart() { return false; }
     this.m_listener = listener;

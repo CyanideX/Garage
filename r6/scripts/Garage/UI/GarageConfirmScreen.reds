@@ -25,6 +25,7 @@ public abstract class GarageConfirmScreen extends GarageScreen {
   private let m_cancelBtn: wref<SimpleButton>;
   private let m_confirmBtn: wref<SimpleButton>;
   private let m_canConfirm: Bool;
+  private let m_busy: Bool;
   private let m_pulse: ref<inkAnimProxy>;
 
   protected cb func OnCreate() {
@@ -154,6 +155,7 @@ public abstract class GarageConfirmScreen extends GarageScreen {
 
   public func Show() {
     super.Show();
+    this.m_busy = false;
     this.Refresh();
   }
 
@@ -164,6 +166,8 @@ public abstract class GarageConfirmScreen extends GarageScreen {
 
   /// Blanks the optional parts and fills the screen in again.
   public func Refresh() -> Void {
+    // Scrolling mid-job can't bring the buttons back
+    if this.m_busy { return; }
     this.SetPriceShown(true);
     this.m_refusal.SetVisible(false);
     this.SetStatusPulsing(false);
@@ -176,11 +180,20 @@ public abstract class GarageConfirmScreen extends GarageScreen {
     this.Fill();
   }
 
-  /// Set the screen up here.
   protected func Fill() -> Void {}
 
-  /// Confirm was clicked while it's allowed.
   protected func OnConfirmed() -> Void {}
+
+  /// Takes the money, or says it couldn't and redraws. Null when it couldn't.
+  protected func Charge(location: CName, amount: Int32, kind: EGarageTxKind, source: CName) -> ref<GarageReceipt> {
+    let receipt: ref<GarageReceipt> = GarageTransactions.Charge(location, amount, kind, source);
+    if receipt.ok { return receipt; }
+    GarageSystem.Get().Xu().Screen().Notify(GarageText.Get(n"Garage-Transaction-DeductFailed"), SimpleMessageType.Negative, 3.0, true);
+    this.Refresh();
+    return null;
+  }
+
+  public func OnBack() -> Bool { return this.m_busy; }
 
   protected func SetTitle(text: String) -> Void { this.m_titleText.SetText(text); }
 
@@ -262,6 +275,7 @@ public abstract class GarageConfirmScreen extends GarageScreen {
 
   /// The money's gone and the work's started, so neither button does anything until the popup closes.
   protected func SetBusy(text: String) -> Void {
+    this.m_busy = true;
     this.SetConfirmText(text);
     this.SetCanConfirm(false);
     this.m_cancelBtn.SetDisabled(true);

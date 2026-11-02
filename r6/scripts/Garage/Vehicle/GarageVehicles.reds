@@ -10,7 +10,7 @@ public func GarageClearDamage() -> Void {
   this.m_bumperBackState = 0;
 }
 
-/// Enabling and disabling a player vehicle by its TweakDBID. Works for any car in Vehicle.vehicle_list, a modded one too.
+/// Player cars by TweakDBID. Any car in Vehicle.vehicle_list works, modded ones too.
 public abstract class GarageVehicles {
   /// False when the car isn't in the vehicle list.
   public static func SetEnabled(record: TweakDBID, enable: Bool, opt despawn: Bool) -> Bool {
@@ -32,6 +32,9 @@ public abstract class GarageVehicles {
   }
 
   public static func HealthPercent(vehicle: ref<VehicleObject>) -> Int32 { return RoundF(GarageVehicles.Health(vehicle) * 100.0); }
+
+  /// 0 to 1 in whole percents, so a price agrees with the condition the screen shows.
+  public static func HealthShown(vehicle: ref<VehicleObject>) -> Float { return Cast<Float>(GarageVehicles.HealthPercent(vehicle)) / 100.0; }
 
   public static func IsFullHealth(vehicle: ref<VehicleObject>) -> Bool { return GarageVehicles.HealthPercent(vehicle) >= 100; }
 
@@ -80,15 +83,13 @@ public abstract class GarageVehicles {
     }
   }
 
-  /// Gives V the car. A record named after this one and the appearance wins if a mod made one, otherwise the appearance is set
-  /// on the record itself.
+  /// Gives V the car. Uses the record named after this one plus the look if a mod made it, else sets the look on this one.
   public static func Unlock(record: TweakDBID, opt appearance: CName) -> Bool {
     if !IsNameValid(appearance) { return GarageVehicles.SetEnabled(record, true); }
     let combined: TweakDBID = record + TDBID.Create("_" + NameToString(appearance));
     if IsDefined(TweakDBInterface.GetVehicleRecord(combined)) { return GarageVehicles.SetEnabled(combined, true); }
     let done: Bool = GarageVehicles.SetEnabled(record, true);
-    TweakDBManager.SetFlat(record + t".appearanceName", appearance);
-    TweakDBManager.UpdateRecord(record);
+    GaragePaint.Apply(record, appearance);
     return done;
   }
 
@@ -108,8 +109,8 @@ public abstract class GarageVehicles {
   }
 }
 
-// EnablePlayerVehicle only wants a name, and without CET nothing turns an id back into one. But it just hashes what it's
-// given and looks that up, so a string with the same CRC32 and length gets the same car
+// EnablePlayerVehicle only wants a name, and without CET nothing turns an id back into one
+// It only hashes what it's given, so a string with the same CRC32 and length gets the same car
 public class GarageRecordNames extends IScriptable {
   private let m_table: array<Uint32>;
   private let m_records: array<TweakDBID>;

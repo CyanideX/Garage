@@ -4,6 +4,7 @@ import Codeware.UI.*
 import Garage.*
 import Garage.Data.*
 import Garage.Economy.*
+import Garage.Scene.*
 import Garage.Services.*
 import Garage.Vehicle.*
 import Garage.World.*
@@ -154,14 +155,22 @@ public abstract class GarageScreen extends inkCustomController {
         return this.m_garageFrame.GetGameInstance();
     }
 
+    /// True for a screen that frames the car for paying.
+    protected func UsesCheckoutCamera() -> Bool { return false; }
+
+    // The camera only moves when the screen really comes or goes
     public func Show() {
+        let wasVisible = this.m_isVisible;
         this.m_isVisible = true;
         this.GetRootWidget().SetVisible(true);
+        if !wasVisible && this.UsesCheckoutCamera() { GarageSystem.Get().Scene().Checkout(); }
     }
 
     public func Hide() {
+        let wasVisible = this.m_isVisible;
         this.m_isVisible = false;
         this.GetRootWidget().SetVisible(false);
+        if wasVisible && this.UsesCheckoutCamera() { GarageSystem.Get().Scene().ExitCheckout(); }
     }
 
     public func IsVisible() -> Bool {

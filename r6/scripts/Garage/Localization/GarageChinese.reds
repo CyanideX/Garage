@@ -300,6 +300,7 @@ public class GarageChinese extends ModLocalizationPackage {
     this.Text("Garage-Notify-ServiceDone", "%s - €$%s");
     this.Text("Garage-Notify-ServiceDetail", "%s：%s");
     this.Text("Garage-Notify-DesignApplied", "外观已应用");
+    this.Text("Garage-Paint-RefundedFailed", "无法更改外观。已退款 €$%s。");
     this.Text("Garage-Notify-TierBlocked", "该车库无法服务此等级车辆");
   }
 }

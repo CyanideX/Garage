@@ -528,21 +528,18 @@ public class CheckoutScreen extends AftermarketScreen {
     this.m_scrollRegion.AttachController(scroll);
   }
 
-  // The camera only moves when this one really comes or goes
+  protected func UsesCheckoutCamera() -> Bool { return true; }
+
   public func Show() {
-    let wasVisible: Bool = this.m_isVisible;
     super.Show();
     this.RefreshAfterCartChange();
     this.UpdateHint(n"click", GarageText.Get(n"Garage-Checkout-Hint"), true);
-    if !wasVisible { GarageSystem.Get().Scene().Checkout(); }
   }
 
   public func Hide() {
-    let wasVisible: Bool = this.m_isVisible;
     super.Hide();
     this.RemoveHint(n"click");
     this.m_source = CheckoutSource.Parts;
-    if wasVisible { GarageSystem.Get().Scene().ExitCheckout(); }
   }
 
   public func RefreshAfterCartChange() -> Void {

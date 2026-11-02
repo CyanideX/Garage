@@ -57,11 +57,6 @@ public abstract class ChopShopDeal {
     return IsDefined(schema) ? schema.tier : n"";
   }
 
-  // Percent, so the price agrees with the condition the screen shows
-  public static func Health(vehicle: wref<VehicleObject>) -> Float {
-    return Cast<Float>(GarageVehicles.HealthPercent(vehicle)) / 100.0;
-  }
-
   public static func ClaimQuote(ctx: ref<GarageContext>) -> ref<GarageClaimQuote> {
     let vehicle: wref<VehicleObject> = ctx.vehicle;
     return GarageSystem.Get().Pricing().QuoteClaim(ctx.vehicleRecord, vehicle.GetCurrentAppearanceName(), ChopShopDeal.Tier());
@@ -70,7 +65,7 @@ public abstract class ChopShopDeal {
   public static func SaleQuote(ctx: ref<GarageContext>) -> ref<GarageSaleQuote> {
     let vehicle: wref<VehicleObject> = ctx.vehicle;
     let system: ref<GarageSystem> = GarageSystem.Get();
-    return system.Pricing().QuoteSale(ctx.vehicleRecord, vehicle.GetCurrentAppearanceName(), ChopShopDeal.Tier(), ChopShopDeal.Health(vehicle), system.Parts().InstalledValue());
+    return system.Pricing().QuoteSale(ctx.vehicleRecord, vehicle.GetCurrentAppearanceName(), ChopShopDeal.Tier(), GarageVehicles.HealthShown(vehicle), system.Parts().InstalledValue());
   }
 
   /// Why this deal's off, "" if it isn't. Being short on eddies for a claim isn't one, the screen still shows the price.
@@ -111,7 +106,7 @@ public class ChopShopScreen extends GarageConfirmScreen {
     this.SetCar(ctx.vehicleDisplayName);
     let vehicle: wref<VehicleObject> = ctx.vehicle;
     if !this.m_claiming && IsDefined(vehicle) {
-      let health: Float = ChopShopDeal.Health(vehicle);
+      let health: Float = GarageVehicles.HealthShown(vehicle);
       this.SetStatus(GarageText.Get(n"Garage-ChopShop-ConditionLabel") + " " + IntToString(RoundF(health * 100.0)) + "%", this.ConditionTint(health));
     }
     let refusal: String = ChopShopDeal.Refusal(ctx, this.m_claiming);
@@ -184,12 +179,8 @@ public class ChopShopScreen extends GarageConfirmScreen {
     let xu: ref<XUtilsMod> = system.Xu();
     let quote: ref<GarageClaimQuote> = ChopShopDeal.ClaimQuote(ctx);
     let price: Int32 = quote.total;
-    let receipt: ref<GarageReceipt> = GarageTransactions.Charge(ctx.locationId, price, EGarageTxKind.Claim, n"chopshop");
-    if !receipt.ok {
-      xu.Screen().Notify(GarageText.Get(n"Garage-Transaction-DeductFailed"), SimpleMessageType.Negative, 3.0, true);
-      this.Refresh();
-      return;
-    }
+    let receipt: ref<GarageReceipt> = this.Charge(ctx.locationId, price, EGarageTxKind.Claim, n"chopshop");
+    if !IsDefined(receipt) { return; }
     if !GarageVehicles.Unlock(ctx.vehicleRecord, vehicle.GetCurrentAppearanceName()) {
       GarageTransactions.Refund(receipt);
       xu.Screen().Notify(GarageText.Get(n"Garage-Transaction-UnlockFailed"), SimpleMessageType.Negative, 4.0, true);
@@ -202,7 +193,7 @@ public class ChopShopScreen extends GarageConfirmScreen {
       let deck: Vector4 = location.deck.Position();
       system.ClaimTimer().Start(ctx.vehicleRecord, deck, ctx.locationId);
     }
-    EconomyEngine.Get().LockGarage(ctx.locationId, 86400, GarageLockReason.Cooldown());
+    EconomyEngine.Get().LockGarage(ctx.locationId, GarageLocks.Day(), GarageLockReason.Cooldown());
     this.Trigger(n"OnClosePopup");
   }
 

@@ -13,6 +13,7 @@ public class GarageAppearanceList extends IScriptable {
 }
 
 /// Trying looks on a car before paying. Revert puts back what it wore at Begin, Keep leaves on what's showing.
+/// Keep saves the look when it's given a record. Pass GarageContext.OwnedRecord: writing a stolen car's would repaint every one in traffic.
 public class GarageLookPreview extends IScriptable {
   private let m_car: wref<VehicleObject>;
   private let m_original: CName;
@@ -38,11 +39,14 @@ public class GarageLookPreview extends IScriptable {
     this.m_car = null;
   }
 
-  public func Keep() -> Void { this.m_car = null; }
+  public func Keep(record: TweakDBID) -> Void {
+    if TDBID.IsValid(record) { GaragePaint.Apply(record, this.m_showing); }
+    this.m_car = null;
+  }
 }
 
-/// The looks a car can be swapped to, from data/paint/appearances.json. A car finds its list through its garageAppearanceKey
-/// flat, or failing that by the appearance it's wearing.
+/// The looks a car can swap to, from data/paint/appearances.json.
+/// Found by its garageAppearanceKey flat, or else by what it's wearing.
 public class GarageAppearances extends IScriptable {
   private let m_xu: ref<XUtilsMod>;
   private let m_loaded: Bool;

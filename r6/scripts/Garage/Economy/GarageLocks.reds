@@ -17,6 +17,8 @@ public abstract class GarageLockReason {
 
 /// Whether a garage is shut, for whoever needs to ask without caring about the economy.
 public abstract class GarageLocks {
+  public static func Day() -> Int32 { return 86400; }
+
   public static func IsBanned(id: CName) -> Bool {
     let engine: ref<EconomyEngine> = EconomyEngine.Get();
     return IsDefined(engine) && engine.IsGarageBanned(id);

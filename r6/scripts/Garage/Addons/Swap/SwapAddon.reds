@@ -14,15 +14,6 @@ public class SwapAddon extends GarageAddon {
   public func Id() -> CName { return n"swap"; }
   public func IsEnabled(settings: ref<GarageSettings>) -> Bool { return settings.swapEnabled; }
 
-  // Flats don't survive a load
-  public func Start(garage: ref<GarageSystem>) -> Void {
-    let done: Int32 = GaragePaint.ReapplyAll();
-    if done > 0 {
-      GaragePaint.RefreshNearby();
-      garage.Xu().Log("Vehicle").Info("re-applied " + IntToString(done) + " saved looks");
-    }
-  }
-
   public func Services() -> array<ref<GarageService>> {
     let list: array<ref<GarageService>>;
     ArrayPush(list, new SwapService());
@@ -55,7 +46,7 @@ public class SwapService extends GarageService {
   }
 
   public func IsMuted(ctx: ref<GarageContext>) -> Bool {
-    return this.LookCount(ctx) <= 1 || (!ctx.isOwned && GarageSystem.Get().IsAddonUp(n"chopshop"));
+    return this.LookCount(ctx) <= 1 || ctx.MustClaimFirst();
   }
 
   public func Open(ctx: ref<GarageContext>) -> Void {
@@ -68,15 +59,44 @@ public class SwapService extends GarageService {
   }
 }
 
+/// One paid swap, Confirm to banner. The look's only saved once the new car's there, the money comes back if it never is.
 public class SwapJob extends GarageSwapListener {
-  private let m_amount: Int32;
+  private let m_receipt: ref<GarageReceipt>;
+  private let m_preview: ref<GarageLookPreview>;
+  private let m_record: TweakDBID;
+  private let m_flat: CName;
+  private let m_reported: Bool;
 
-  public func Setup(amount: Int32) -> Void { this.m_amount = amount; }
+  public func Setup(receipt: ref<GarageReceipt>, record: TweakDBID) -> Void {
+    this.m_receipt = receipt;
+    this.m_record = record;
+    if TDBID.IsValid(record) { this.m_flat = GaragePaint.GetFlat(record); }
+  }
 
-  public func OnBlack() -> Void { GarageSystem.Get().ClosePopup(); }
+  public func Take(preview: ref<GarageLookPreview>) -> Void { this.m_preview = preview; }
+
+  public func OnBlack() -> Void { GarageSystem.Get().RequestClose(); }
+
+  public func OnResult(reason: CName, car: wref<VehicleObject>) -> Void { this.m_reported = true; }
 
   public func OnClear(reason: CName, timedOut: Bool) -> Void {
-    if !timedOut { GarageServiceNotify.Post(GarageText.Get(n"Garage-Notify-DesignApplied"), "", this.m_amount); }
+    let failure: CName = this.m_reported ? reason : n"timeout";
+    if IsNameValid(failure) {
+      this.Fail(failure);
+      return;
+    }
+    this.m_preview.Keep(this.m_record);
+    GarageServiceNotify.Post(GarageText.Get(n"Garage-Notify-DesignApplied"), "", this.m_receipt.amount);
+  }
+
+  private func Fail(reason: CName) -> Void {
+    this.m_preview.Revert();
+    // Respawn wrote the new look to the record before it knew how this would go
+    if TDBID.IsValid(this.m_record) { GaragePaint.WriteFlat(this.m_record, this.m_flat); }
+    GarageTransactions.Refund(this.m_receipt);
+    let xu: ref<XUtilsMod> = GarageSystem.Get().Xu();
+    xu.Log("Vehicle").Warn("look swap failed: " + NameToString(reason));
+    xu.Screen().Notify(GarageText.Format(n"Garage-Paint-RefundedFailed", [GarageText.Price(this.m_receipt.amount)]), SimpleMessageType.Negative, 5.0, false);
   }
 }
 
@@ -131,7 +151,7 @@ public class SwapScreen extends GarageConfirmScreen {
     this.SetPrice(GarageText.Get(n"Garage-Paint-PriceLabel"), price, "");
     this.SetBalance(GarageText.Get(n"Garage-Paint-BalanceLabel"), balance - price, balance >= price);
     let same: Bool = Equals(look, original);
-    let unowned: Bool = !ctx.isOwned && system.IsAddonUp(n"chopshop");
+    let unowned: Bool = ctx.MustClaimFirst();
     if unowned {
       this.SetConfirmText(GarageText.Get(n"Garage-Paint-ClaimFirst"));
     } else {
@@ -146,6 +166,7 @@ public class SwapScreen extends GarageConfirmScreen {
   }
 
   public func OnBack() -> Bool {
+    if super.OnBack() { return true; }
     this.RevertLook();
     return false;
   }
@@ -160,24 +181,19 @@ public class SwapScreen extends GarageConfirmScreen {
     }
     let look: CName = this.m_looks[this.m_index];
     let price: Int32 = this.Price(ctx, look);
-    let receipt: ref<GarageReceipt> = GarageTransactions.Charge(ctx.locationId, price, EGarageTxKind.Service, n"swap");
-    if !receipt.ok {
-      system.Xu().Screen().Notify(GarageText.Get(n"Garage-Transaction-DeductFailed"), SimpleMessageType.Negative, 3.0, true);
-      this.Refresh();
-      return;
-    }
-    this.SetBusy(GarageText.Get(n"Garage-Paint-Confirm"));
+    let receipt: ref<GarageReceipt> = this.Charge(ctx.locationId, price, EGarageTxKind.Service, n"swap");
+    if !IsDefined(receipt) { return; }
+    let record: TweakDBID = ctx.OwnedRecord();
     let job: ref<SwapJob> = new SwapJob();
-    job.Setup(price);
-    let options: ref<XUtilsFadeOptions> = XUtilsFadeOptions.Create().Out(0.75).In(0.75).MinHold(0.5).MaxHold(17.0);
-    let record: TweakDBID = ctx.isOwned ? ctx.vehicleRecord : TDBID.None();
-    if !system.Swap().BehindFade(options, record, look, GarageVehicles.SpotOf(vehicle), vehicle, job) {
+    job.Setup(receipt, record);
+    if !system.Swap().BehindFade(GarageEntitySwap.FadeOptions(0.5), record, look, GarageVehicles.SpotOf(vehicle), vehicle, job) {
       GarageTransactions.Refund(receipt);
       this.Refresh();
       return;
     }
-    this.m_preview.Keep();
-    // A stolen car keeps its new look, but writing the record would repaint every one in traffic
-    if ctx.isOwned { GaragePaint.Apply(ctx.vehicleRecord, look); }
+    // Closing the popup reverts whatever preview the screen still holds
+    job.Take(this.m_preview);
+    this.m_preview = null;
+    this.SetBusy(GarageText.Get(n"Garage-Paint-Confirm"));
   }
 }

@@ -102,7 +102,7 @@ public class GarageSystem extends ScriptableService {
 
   public func IsGarageOpen() -> Bool { return this.m_garageOpen; }
 
-  /// A service that's finished and wants the garage shut.
+  /// Shuts the popup now, cart or no cart. For a service that's finished, or whose work carries on behind it.
   public func RequestClose() -> Void {
     let popup: ref<GaragePopup> = this.m_popup;
     if IsDefined(popup) { popup.ForceClose(); }
@@ -114,12 +114,6 @@ public class GarageSystem extends ScriptableService {
   public func RefreshHub() -> Void {
     let popup: ref<GaragePopup> = this.m_popup;
     if IsDefined(popup) { popup.RefreshHub(); }
-  }
-
-  /// Shuts the popup now, cart or no cart. For a service whose work carries on behind it.
-  public func ClosePopup() -> Void {
-    let popup: ref<GaragePopup> = this.m_popup;
-    if IsDefined(popup) { popup.ForceClose(); }
   }
 
   /// True while that addon's enabled and running.
@@ -199,6 +193,7 @@ public class GarageSystem extends ScriptableService {
     data.garageId = location.id;
     data.garageName = location.name;
     this.m_xu.Emit(GarageEvents.GarageClose(), data);
+    this.SyncAddons();
   }
 
   public func Swap() -> ref<GarageEntitySwap> { return this.m_swap; }
@@ -233,6 +228,12 @@ public class GarageSystem extends ScriptableService {
   public func OnPlayerReady(e: ref<XUtilsEvent>) -> Void {
     this.m_inSession = true;
     this.ApplySettings();
+    // Flats don't survive a load
+    let looks: Int32 = GaragePaint.ReapplyAll();
+    if looks > 0 {
+      GaragePaint.RefreshNearby();
+      this.m_xu.Log("Vehicle").Info("re-applied " + IntToString(looks) + " saved looks");
+    }
     this.m_data.Reload();
     this.m_pricing.Reload();
     this.m_data.LogContents();
@@ -304,6 +305,8 @@ public class GarageSystem extends ScriptableService {
   }
 
   private func SyncAddons() -> Void {
+    // A toggle flipped mid-visit waits for the close. The screens are built and OnVisitEnd still has to reach whoever's started
+    if this.m_garageOpen { return; }
     let settings: ref<GarageSettings> = GarageSettings.Get();
     let changed: Bool = false;
     let i: Int32 = 0;
