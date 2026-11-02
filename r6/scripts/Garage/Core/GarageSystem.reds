@@ -32,6 +32,7 @@ public class GarageSystem extends ScriptableService {
   private let m_started: array<Bool>;
   private let m_services: array<ref<GarageService>>;
   private let m_recordNames: ref<GarageRecordNames>;
+  private let m_paintOriginals: ref<GaragePaintOriginals>;
   private let m_inSession: Bool;
   private let m_said: Bool;
   private let m_visited: Bool;
@@ -52,6 +53,7 @@ public class GarageSystem extends ScriptableService {
     this.m_pricing = new GaragePricing();
     this.m_pricing.Setup(this.m_xu);
     this.m_parts = new GarageParts();
+    this.m_paintOriginals = new GaragePaintOriginals();
     this.m_swap = new GarageEntitySwap();
     this.m_swap.Setup(this.m_xu);
     this.m_appearances = new GarageAppearances();
@@ -114,6 +116,14 @@ public class GarageSystem extends ScriptableService {
   public func RefreshHub() -> Void {
     let popup: ref<GaragePopup> = this.m_popup;
     if IsDefined(popup) { popup.RefreshHub(); }
+  }
+
+  /// That addon, or null if nothing has that id. It can be off, IsAddonUp says.
+  public func Addon(id: CName) -> ref<GarageAddon> {
+    for addon in this.m_addons {
+      if Equals(addon.Id(), id) { return addon; }
+    }
+    return null;
   }
 
   /// True while that addon's enabled and running.
@@ -198,6 +208,8 @@ public class GarageSystem extends ScriptableService {
 
   public func Swap() -> ref<GarageEntitySwap> { return this.m_swap; }
 
+  public func PaintOriginals() -> ref<GaragePaintOriginals> { return this.m_paintOriginals; }
+
   public func Appearances() -> ref<GarageAppearances> { return this.m_appearances; }
 
   public func EconomyPanel() -> ref<GarageEconomyPanel> { return this.m_panel; }
@@ -228,7 +240,7 @@ public class GarageSystem extends ScriptableService {
   public func OnPlayerReady(e: ref<XUtilsEvent>) -> Void {
     this.m_inSession = true;
     this.ApplySettings();
-    // Flats don't survive a load
+    // OnSessionEnd put the game's own flats back, so this save's looks go on top
     let looks: Int32 = GaragePaint.ReapplyAll();
     if looks > 0 {
       GaragePaint.RefreshNearby();
@@ -262,6 +274,7 @@ public class GarageSystem extends ScriptableService {
     this.m_parts.End();
     this.m_scene.Close();
     this.m_swap.Abort();
+    this.m_paintOriginals.RestoreAll();
     this.m_appearances.ClearCache();
     this.m_panel.Hide();
     this.m_claim.Stop();
@@ -305,7 +318,7 @@ public class GarageSystem extends ScriptableService {
   }
 
   private func SyncAddons() -> Void {
-    // A toggle flipped mid-visit waits for the close. The screens are built and OnVisitEnd still has to reach whoever's started
+    // Toggles wait for the close: the screens are built, and whoever's started still needs OnVisitEnd
     if this.m_garageOpen { return; }
     let settings: ref<GarageSettings> = GarageSettings.Get();
     let changed: Bool = false;

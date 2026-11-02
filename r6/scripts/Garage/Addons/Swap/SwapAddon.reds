@@ -59,30 +59,25 @@ public class SwapService extends GarageService {
   }
 }
 
-/// One paid swap, Confirm to banner. The look's only saved once the new car's there, the money comes back if it never is.
+// Look's only saved once the new car's there, the money comes back if it never is
 public class SwapJob extends GarageSwapListener {
   private let m_receipt: ref<GarageReceipt>;
   private let m_preview: ref<GarageLookPreview>;
   private let m_record: TweakDBID;
   private let m_flat: CName;
-  private let m_reported: Bool;
 
-  public func Setup(receipt: ref<GarageReceipt>, record: TweakDBID) -> Void {
+  public func Setup(receipt: ref<GarageReceipt>, record: TweakDBID, preview: ref<GarageLookPreview>) -> Void {
     this.m_receipt = receipt;
     this.m_record = record;
+    this.m_preview = preview;
     if TDBID.IsValid(record) { this.m_flat = GaragePaint.GetFlat(record); }
   }
 
-  public func Take(preview: ref<GarageLookPreview>) -> Void { this.m_preview = preview; }
-
   public func OnBlack() -> Void { GarageSystem.Get().RequestClose(); }
 
-  public func OnResult(reason: CName, car: wref<VehicleObject>) -> Void { this.m_reported = true; }
-
   public func OnClear(reason: CName, timedOut: Bool) -> Void {
-    let failure: CName = this.m_reported ? reason : n"timeout";
-    if IsNameValid(failure) {
-      this.Fail(failure);
+    if IsNameValid(reason) {
+      this.Fail(reason);
       return;
     }
     this.m_preview.Keep(this.m_record);
@@ -185,14 +180,13 @@ public class SwapScreen extends GarageConfirmScreen {
     if !IsDefined(receipt) { return; }
     let record: TweakDBID = ctx.OwnedRecord();
     let job: ref<SwapJob> = new SwapJob();
-    job.Setup(receipt, record);
+    job.Setup(receipt, record, this.m_preview);
     if !system.Swap().BehindFade(GarageEntitySwap.FadeOptions(0.5), record, look, GarageVehicles.SpotOf(vehicle), vehicle, job) {
       GarageTransactions.Refund(receipt);
       this.Refresh();
       return;
     }
     // Closing the popup reverts whatever preview the screen still holds
-    job.Take(this.m_preview);
     this.m_preview = null;
     this.SetBusy(GarageText.Get(n"Garage-Paint-Confirm"));
   }

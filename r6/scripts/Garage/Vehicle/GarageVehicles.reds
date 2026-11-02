@@ -88,9 +88,9 @@ public abstract class GarageVehicles {
     if !IsNameValid(appearance) { return GarageVehicles.SetEnabled(record, true); }
     let combined: TweakDBID = record + TDBID.Create("_" + NameToString(appearance));
     if IsDefined(TweakDBInterface.GetVehicleRecord(combined)) { return GarageVehicles.SetEnabled(combined, true); }
-    let done: Bool = GarageVehicles.SetEnabled(record, true);
+    if !GarageVehicles.SetEnabled(record, true) { return false; }
     GaragePaint.Apply(record, appearance);
-    return done;
+    return true;
   }
 
   /// A string the game takes for this record. It isn't the record's real name, so it's no good for showing anyone.

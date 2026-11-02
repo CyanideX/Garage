@@ -13,11 +13,6 @@ public class RepairAddon extends GarageAddon {
   public func Id() -> CName { return n"repair"; }
   public func IsEnabled(settings: ref<GarageSettings>) -> Bool { return settings.repairEnabled; }
 
-  public func Stop() -> Void {
-    if IsDefined(this.m_job) { this.m_job.Abandon(); }
-    this.m_job = null;
-  }
-
   public func Services() -> array<ref<GarageService>> {
     let list: array<ref<GarageService>>;
     ArrayPush(list, new RepairService());
@@ -45,7 +40,7 @@ public class RepairService extends GarageService {
   public func Open(ctx: ref<GarageContext>) -> Void { ctx.screens.ShowScreen(n"repair_confirm"); }
 }
 
-/// One paid repair, Confirm to banner. Holds its own car since the popup takes the visit's with it.
+// Holds its own car, the popup takes the visit's with it
 public class RepairJob extends GarageSwapListener {
   private let m_addon: wref<RepairAddon>;
   private let m_xu: ref<XUtilsMod>;
@@ -53,8 +48,7 @@ public class RepairJob extends GarageSwapListener {
   private let m_receipt: ref<GarageReceipt>;
   private let m_full: Bool;
   private let m_timer: Uint64;
-  private let m_reported: Bool;
-  private let m_settled: Bool;
+  private let m_sessionEnd: Uint64;
 
   public func Setup(addon: ref<RepairAddon>, xu: ref<XUtilsMod>, car: wref<VehicleObject>, receipt: ref<GarageReceipt>, full: Bool) -> Void {
     this.m_addon = addon;
@@ -62,6 +56,7 @@ public class RepairJob extends GarageSwapListener {
     this.m_car = car;
     this.m_receipt = receipt;
     this.m_full = full;
+    this.m_sessionEnd = xu.On(XUtilsEventType.SessionEnd, this, n"OnSessionEnd");
   }
 
   public func RunQuick(delay: Float) -> Void {
@@ -78,9 +73,7 @@ public class RepairJob extends GarageSwapListener {
 
   public func InPlace() -> CName { return this.FixHere(); }
 
-  public func OnResult(reason: CName, car: wref<VehicleObject>) -> Void { this.m_reported = true; }
-
-  public func OnClear(reason: CName, timedOut: Bool) -> Void { this.Settle(this.m_reported ? reason : n"timeout"); }
+  public func OnClear(reason: CName, timedOut: Bool) -> Void { this.Settle(reason); }
 
   public func Refused() -> Void { this.Settle(n"busy"); }
 
@@ -93,11 +86,8 @@ public class RepairJob extends GarageSwapListener {
   }
 
   private func Settle(reason: CName) -> Void {
-    if this.m_settled { return; }
-    this.m_settled = true;
     let amount: Int32 = this.m_receipt.amount;
-    let addon: wref<RepairAddon> = this.m_addon;
-    if IsDefined(addon) { addon.JobDone(); }
+    this.Drop();
     if !IsNameValid(reason) {
       GarageServiceNotify.Post(GarageText.Get(this.m_full ? n"Garage-Repair-CompleteFull" : n"Garage-Repair-CompleteQuick"), "", amount);
       return;
@@ -111,13 +101,15 @@ public class RepairJob extends GarageSwapListener {
     this.m_xu.Screen().Notify(text, SimpleMessageType.Negative, 5.0, false);
   }
 
-  /// The session ended under it, so the money goes back with no banner.
-  public func Abandon() -> Void {
-    if this.m_settled { return; }
-    this.m_settled = true;
+  // A load replaces the money anyway. XU timers outlive it though, and this one would pay into the next save
+  public func OnSessionEnd(e: ref<XUtilsEvent>) -> Void { this.Drop(); }
+
+  private func Drop() -> Void {
+    this.m_xu.Off(this.m_sessionEnd);
     if this.m_timer != 0ul { this.m_xu.Cancel(this.m_timer); }
     this.m_timer = 0ul;
-    GarageTransactions.Refund(this.m_receipt);
+    let addon: wref<RepairAddon> = this.m_addon;
+    if IsDefined(addon) { addon.JobDone(); }
   }
 }
 

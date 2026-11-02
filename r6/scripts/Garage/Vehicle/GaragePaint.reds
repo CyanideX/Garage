@@ -1,5 +1,7 @@
 module Garage.Vehicle
 
+import Garage.*
+
 public class PaintOverrideEntry {
   public persistent let recordId: TweakDBID;
   public persistent let appearanceName: CName;
@@ -42,6 +44,29 @@ public class PaintOverrides extends ScriptableSystem {
   }
 
   public func All() -> array<ref<PaintOverrideEntry>> { return this.m_overrides; }
+}
+
+// Flats outlive a load and the save that paid for them doesn't, so whatever we overwrite goes back at session end
+public class GaragePaintOriginals extends IScriptable {
+  private let m_records: array<TweakDBID>;
+  private let m_flats: array<CName>;
+
+  public func Remember(record: TweakDBID, flat: CName) -> Void {
+    if ArrayContains(this.m_records, record) { return; }
+    ArrayPush(this.m_records, record);
+    ArrayPush(this.m_flats, flat);
+  }
+
+  public func RestoreAll() -> Void {
+    let i: Int32 = 0;
+    while i < ArraySize(this.m_records) {
+      TweakDBManager.SetFlat(this.m_records[i] + t".appearanceName", this.m_flats[i]);
+      TweakDBManager.UpdateRecord(this.m_records[i]);
+      i += 1;
+    }
+    ArrayClear(this.m_records);
+    ArrayClear(this.m_flats);
+  }
 }
 
 /// A car's saved appearance, on the record itself so every spawn of it comes out that way.
@@ -91,7 +116,9 @@ public abstract class GaragePaint {
 
   /// The flat only, the save doesn't hear about it. False when the record has no appearance flat.
   public static func WriteFlat(record: TweakDBID, appearance: CName) -> Bool {
-    if !IsNameValid(GaragePaint.GetFlat(record)) { return false; }
+    let flat: CName = GaragePaint.GetFlat(record);
+    if !IsNameValid(flat) { return false; }
+    GarageSystem.Get().PaintOriginals().Remember(record, flat);
     TweakDBManager.SetFlat(record + t".appearanceName", appearance);
     TweakDBManager.UpdateRecord(record);
     return true;

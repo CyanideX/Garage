@@ -3,7 +3,7 @@ module Garage.Vehicle
 import Garage.*
 import Garage.Data.*
 
-/// What a swap reports back. reason is n"" when it worked, otherwise busy, bad_args, no_player, timeout, lost or aborted.
+/// What a swap reports back. reason is n"" when it worked, otherwise busy, bad_args, no_player, timeout, lost, cancelled or aborted.
 public abstract class GarageSwapListener extends IScriptable {
   /// First thing behind the black, for closing a popup.
   public func OnBlack() -> Void {}
@@ -65,10 +65,14 @@ public class GarageEntitySwap extends IScriptable {
 
   /// Reports through listener.OnResult. False if it couldn't start.
   public func Respawn(record: TweakDBID, appearance: CName, spot: ref<GarageSpot>, old: wref<GameObject>, listener: ref<GarageSwapListener>) -> Bool {
-    if this.m_active {
+    if !this.CanStart() {
       listener.OnResult(n"busy", null);
       return false;
     }
+    return this.Begin(record, appearance, spot, old, listener);
+  }
+
+  private func Begin(record: TweakDBID, appearance: CName, spot: ref<GarageSpot>, old: wref<GameObject>, listener: ref<GarageSwapListener>) -> Bool {
     if !TDBID.IsValid(record) || !IsDefined(spot) {
       listener.OnResult(n"bad_args", null);
       return false;
@@ -82,6 +86,7 @@ public class GarageEntitySwap extends IScriptable {
     TweakDBManager.SetFlat(t"Vehicle.summon_setup.forceDespawnOnResummon", true);
     // Off first, so the spawn system doesn't see an active car
     GarageVehicles.SetEnabled(record, false);
+    // Before the spawn, or the game never makes a new one. The old car's gone after this, even teleported straight back
     if IsDefined(old) {
       let flat: EulerAngles;
       let parked: Vector4 = new Vector4(spot.x + GarageEntitySwap.ParkOffset(), spot.y, spot.z - GarageEntitySwap.ParkOffset(), 1.0);
@@ -206,7 +211,8 @@ public class GarageEntitySwap extends IScriptable {
     this.m_spot = spot;
     this.m_oldCar = old;
     this.m_appearance = appearance;
-    this.m_fadeReason = n"";
+    // Stands until something reports, so a black that runs out counts as a failure
+    this.m_fadeReason = n"timeout";
     this.m_fade = this.m_xu.Screen().Fade(options);
     this.m_fade.On(XUtilsEventType.FadedOut, this, n"OnBlack");
     this.m_fade.On(XUtilsEventType.FadeCleared, this, n"OnCleared");
@@ -220,7 +226,10 @@ public class GarageEntitySwap extends IScriptable {
     listener.OnBlack();
     if TDBID.IsValid(this.m_record) {
       let old: wref<GameObject> = this.m_oldCar;
-      this.Respawn(this.m_record, this.m_appearance, this.m_spot, old, listener);
+      if !this.Begin(this.m_record, this.m_appearance, this.m_spot, old, listener) {
+        this.m_fadeReason = n"bad_args";
+        this.m_fade.Release();
+      }
       return;
     }
     let reason: CName = listener.InPlace();
@@ -257,7 +266,10 @@ public class GarageEntitySwap extends IScriptable {
     ArrayPush(this.m_afterFadeSeconds, seconds);
   }
 
-  /// Session end: stops polling and puts summon mode back.
+  /// Gives up on the running swap. It reports n"cancelled" like any other failure, and V has to summon the car.
+  public func Cancel() -> Void { this.Finish(n"cancelled"); }
+
+  /// Session end: stops polling and puts summon mode back. The listener never gets OnClear.
   public func Abort() -> Void {
     this.Finish(n"aborted");
     if IsDefined(this.m_fade) { this.m_fade.Destroy(); }

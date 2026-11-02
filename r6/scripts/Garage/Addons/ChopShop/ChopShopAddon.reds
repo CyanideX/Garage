@@ -106,8 +106,7 @@ public class ChopShopScreen extends GarageConfirmScreen {
     this.SetCar(ctx.vehicleDisplayName);
     let vehicle: wref<VehicleObject> = ctx.vehicle;
     if !this.m_claiming && IsDefined(vehicle) {
-      let health: Float = GarageVehicles.HealthShown(vehicle);
-      this.SetStatus(GarageText.Get(n"Garage-ChopShop-ConditionLabel") + " " + IntToString(RoundF(health * 100.0)) + "%", this.ConditionTint(health));
+      this.SetStatus(GarageText.Get(n"Garage-ChopShop-ConditionLabel") + " " + IntToString(GarageVehicles.HealthPercent(vehicle)) + "%", this.ConditionTint(GarageVehicles.HealthShown(vehicle)));
     }
     let refusal: String = ChopShopDeal.Refusal(ctx, this.m_claiming);
     if StrLen(refusal) > 0 {

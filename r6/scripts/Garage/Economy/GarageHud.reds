@@ -44,7 +44,7 @@ public class GarageEconomyPanel extends IScriptable {
   }
 }
 
-/// 15 seconds on screen to drive this car off the lot. Subclass it for what happens each way.
+/// 15 seconds on screen to drive this car off the lot, or the garage locks for a day. Subclass it for the getaway.
 public abstract class GarageGetawayTimer extends IScriptable {
   protected let m_xu: ref<XUtilsMod>;
   protected let m_garage: CName;
@@ -112,5 +112,5 @@ public abstract class GarageGetawayTimer extends IScriptable {
   }
 }
 
-/// A freshly claimed car has to get clear. Too slow locks the garage for a day.
+/// A freshly claimed car has to get clear.
 public class GarageClaimTimer extends GarageGetawayTimer {}

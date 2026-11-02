@@ -273,7 +273,7 @@ public abstract class GarageConfirmScreen extends GarageScreen {
     this.m_refusal.SetVisible(true);
   }
 
-  /// The money's gone and the work's started, so neither button does anything until the popup closes.
+  /// The money's gone and the work's started, so buttons, scrolling and Esc do nothing until the popup closes.
   protected func SetBusy(text: String) -> Void {
     this.m_busy = true;
     this.SetConfirmText(text);
