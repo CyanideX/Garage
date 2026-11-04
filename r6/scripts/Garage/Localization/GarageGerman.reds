@@ -8,7 +8,7 @@ public class GarageGerman extends ModLocalizationPackage {
 
     this.Text("Garage-Category-Title", "KATEGORIE WÄHLEN");
     this.Text("Garage-Category-Subtitle", "Wähle eine Tuning-Kategorie, um verfügbare Teile zu durchsuchen");
-    this.Text("Garage-Category-Hint", "Kategorie wählen");
+    this.Text("Garage-Hint-Select", "Wählen");
     this.Text("Garage-Category-Body", "KAROSSERIE");
     this.Text("Garage-Category-Interior", "INNENRAUM");
     this.Text("Garage-Category-Paint", "LACK");
@@ -21,16 +21,13 @@ public class GarageGerman extends ModLocalizationPackage {
 
     this.Text("Garage-Subcategory-Title", "UNTERKATEGORIE WÄHLEN");
     this.Text("Garage-Subcategory-Subtitle", "Wähle einen Teiletyp");
-    this.Text("Garage-Subcategory-Hint", "Unterkategorie wählen");
 
     this.Text("Garage-PaintType-Title", "LACKART WÄHLEN");
     this.Text("Garage-PaintType-Subtitle", "Wähle eine Lackierung");
-    this.Text("Garage-PaintType-Hint", "Lackart wählen");
     this.Text("Garage-PaintType-Standard", "Standard");
     this.Text("Garage-PaintType-Metallic", "Metallic");
     this.Text("Garage-PaintType-Matte", "Matt");
 
-    this.Text("Garage-PartsList-Hint", "Teil wählen");
     this.Text("Garage-PartsList-Installed", "EINGEBAUT");
     this.Text("Garage-PartsList-Stock", "SERIE");
     this.Text("Garage-PartsList-Owned", "IM BESITZ");

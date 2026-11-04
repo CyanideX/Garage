@@ -20,7 +20,9 @@ public class GarageEconomyPanel extends IScriptable {
     let engine: ref<EconomyEngine> = EconomyEngine.Get();
     if !IsDefined(engine) { return; }
     this.m_garage = garage.id;
+    let style: ref<XUtilsPanelStyle> = XUtilsPanelStyle.Create().Header(new HDRColor(1.0, 1.0, 1.0, 1.0)).HeaderSize(40.0).Size(34.0);
     let spec: ref<XUtilsPanelSpec> = XUtilsPanelSpec.Create().Header(garage.name).Corner(XUtilsScreenAnchor.BottomRight).Layer(XUtilsScreenLayer.Scene)
+      .Style(style).Width(640.0)
       .Row(n"cash", GarageText.Get(n"Garage-HUD-Cash"), XUtilsRowKind.Text)
       .Row(n"tier", GarageText.Get(n"Garage-HUD-Tier"), XUtilsRowKind.Text);
     this.m_panel = this.m_xu.Screen().Panel(spec);

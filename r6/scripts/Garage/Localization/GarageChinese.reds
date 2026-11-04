@@ -8,7 +8,7 @@ public class GarageChinese extends ModLocalizationPackage {
 
     this.Text("Garage-Category-Title", "选择类别");
     this.Text("Garage-Category-Subtitle", "选择调校类别以浏览可用零件");
-    this.Text("Garage-Category-Hint", "选择类别");
+    this.Text("Garage-Hint-Select", "选择");
     this.Text("Garage-Category-Body", "车身");
     this.Text("Garage-Category-Interior", "内饰");
     this.Text("Garage-Category-Paint", "喷漆");
@@ -21,16 +21,13 @@ public class GarageChinese extends ModLocalizationPackage {
 
     this.Text("Garage-Subcategory-Title", "选择子类别");
     this.Text("Garage-Subcategory-Subtitle", "选择零件类型");
-    this.Text("Garage-Subcategory-Hint", "选择子类别");
 
     this.Text("Garage-PaintType-Title", "选择喷漆类型");
     this.Text("Garage-PaintType-Subtitle", "选择漆面效果");
-    this.Text("Garage-PaintType-Hint", "选择喷漆类型");
     this.Text("Garage-PaintType-Standard", "标准");
     this.Text("Garage-PaintType-Metallic", "金属漆");
     this.Text("Garage-PaintType-Matte", "哑光");
 
-    this.Text("Garage-PartsList-Hint", "选择零件");
     this.Text("Garage-PartsList-Installed", "已安装");
     this.Text("Garage-PartsList-Stock", "原厂");
     this.Text("Garage-PartsList-Owned", "已拥有");

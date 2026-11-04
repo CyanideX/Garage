@@ -38,6 +38,11 @@ public class GarageEntitySwap extends IScriptable {
   private let m_fadeReason: CName;
   private let m_oldCar: wref<GameObject>;
   private let m_appearance: CName;
+  // What a failure has to put back: the car moved off the deck, the look it wore
+  private let m_moved: wref<GameObject>;
+  private let m_movedOld: Bool;
+  private let m_wroteFlat: Bool;
+  private let m_oldFlat: CName;
   private let m_afterFade: array<String>;
   private let m_afterFadeKinds: array<SimpleMessageType>;
   private let m_afterFadeSeconds: array<Float>;
@@ -82,6 +87,10 @@ public class GarageEntitySwap extends IScriptable {
     this.m_spot = spot;
     this.m_listener = listener;
     this.m_attempts = 0;
+    this.m_moved = old;
+    this.m_movedOld = IsDefined(old);
+    this.m_wroteFlat = IsNameValid(appearance);
+    this.m_oldFlat = GaragePaint.GetFlat(record);
     let vehicles: ref<VehicleSystem> = GameInstance.GetVehicleSystem(GetGameInstance());
     TweakDBManager.SetFlat(t"Vehicle.summon_setup.forceDespawnOnResummon", true);
     // Off first, so the spawn system doesn't see an active car
@@ -168,6 +177,30 @@ public class GarageEntitySwap extends IScriptable {
     this.m_settleTimer = this.m_xu.After(0.1, this, n"OnSettle");
   }
 
+  // Nobody loses a car to a failed swap: the old one goes back on the deck if it's still there, else it's summoned
+  private func Recover(reason: CName) -> Void {
+    if this.m_wroteFlat { GaragePaint.WriteFlat(this.m_record, this.m_oldFlat); }
+    let how: String = "nothing moved";
+    let old: wref<GameObject> = this.m_moved;
+    if this.m_movedOld && IsDefined(old) && IsDefined(this.m_spot) {
+      let angles: EulerAngles;
+      angles.Yaw = this.m_spot.yaw;
+      GameInstance.GetTeleportationFacility(GetGameInstance()).Teleport(old, this.m_spot.Position(), angles);
+      how = "old car put back";
+    } else {
+      if this.m_movedOld && !IsDefined(this.m_car) {
+        let vehicle: wref<Vehicle_Record> = TweakDBInterface.GetVehicleRecord(this.m_record);
+        let kind: wref<VehicleType_Record> = IsDefined(vehicle) ? vehicle.Type() : null;
+        GameInstance.GetVehicleSystem(GetGameInstance()).SpawnPlayerVehicle(IsDefined(kind) ? kind.Type() : gamedataVehicleType.Car, this.m_record);
+        how = "summoned";
+      }
+    }
+    this.m_log.Warn("swap failed: " + NameToString(reason) + ", " + how + " after " + IntToString(this.m_attempts) + " polls");
+    this.m_moved = null;
+    this.m_movedOld = false;
+    this.m_wroteFlat = false;
+  }
+
   public func OnTimeout(e: ref<XUtilsEvent>) -> Void {
     this.m_timeoutTimer = 0ul;
     this.Finish(n"timeout");
@@ -190,7 +223,7 @@ public class GarageEntitySwap extends IScriptable {
     this.CancelTimers();
     if this.m_summonToggled { GameInstance.GetVehicleSystem(GetGameInstance()).ToggleSummonMode(); }
     this.m_summonToggled = false;
-    if IsNameValid(reason) { this.m_log.Warn("swap failed: " + NameToString(reason)); }
+    if IsNameValid(reason) { this.Recover(reason); }
     let listener: ref<GarageSwapListener> = this.m_listener;
     let car: wref<VehicleObject> = this.m_car;
     this.m_listener = IsDefined(this.m_fade) ? listener : null;
@@ -266,7 +299,7 @@ public class GarageEntitySwap extends IScriptable {
     ArrayPush(this.m_afterFadeSeconds, seconds);
   }
 
-  /// Gives up on the running swap. It reports n"cancelled" like any other failure, and V has to summon the car.
+  /// Gives up on the running swap. It reports n"cancelled" like any other failure, and the car comes back as on any failure.
   public func Cancel() -> Void { this.Finish(n"cancelled"); }
 
   /// Session end: stops polling and puts summon mode back. The listener never gets OnClear.

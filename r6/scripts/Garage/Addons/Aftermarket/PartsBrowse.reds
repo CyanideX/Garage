@@ -75,7 +75,7 @@ public class CategoryScreen extends AftermarketScreen {
     super.Show();
     this.m_flow.LeaveSlot();
     this.UpdateCheckoutButton();
-    this.UpdateHint(n"click", GarageText.Get(n"Garage-Category-Hint"), true);
+    this.UpdateHint(n"click", GarageText.Get(n"Garage-Hint-Select"), true);
   }
 
   // Nothing else has an Explode button, so the car can't be left exploded once we're gone
@@ -185,7 +185,7 @@ public class SubcategoryScreen extends AftermarketScreen {
     super.Show();
     this.m_flow.LeaveSlot();
     this.m_flow.ForgetHover();
-    this.UpdateHint(n"click", GarageText.Get(n"Garage-Subcategory-Hint"), true);
+    this.UpdateHint(n"click", GarageText.Get(n"Garage-Hint-Select"), true);
     if !Equals(this.m_flow.section, this.m_section) {
       this.m_pagination.SetCurrentPage(0);
       this.m_section = this.m_flow.section;
@@ -254,7 +254,7 @@ public class PaintTypeScreen extends AftermarketScreen {
 
   public func Show() {
     super.Show();
-    this.UpdateHint(n"click", GarageText.Get(n"Garage-PaintType-Hint"), true);
+    this.UpdateHint(n"click", GarageText.Get(n"Garage-Hint-Select"), true);
   }
 
   public func Hide() {
@@ -521,7 +521,7 @@ public class PartsListScreen extends AftermarketScreen {
     this.m_pagination.ClampPage();
     this.m_flow.SaveListPage(this.m_pagination.GetCurrentPage());
     this.DisplayCurrentPage();
-    this.UpdateHint(n"click", GarageText.Get(n"Garage-PartsList-Hint"), true);
+    this.UpdateHint(n"click", GarageText.Get(n"Garage-Hint-Select"), true);
     this.m_flow.Mark("list show done");
   }
 

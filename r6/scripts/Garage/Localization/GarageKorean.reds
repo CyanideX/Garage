@@ -8,7 +8,7 @@ public class GarageKorean extends ModLocalizationPackage {
 
     this.Text("Garage-Category-Title", "카테고리 선택");
     this.Text("Garage-Category-Subtitle", "튜닝 카테고리를 선택하여 사용 가능한 부품을 둘러보세요");
-    this.Text("Garage-Category-Hint", "카테고리 선택");
+    this.Text("Garage-Hint-Select", "선택");
     this.Text("Garage-Category-Body", "바디");
     this.Text("Garage-Category-Interior", "실내");
     this.Text("Garage-Category-Paint", "도장");
@@ -21,16 +21,13 @@ public class GarageKorean extends ModLocalizationPackage {
 
     this.Text("Garage-Subcategory-Title", "하위 카테고리 선택");
     this.Text("Garage-Subcategory-Subtitle", "부품 유형을 선택하세요");
-    this.Text("Garage-Subcategory-Hint", "하위 카테고리 선택");
 
     this.Text("Garage-PaintType-Title", "도장 유형 선택");
     this.Text("Garage-PaintType-Subtitle", "도장 마감을 선택하세요");
-    this.Text("Garage-PaintType-Hint", "도장 유형 선택");
     this.Text("Garage-PaintType-Standard", "기본");
     this.Text("Garage-PaintType-Metallic", "메탈릭");
     this.Text("Garage-PaintType-Matte", "매트");
 
-    this.Text("Garage-PartsList-Hint", "부품 선택");
     this.Text("Garage-PartsList-Installed", "장착됨");
     this.Text("Garage-PartsList-Stock", "순정");
     this.Text("Garage-PartsList-Owned", "보유");

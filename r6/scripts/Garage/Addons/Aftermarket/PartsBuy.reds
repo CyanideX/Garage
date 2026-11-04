@@ -308,67 +308,6 @@ public class ConfirmScreen extends AftermarketScreen {
 }
 
 /// One line of the checkout's list. The pool only ever grows, a shorter cart hides the rest.
-public class CheckoutRow extends inkCustomController {
-  private let m_number: wref<inkText>;
-  private let m_name: wref<inkText>;
-  private let m_icon: wref<inkImage>;
-  private let m_price: wref<inkText>;
-  private let m_iconReady: Bool;
-
-  protected cb func OnCreate() {
-    let fontSize: Int32 = 32;
-    let accent: HDRColor = GarageColors.AccentBlue();
-    let gold: HDRColor = GarageColors.Gold();
-
-    let row: ref<inkCanvas> = new inkCanvas();
-    row.SetName(n"itemRowContainer");
-    row.SetSize(new Vector2(644.0, Cast<Float>(fontSize) + 12.0));
-    this.SetRootWidget(row);
-
-    let left: ref<inkHorizontalPanel> = new inkHorizontalPanel();
-    left.SetName(n"leftPanel");
-    left.SetAnchor(inkEAnchor.CenterLeft);
-    left.SetAnchorPoint(new Vector2(0.0, 0.5));
-    left.Reparent(row);
-
-    let number: ref<inkText> = PartsLabel(n"itemNum", "", n"Regular", fontSize - 2, accent, left);
-    number.SetOpacity(0.6);
-    number.SetMargin(new inkMargin(0.0, 0.0, 10.0, 0.0));
-    this.m_number = number;
-    this.m_name = PartsLabel(n"itemName", "", n"Regular", fontSize, accent, left);
-
-    let priceRow: ref<inkHorizontalPanel> = new inkHorizontalPanel();
-    priceRow.SetName(n"priceRow");
-    priceRow.SetAnchor(inkEAnchor.CenterRight);
-    priceRow.SetAnchorPoint(new Vector2(1.0, 0.5));
-    priceRow.SetVAlign(inkEVerticalAlign.Center);
-    priceRow.Reparent(row);
-
-    let icon: ref<inkImage> = CreateMoneyIconForFont(fontSize, 0.5, gold);
-    icon.SetMargin(new inkMargin(0.0, 0.0, 30.0, 0.0));
-    icon.SetVAlign(inkEVerticalAlign.Center);
-    icon.Reparent(priceRow);
-    this.m_icon = icon;
-
-    let price: ref<inkText> = PartsLabel(n"priceText", "", n"Bold", fontSize, gold, priceRow);
-    price.SetVAlign(inkEVerticalAlign.Center);
-    this.m_price = price;
-  }
-
-  public func Bind(item: ref<GarageCartItem>, index: Int32) -> Void {
-    this.GetRootWidget().SetVisible(true);
-    this.m_number.SetText(IntToString(index) + ".");
-    this.m_name.SetText(item.name);
-    this.m_price.SetText(GarageText.Price(item.Total()));
-    if !this.m_iconReady {
-      this.m_iconReady = true;
-      InitMoneyIcon(this.m_icon);
-    }
-  }
-
-  public func Clear() -> Void { this.GetRootWidget().SetVisible(false); }
-}
-
 public enum CheckoutSource {
   Parts = 0,
   Quick = 1
@@ -378,11 +317,12 @@ public enum CheckoutSource {
 public class CheckoutScreen extends AftermarketScreen {
   private let m_source: CheckoutSource;
   private let m_items: wref<inkVerticalPanel>;
-  private let m_rows: array<ref<CheckoutRow>>;
+  private let m_rows: array<ref<CartRow>>;
   private let m_emptyText: wref<inkText>;
   private let m_subtotalValue: wref<inkText>;
   private let m_serviceValue: wref<inkText>;
   private let m_totalValue: wref<inkText>;
+  private let m_lines: array<ref<GarageMoneyLine>>;
   private let m_balanceValue: wref<inkText>;
   private let m_confirmBtn: wref<SimpleButton>;
   private let m_scrollRegion: wref<inkCanvas>;
@@ -407,7 +347,7 @@ public class CheckoutScreen extends AftermarketScreen {
     region.SetAnchor(inkEAnchor.TopCenter);
     region.SetAnchorPoint(new Vector2(0.5, 0.0));
     region.SetMargin(new inkMargin(0.0, 160.0, 0.0, 0.0));
-    region.SetSize(new Vector2(660.0, 370.0));
+    region.SetSize(new Vector2(660.0, 7.0 * CartWidget.RowStep()));
     region.Reparent(root);
     this.m_scrollRegion = region;
 
@@ -423,7 +363,7 @@ public class CheckoutScreen extends AftermarketScreen {
     let items: ref<inkVerticalPanel> = new inkVerticalPanel();
     items.SetName(n"itemsContainer");
     items.SetHAlign(inkEHorizontalAlign.Left);
-    items.SetChildMargin(new inkMargin(0.0, 4.0, 0.0, 4.0));
+    items.SetChildMargin(new inkMargin(0.0, CartWidget.RowGap(), 0.0, CartWidget.RowGap()));
     items.Reparent(area);
     this.m_items = items;
 
@@ -437,7 +377,7 @@ public class CheckoutScreen extends AftermarketScreen {
     slider.SetName(n"sliderArea");
     slider.SetAnchor(inkEAnchor.RightFillVerticaly);
     slider.SetAnchorPoint(new Vector2(1.0, 0.0));
-    slider.SetSize(new Vector2(10.0, 370.0));
+    slider.SetSize(new Vector2(10.0, 7.0 * CartWidget.RowStep()));
     slider.SetInteractive(true);
     slider.Reparent(region);
     this.m_sliderArea = slider;
@@ -475,10 +415,11 @@ public class CheckoutScreen extends AftermarketScreen {
     divider.SetOpacity(0.5);
     divider.Reparent(bottom);
 
-    this.m_subtotalValue = this.CreateSummaryRow(n"subtotal", n"Garage-Checkout-PartsLabel", n"Regular", 20, 0.7, 20, 20, 6.0, 8.0, bottom);
-    this.m_serviceValue = this.CreateSummaryRow(n"service", n"Garage-Checkout-ServiceLabel", n"Regular", 20, 0.7, 20, 20, 6.0, 8.0, bottom);
-    this.m_totalValue = this.CreateSummaryRow(n"total", n"Garage-Checkout-TotalLabel", n"Bold", 28, 1.0, 32, 32, 8.0, 10.0, bottom);
-    this.m_balanceValue = this.CreateSummaryRow(n"balance", n"Garage-Checkout-BalanceLabel", n"Regular", 20, 0.7, 24, 24, 6.0, 8.0, bottom);
+    let size: Int32 = GarageMoneyLine.LineSize();
+    this.m_subtotalValue = this.AddLine(bottom, n"subtotal", n"Garage-Checkout-PartsLabel", size, 0.7);
+    this.m_serviceValue = this.AddLine(bottom, n"service", n"Garage-Checkout-ServiceLabel", size, 0.7);
+    this.m_totalValue = this.AddLine(bottom, n"total", n"Garage-Checkout-TotalLabel", GarageMoneyLine.TotalSize(), 1.0);
+    this.m_balanceValue = this.AddLine(bottom, n"balance", n"Garage-Checkout-BalanceLabel", size, 0.7);
 
     let buttons: ref<inkHorizontalPanel> = new inkHorizontalPanel();
     buttons.SetName(n"buttonContainer");
@@ -493,23 +434,10 @@ public class CheckoutScreen extends AftermarketScreen {
     this.SetupScrollController();
   }
 
-  private func CreateSummaryRow(name: CName, key: CName, style: CName, labelSize: Int32, labelOpacity: Float, iconFont: Int32, valueSize: Int32, spacing: Float, iconGap: Float, parent: ref<inkCompoundWidget>) -> ref<inkText> {
-    let row: ref<inkHorizontalPanel> = new inkHorizontalPanel();
-    row.SetName(StringToName(NameToString(name) + "Row"));
-    row.SetHAlign(inkEHorizontalAlign.Center);
-    row.SetChildMargin(new inkMargin(spacing, 0.0, spacing, 0.0));
-    row.Reparent(parent);
-
-    let label: ref<inkText> = PartsLabel(StringToName(NameToString(name) + "Label"), GarageText.Get(key), style, labelSize, GarageColors.AccentBlue(), row);
-    label.SetOpacity(labelOpacity);
-
-    let icon: ref<inkImage> = CreateMoneyIconForFont(iconFont, 0.6, GarageColors.Gold());
-    icon.SetMargin(new inkMargin(0.0, 0.0, iconGap, 0.0));
-    icon.SetVAlign(inkEVerticalAlign.Center);
-    icon.Reparent(row);
-    InitMoneyIcon(icon);
-
-    return PartsLabel(StringToName(NameToString(name) + "Value"), "0", n"Bold", valueSize, GarageColors.Gold(), row);
+  private func AddLine(parent: ref<inkCompoundWidget>, name: CName, key: CName, size: Int32, opacity: Float) -> wref<inkText> {
+    let line: ref<GarageMoneyLine> = GarageMoneyLine.Make(parent, name, GarageText.Get(key), size, opacity);
+    ArrayPush(this.m_lines, line);
+    return line.Value();
   }
 
   private func SetupScrollController() -> Void {
@@ -532,6 +460,7 @@ public class CheckoutScreen extends AftermarketScreen {
 
   public func Show() {
     super.Show();
+    for line in this.m_lines { line.InitIcon(); }
     this.RefreshAfterCartChange();
     this.UpdateHint(n"click", GarageText.Get(n"Garage-Checkout-Hint"), true);
   }
@@ -550,14 +479,16 @@ public class CheckoutScreen extends AftermarketScreen {
 
     this.m_emptyText.SetVisible(ArraySize(items) == 0);
     while ArraySize(this.m_rows) < ArraySize(items) {
-      let added: ref<CheckoutRow> = new CheckoutRow();
+      let added: ref<CartRow> = new CartRow();
+      added.CreateInstance();
+      added.RegisterToCallback(n"OnRemove", this, n"OnRowRemove");
       added.Reparent(this.m_items);
       ArrayPush(this.m_rows, added);
     }
     let i: Int32 = 0;
     while i < ArraySize(this.m_rows) {
       if i < ArraySize(items) {
-        this.m_rows[i].Bind(items[i], i + 1);
+        this.m_rows[i].Bind(items[i], GarageColors.Gold(), GarageColors.AccentBlue());
         subtotal += items[i].price;
         service += items[i].serviceFee;
       } else {
@@ -575,6 +506,15 @@ public class CheckoutScreen extends AftermarketScreen {
     this.m_balanceValue.SetText(GarageText.Price(balance));
     this.m_balanceValue.SetTintColor(this.m_canAfford ? GarageColors.Gold() : GarageColors.Error());
     this.UpdateConfirmButton(cart.Count());
+  }
+
+  protected cb func OnRowRemove(widget: wref<inkWidget>) -> Bool {
+    let subcategory: CName = CartRow.Find(this.m_rows, widget);
+    if !IsNameValid(subcategory) { return false; }
+    this.Parts().RemoveFromCart(subcategory);
+    this.RefreshAfterCartChange();
+    this.Trigger(n"OnCartChanged");
+    return false;
   }
 
   private func UpdateConfirmButton(count: Int32) -> Void {

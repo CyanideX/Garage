@@ -237,6 +237,7 @@ public class GarageWorld extends IScriptable {
     let was: Int32 = site.zone;
     site.zone = zone;
     let id: CName = site.location.id;
+    this.m_log.Debug(NameToString(id) + " zone " + IntToString(was) + " to " + IntToString(zone));
     // Door first: a theft ban fires from Leave and has to find V outside already
     if site.hasDoor {
       let doors: ref<DoorController> = DoorController.Get();
@@ -323,10 +324,12 @@ public class GarageWorld extends IScriptable {
     let prompt: Bool = open && !state.Is(XUtilsStateField.IsInVehicle);
     if IsDefined(this.m_press) {
       if prompt && !this.m_press.IsArmed() {
+        this.m_log.Debug("enter prompt on at " + NameToString(this.m_active.location.id));
         this.m_press.Arm();
         this.m_hints.Show();
       }
       if !prompt && this.m_press.IsArmed() {
+        this.m_log.Debug("enter prompt off");
         this.m_press.Disarm();
         this.m_hints.Hide();
       }
