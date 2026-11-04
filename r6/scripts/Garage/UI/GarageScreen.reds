@@ -25,30 +25,6 @@ public static func FormatCheckoutLabel(label: String, count: Int32, total: Int32
     return s"\(label) (\(count)) - €$\(GarageText.Price(total))";
 }
 
-// Create a money icon image with scale-based sizing (call InitMoneyIcon after reparenting)
-// baseSize: the native icon size in the atlas (use 24.0 as default)
-// scale: transform scale factor (e.g., 0.5 = half size)
-public static func CreateMoneyIconScaled(baseSize: Float, scale: Float, tintColor: HDRColor) -> ref<inkImage> {
-    let icon = new inkImage();
-    icon.SetName(n"moneyIcon");
-    icon.SetSize(new Vector2(baseSize, baseSize));
-    icon.SetScale(new Vector2(scale, scale));
-    icon.SetBrushMirrorType(inkBrushMirrorType.NoMirror);
-    icon.SetContentHAlign(inkEHorizontalAlign.Left);
-    icon.SetContentVAlign(inkEVerticalAlign.Center);
-    icon.SetTintColor(tintColor);
-    return icon;
-}
-
-// Creates a money icon scaled relative to font size.
-// scaleFactor: fraction of fontSize the icon should occupy (e.g., 0.5 = 50%)
-public static func CreateMoneyIconForFont(fontSize: Int32, scaleFactor: Float, tintColor: HDRColor) -> ref<inkImage> {
-    // Atlas icon is natively 24px, so the scale factor is relative to that
-    let targetSize = Cast<Float>(fontSize) * scaleFactor;
-    let scale = targetSize / 24.0;
-    return CreateMoneyIconScaled(24.0, scale, tintColor);
-}
-
 // Initialize money icon atlas (call after reparenting)
 public static func InitMoneyIcon(icon: ref<inkImage>) {
     if IsDefined(icon) {
@@ -58,35 +34,16 @@ public static func InitMoneyIcon(icon: ref<inkImage>) {
     }
 }
 
-// Create a price display row with money icon + text (horizontal panel)
-// iconScale: fraction of font size for icon (e.g., 0.6 = 60% of font size)
-public static func CreatePriceRow(price: Int32, fontSize: Int32, tintColor: HDRColor, iconScale: Float) -> ref<inkHorizontalPanel> {
-    let row = new inkHorizontalPanel();
-    row.SetName(n"priceRow");
-    // Proportional child margins based on font size
-    let marginSize = Cast<Float>(fontSize) * 0.1;
-    row.SetChildMargin(new inkMargin(marginSize, 0.0, marginSize, 0.0));
-    row.SetVAlign(inkEVerticalAlign.Center);
-
-    let icon = CreateMoneyIconForFont(fontSize, iconScale, tintColor);
-    // Proportional icon margin (right side only, to separate from text)
-    let iconMargin = Cast<Float>(fontSize) * 0.15;
-    icon.SetMargin(new inkMargin(0.0, 0.0, iconMargin, 0.0));
-    icon.SetVAlign(inkEVerticalAlign.Center);
-    icon.Reparent(row);
-    InitMoneyIcon(icon);
-
-    let priceText = new inkText();
-    priceText.SetName(n"priceText");
-    priceText.SetText(GarageText.Price(price));
-    priceText.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
-    priceText.SetFontStyle(n"Bold");
-    priceText.SetFontSize(fontSize);
-    priceText.SetTintColor(tintColor);
-    priceText.SetVAlign(inkEVerticalAlign.Center);
-    priceText.Reparent(row);
-
-    return row;
+public static func GarageLabel(name: CName, text: String, style: CName, size: Int32, tint: HDRColor, parent: ref<inkCompoundWidget>) -> ref<inkText> {
+    let label = new inkText();
+    label.SetName(name);
+    label.SetText(text);
+    label.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
+    label.SetFontStyle(style);
+    label.SetFontSize(size);
+    label.SetTintColor(tint);
+    label.Reparent(parent);
+    return label;
 }
 
 // A label can be anything an addon or a translation hands us, and a button neither wraps nor clips
@@ -196,16 +153,20 @@ public abstract class GarageScreen extends inkCustomController {
     /// True if Esc here should ask before going back with a cart, since the warning's yes empties it and goes to the hub.
     public func WarnsOnBack() -> Bool { return false; }
 
+    // Null until the footer's initialized
     protected func UpdateHint(action: CName, label: String, active: Bool) {
+        let hints = this.m_garageFrame.GetHints();
+        if !IsDefined(hints) { return; }
         if active {
-            this.m_garageFrame.GetHints().AddButtonHint(action, label);
+            hints.AddButtonHint(action, label);
         } else {
-            this.m_garageFrame.GetHints().RemoveButtonHint(action);
+            hints.RemoveButtonHint(action);
         }
     }
 
     protected func RemoveHint(action: CName) {
-        this.m_garageFrame.GetHints().RemoveButtonHint(action);
+        let hints = this.m_garageFrame.GetHints();
+        if IsDefined(hints) { hints.RemoveButtonHint(action); }
     }
 
     protected func Trigger(event: CName) {

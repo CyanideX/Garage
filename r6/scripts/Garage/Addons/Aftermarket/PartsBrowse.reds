@@ -289,9 +289,7 @@ public class PartRow extends inkCustomController {
   private let m_cartHolder: wref<inkHorizontalPanel>;
   private let m_cartIcon: wref<inkImage>;
   private let m_badge: wref<inkText>;
-  private let m_priceRow: wref<inkHorizontalPanel>;
-  private let m_priceIcon: wref<inkImage>;
-  private let m_priceText: wref<inkText>;
+  private let m_price: ref<GarageMoneyLine>;
   private let m_width: Float;
   private let m_swatchReady: Bool;
   private let m_warningReady: Bool;
@@ -342,22 +340,16 @@ public class PartRow extends inkCustomController {
     cartIcon.Reparent(holder);
     this.m_cartIcon = cartIcon;
 
-    let badge: ref<inkText> = PartsLabel(n"status", "", n"Bold", 36, GarageColors.Blue(), row);
+    let badge: ref<inkText> = GarageLabel(n"status", "", n"Bold", 36, GarageColors.Blue(), row);
     badge.SetMargin(new inkMargin(20.0, 18.0, 0.0, 0.0));
     badge.SetVisible(false);
     this.m_badge = badge;
 
-    let priceRow: ref<inkHorizontalPanel> = new inkHorizontalPanel();
-    priceRow.SetName(n"priceRow");
+    this.m_price = GarageMoneyLine.Make(row, n"price", "", 36, 1.0);
+    let priceRow: wref<inkHorizontalPanel> = this.m_price.Root();
+    priceRow.SetHAlign(inkEHorizontalAlign.Left);
     priceRow.SetMargin(new inkMargin(20.0, 18.0, 0.0, 0.0));
     priceRow.SetVisible(false);
-    priceRow.Reparent(row);
-    this.m_priceRow = priceRow;
-    let priceIcon: ref<inkImage> = CreateMoneyIconForFont(36, 0.5, GarageColors.Gold());
-    priceIcon.SetMargin(new inkMargin(0.0, -38.0, 30.0, 0.0));
-    priceIcon.Reparent(priceRow);
-    this.m_priceIcon = priceIcon;
-    this.m_priceText = PartsLabel(n"priceText", "", n"Bold", 36, GarageColors.Gold(), priceRow);
   }
 
   // Sits between the button's own background and its hover fill, so turning it off leaves the button as it was
@@ -474,12 +466,12 @@ public class PartRow extends inkCustomController {
   }
 
   private func ShowPrice(on: Bool, price: Int32) -> Void {
-    this.m_priceRow.SetVisible(on);
+    this.m_price.Root().SetVisible(on);
     if !on { return; }
-    this.m_priceText.SetText(GarageText.Price(price));
+    this.m_price.SetValue(GarageText.Price(price));
     if !this.m_priceReady {
       this.m_priceReady = true;
-      InitMoneyIcon(this.m_priceIcon);
+      this.m_price.InitIcon();
     }
   }
 

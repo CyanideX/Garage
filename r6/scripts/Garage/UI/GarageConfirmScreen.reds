@@ -13,6 +13,8 @@ public abstract class GarageConfirmScreen extends GarageScreen {
   private let m_optionName: wref<inkText>;
   private let m_optionDesc: wref<inkText>;
   private let m_priceLabel: wref<inkText>;
+  private let m_price: ref<GarageMoneyLine>;
+  private let m_balance: ref<GarageMoneyLine>;
   private let m_priceRow: wref<inkHorizontalPanel>;
   private let m_priceText: wref<inkText>;
   private let m_breakdown: wref<inkText>;
@@ -63,27 +65,10 @@ public abstract class GarageConfirmScreen extends GarageScreen {
     priceLabel.SetMargin(new inkMargin(0.0, 0.0, 0.0, -40.0));
     this.m_priceLabel = priceLabel;
 
-    let priceRow: ref<inkHorizontalPanel> = new inkHorizontalPanel();
-    priceRow.SetName(n"priceRow");
-    priceRow.SetHAlign(inkEHorizontalAlign.Center);
-    priceRow.SetVAlign(inkEVerticalAlign.Center);
-    priceRow.Reparent(content);
-    this.m_priceRow = priceRow;
-
-    let priceIcon: ref<inkImage> = new inkImage();
-    priceIcon.SetName(n"priceIcon");
-    priceIcon.SetSize(new Vector2(48.0, 48.0));
-    priceIcon.SetFitToContent(true);
-    priceIcon.SetScale(new Vector2(1.2, 1.2));
-    priceIcon.SetTintColor(gold);
-    priceIcon.SetMargin(new inkMargin(0.0, 0.0, 20.0, 0.0));
-    priceIcon.SetVAlign(inkEVerticalAlign.Center);
-    priceIcon.Reparent(priceRow);
-    InitMoneyIcon(priceIcon);
-
-    let priceText: ref<inkText> = this.AddText(n"priceValue", n"Bold", 64, gold, priceRow);
-    priceText.SetVAlign(inkEVerticalAlign.Center);
-    this.m_priceText = priceText;
+    this.m_price = GarageMoneyLine.Make(content, n"price", "", 64, 1.0);
+    this.m_priceRow = this.m_price.Root();
+    this.m_priceRow.SetVAlign(inkEVerticalAlign.Center);
+    this.m_priceText = this.m_price.Value();
 
     let breakdown: ref<inkText> = this.AddText(n"priceBreakdown", n"Regular", 32, gold, content);
     breakdown.SetVerticalAlignment(textVerticalAlignment.Center);
@@ -98,26 +83,11 @@ public abstract class GarageConfirmScreen extends GarageScreen {
     balanceLabel.SetMargin(new inkMargin(0.0, 0.0, 0.0, -32.0));
     this.m_balanceLabel = balanceLabel;
 
-    let balanceRow: ref<inkHorizontalPanel> = new inkHorizontalPanel();
-    balanceRow.SetName(n"balanceRow");
-    balanceRow.SetHAlign(inkEHorizontalAlign.Center);
-    balanceRow.SetVAlign(inkEVerticalAlign.Center);
-    balanceRow.Reparent(content);
-    this.m_balanceRow = balanceRow;
-
-    let balanceIcon: ref<inkImage> = new inkImage();
-    balanceIcon.SetName(n"balanceIcon");
-    balanceIcon.SetSize(new Vector2(32.0, 32.0));
-    balanceIcon.SetFitToContent(true);
-    balanceIcon.SetTintColor(gold);
-    balanceIcon.SetMargin(new inkMargin(0.0, 0.0, 12.0, 0.0));
-    balanceIcon.SetVAlign(inkEVerticalAlign.Center);
-    balanceIcon.Reparent(balanceRow);
-    InitMoneyIcon(balanceIcon);
-    this.m_balanceIcon = balanceIcon;
-
-    let balanceText: ref<inkText> = this.AddText(n"balanceValue", n"Bold", 40, gold, balanceRow);
-    balanceText.SetVAlign(inkEVerticalAlign.Center);
+    this.m_balance = GarageMoneyLine.Make(content, n"balance", "", 40, 1.0);
+    this.m_balanceRow = this.m_balance.Root();
+    this.m_balanceRow.SetVAlign(inkEVerticalAlign.Center);
+    this.m_balanceIcon = this.m_balance.Icon();
+    let balanceText: wref<inkText> = this.m_balance.Value();
     this.m_balanceText = balanceText;
 
     let refusal: ref<inkText> = this.AddText(n"refusal", n"Regular", 36, GarageColors.Error(), content);
@@ -155,12 +125,16 @@ public abstract class GarageConfirmScreen extends GarageScreen {
 
   public func Show() {
     super.Show();
+    this.m_price.InitIcon();
+    this.m_balance.InitIcon();
     this.m_busy = false;
     this.Refresh();
+    this.UpdateHint(n"click", GarageText.Get(n"Garage-Confirm-Hint"), true);
   }
 
   public func Hide() {
     super.Hide();
+    this.RemoveHint(n"click");
     this.SetStatusPulsing(false);
   }
 

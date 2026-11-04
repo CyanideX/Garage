@@ -73,6 +73,11 @@ public class ServiceHubScreen extends GarageScreen {
         }
         super.Show();
         this.Render();
+        this.ShowHint();
+    }
+
+    public func ShowHint() -> Void {
+        this.UpdateHint(n"click", GarageText.Get(n"Garage-Hint-Select"), true);
     }
 
     public func Hide() {
@@ -80,6 +85,7 @@ public class ServiceHubScreen extends GarageScreen {
             return;
         }
         super.Hide();
+        this.RemoveHint(n"click");
 
         this.StopPulseAnimation();
         this.m_refreshPending = false;
@@ -428,10 +434,12 @@ public class UnavailableScreen extends GarageScreen {
         if IsDefined(this.m_messageText) {
             this.m_messageText.SetText(message);
         }
+        this.UpdateHint(n"click", GarageText.Get(n"Garage-Hint-Select"), true);
     }
 
     public func Hide() -> Void {
         this.m_isVisible = false;
         this.m_root.SetVisible(false);
+        this.RemoveHint(n"click");
     }
 }

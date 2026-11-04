@@ -198,18 +198,6 @@ public class PartsFlow {
   }
 }
 
-public static func PartsLabel(name: CName, text: String, style: CName, size: Int32, tint: HDRColor, parent: ref<inkCompoundWidget>) -> ref<inkText> {
-  let label: ref<inkText> = new inkText();
-  label.SetName(name);
-  label.SetText(text);
-  label.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
-  label.SetFontStyle(style);
-  label.SetFontSize(size);
-  label.SetTintColor(tint);
-  label.Reparent(parent);
-  return label;
-}
-
 public abstract class AftermarketScreen extends GarageScreen {
   protected let m_flow: ref<PartsFlow>;
 
@@ -224,7 +212,7 @@ public abstract class AftermarketScreen extends GarageScreen {
   public func OnPartsButtonHover(id: CName) -> Void {}
 
   protected func CreateSubtitle(root: ref<inkCanvas>, text: String, size: Int32, marginTop: Float) -> Void {
-    let subtitle: ref<inkText> = PartsLabel(n"subtitle", text, n"Regular", size, GarageColors.AccentBlue(), root);
+    let subtitle: ref<inkText> = GarageLabel(n"subtitle", text, n"Regular", size, GarageColors.AccentBlue(), root);
     subtitle.SetOpacity(0.6);
     subtitle.SetAnchor(inkEAnchor.TopCenter);
     subtitle.SetAnchorPoint(new Vector2(0.5, 0.0));

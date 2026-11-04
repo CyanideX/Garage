@@ -448,22 +448,18 @@ public class ExitWarningPopup extends inkCustomController {
         GarageSystem.Get().Parts().DiscardCart();
     }
 
+    private func TriggerCartChanged() {
+        if !IsDefined(this.m_screenManager) { return; }
+        let garageFrame = this.m_screenManager.GetGarageFrame();
+        if IsDefined(garageFrame) { garageFrame.TriggerCartChanged(); }
+    }
+
     protected cb func OnYesClick(widget: wref<inkWidget>) -> Bool {
         if this.m_clearCartMode {
             this.m_clearCartMode = false;
             this.ClearCartAndRevert();
             this.Hide();
-            // Targeted refresh - calling Show() would re-fire camera transitions and data fetches
-            if IsDefined(this.m_screenManager) {
-                let screen = this.m_screenManager.GetScreen(this.m_screenManager.GetCurrentScreen());
-                if IsDefined(screen) {
-                    screen.RefreshAfterCartChange();
-                }
-                let garageFrame = this.m_screenManager.GetGarageFrame();
-                if IsDefined(garageFrame) {
-                    garageFrame.TriggerCartChanged();
-                }
-            }
+            this.TriggerCartChanged();
         } else if this.m_navigateBackMode {
             this.m_navigateBackMode = false;
             this.ClearCartAndRevert();
@@ -472,6 +468,7 @@ public class ExitWarningPopup extends inkCustomController {
                 this.m_screenManager.ClearHistory();
                 this.m_screenManager.ShowScreen(n"hub");
             }
+            this.TriggerCartChanged();
         } else {
             this.Hide();
             if IsDefined(this.m_parentPopup) {

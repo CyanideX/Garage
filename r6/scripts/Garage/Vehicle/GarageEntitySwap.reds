@@ -299,7 +299,7 @@ public class GarageEntitySwap extends IScriptable {
     ArrayPush(this.m_afterFadeSeconds, seconds);
   }
 
-  /// Gives up on the running swap. It reports n"cancelled" like any other failure, and the car comes back as on any failure.
+  /// Gives up on the running swap: reports n"cancelled", and the car comes back as on any failure
   public func Cancel() -> Void { this.Finish(n"cancelled"); }
 
   /// Session end: stops polling and puts summon mode back. The listener never gets OnClear.

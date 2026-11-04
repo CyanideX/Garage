@@ -121,6 +121,9 @@ public class GaragePopup extends InGamePopup {
     super.OnInitialize();
     GarageSounds.PlayOpen();
     this.m_frame.SetHints(this.m_footer.GetHints());
+    // The hub went up in OnCreate, before the footer had hints to add to
+    let hub: ref<ServiceHubScreen> = this.m_screens.GetScreen(n"hub") as ServiceHubScreen;
+    if IsDefined(hub) && hub.IsVisible() { hub.ShowHint(); }
     this.m_frame.RegisterToCallback(n"OnClosePopup", this, n"OnCloseRequest");
     this.m_frame.RegisterToCallback(n"OnScreenError", this, n"OnScreenError");
     this.m_frame.RegisterToCallback(n"OnCartChanged", this, n"OnCartChanged");
@@ -178,8 +181,11 @@ public class GaragePopup extends InGamePopup {
 
   public func OnEconomyRefresh(e: ref<XUtilsEvent>) -> Void { this.RefreshHub(); }
 
+  // The one place a cart change gets drawn. Whatever changed the cart just fires OnCartChanged
   protected cb func OnCartChanged(widget: wref<inkWidget>) {
     this.m_cartWidget.RefreshDisplay();
+    let screen: ref<GarageScreen> = this.m_screens.GetScreen(this.m_screens.GetCurrentScreen());
+    if IsDefined(screen) { screen.RefreshAfterCartChange(); }
   }
 
   // Global input reaches every popup, and 0.3 s of Esc meant for one above would count as hold to leave

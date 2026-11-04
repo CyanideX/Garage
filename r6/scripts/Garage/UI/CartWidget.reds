@@ -31,8 +31,7 @@ public class CartWidget extends inkCustomController {
 
     private let m_cartIcon: wref<inkImage>;
     private let m_cartCountText: wref<inkText>;
-    private let m_cartTotalText: wref<inkText>;
-    private let m_cashIcon: wref<inkImage>;
+    private let m_headerTotal: ref<GarageMoneyLine>;
 
     private let m_headerText: wref<inkText>;
     private let m_itemsContainer: wref<inkVerticalPanel>;
@@ -46,9 +45,6 @@ public class CartWidget extends inkCustomController {
     private let m_collapsedBg: wref<inkRectangle>;
     private let m_expandedBg: wref<inkRectangle>;
 
-    private let m_accentColor: HDRColor;
-    private let m_priceColor: HDRColor;
-
     public func SetScreenManager(manager: ref<ScreenManager>) {
         this.m_screenManager = manager;
     }
@@ -59,8 +55,6 @@ public class CartWidget extends inkCustomController {
 
     protected cb func OnCreate() {
         this.m_isExpanded = false;
-        this.m_accentColor = new HDRColor(0.24, 0.77, 0.89, 1.0);  // Electric Blue
-        this.m_priceColor = new HDRColor(1.0, 0.81, 0.06, 1.0);    // Gold
 
         let root = new inkCanvas();
         root.SetName(n"CartWidget");
@@ -89,7 +83,7 @@ public class CartWidget extends inkCustomController {
             this.m_cartIcon.SetVisible(true);
         }
 
-        InitMoneyIcon(this.m_cashIcon);
+        if IsDefined(this.m_headerTotal) { this.m_headerTotal.InitIcon(); }
         if IsDefined(this.m_total) { this.m_total.InitIcon(); }
     }
 
@@ -114,7 +108,7 @@ public class CartWidget extends inkCustomController {
         let border = new inkRectangle();
         border.SetName(n"collapsedBorder");
         border.SetAnchor(inkEAnchor.Fill);
-        border.SetTintColor(this.m_accentColor);
+        border.SetTintColor(GarageColors.AccentBlue());
         border.SetOpacity(0.3);
         border.SetMargin(new inkMargin(-1.0, -1.0, -1.0, -1.0));
         border.Reparent(container);
@@ -134,66 +128,36 @@ public class CartWidget extends inkCustomController {
         cartIcon.SetBrushMirrorType(inkBrushMirrorType.NoMirror);
         cartIcon.SetContentHAlign(inkEHorizontalAlign.Center);
         cartIcon.SetContentVAlign(inkEVerticalAlign.Center);
-        cartIcon.SetTintColor(this.m_accentColor);
+        cartIcon.SetTintColor(GarageColors.AccentBlue());
         cartIcon.SetMargin(new inkMargin(20.0, 0.0, 0.0, 0.0));
         cartIcon.Reparent(mainPanel);
         this.m_cartIcon = cartIcon;
 
-        let countText = new inkText();
-        countText.SetName(n"cartCountText");
-        countText.SetText("0");
-        countText.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
-        countText.SetFontStyle(n"Bold");
-        countText.SetFontSize(36);
-        countText.SetTintColor(this.m_accentColor);
+        let countText = GarageLabel(n"cartCountText", "0", n"Bold", 36, GarageColors.AccentBlue(), mainPanel);
         countText.SetVAlign(inkEVerticalAlign.Center);
-        countText.Reparent(mainPanel);
         this.m_cartCountText = countText;
 
         let sep = new inkRectangle();
         sep.SetName(n"separator");
         sep.SetSize(new Vector2(1.0, 24.0));
-        sep.SetTintColor(this.m_accentColor);
+        sep.SetTintColor(GarageColors.AccentBlue());
         sep.SetOpacity(0.4);
         sep.SetMargin(new inkMargin(8.0, 0.0, 8.0, 0.0));
         sep.Reparent(mainPanel);
 
-        // Atlas set in OnInitialize
-        let cashIcon = CreateMoneyIconForFont(24, 0.7, this.m_priceColor);
-        cashIcon.SetName(n"cashIcon");
-        cashIcon.SetSize(new Vector2(32.0, 32.0));
-        cashIcon.SetContentHAlign(inkEHorizontalAlign.Center);
-        cashIcon.SetMargin(new inkMargin(6.0, 0.0, 6.0, 0.0));
-        cashIcon.SetVAlign(inkEVerticalAlign.Center);
-        cashIcon.Reparent(mainPanel);
-        this.m_cashIcon = cashIcon;
-
-        let totalText = new inkText();
-        totalText.SetName(n"cartTotalText");
-        totalText.SetText("0");
-        totalText.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
-        totalText.SetFontStyle(n"Bold");
-        totalText.SetFontSize(36);
-        totalText.SetTintColor(this.m_priceColor);
-        totalText.SetVAlign(inkEVerticalAlign.Center);
-        totalText.Reparent(mainPanel);
-        this.m_cartTotalText = totalText;
+        this.m_headerTotal = GarageMoneyLine.Make(mainPanel, n"cartTotal", "", 36, 1.0);
+        this.m_headerTotal.Root().SetHAlign(inkEHorizontalAlign.Left);
+        this.m_headerTotal.Root().SetVAlign(inkEVerticalAlign.Center);
+        this.m_headerTotal.Root().SetMargin(new inkMargin(6.0, 0.0, 0.0, 0.0));
 
         let spacer = new inkFlex();
         spacer.SetName(n"spacer");
         spacer.SetHAlign(inkEHorizontalAlign.Fill);
         spacer.Reparent(mainPanel);
 
-        let expandIcon = new inkText();
-        expandIcon.SetName(n"expandIcon");
-        expandIcon.SetText("v");
-        expandIcon.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
-        expandIcon.SetFontStyle(n"Bold");
-        expandIcon.SetFontSize(18);
-        expandIcon.SetTintColor(this.m_accentColor);
+        let expandIcon = GarageLabel(n"expandIcon", "v", n"Bold", 18, GarageColors.AccentBlue(), mainPanel);
         expandIcon.SetOpacity(0.6);
         expandIcon.SetVAlign(inkEVerticalAlign.Center);
-        expandIcon.Reparent(mainPanel);
 
         container.RegisterToCallback(n"OnRelease", this, n"OnExpandClick");
     }
@@ -224,21 +188,14 @@ public class CartWidget extends inkCustomController {
         headerPanel.SetChildMargin(new inkMargin(0.0, 4.0, 0.0, 4.0));
         headerPanel.Reparent(container);
 
-        let header = new inkText();
-        header.SetName(n"headerText");
-        header.SetText(GetLocalizedTextByKey(n"Garage-Cart-Header"));
-        header.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
-        header.SetFontStyle(n"Bold");
-        header.SetFontSize(36);
-        header.SetTintColor(this.m_accentColor);
+        let header = GarageLabel(n"headerText", GetLocalizedTextByKey(n"Garage-Cart-Header"), n"Bold", 36, GarageColors.AccentBlue(), headerPanel);
         header.SetHorizontalAlignment(textHorizontalAlignment.Center);
-        header.Reparent(headerPanel);
         this.m_headerText = header;
 
         let divider = new inkRectangle();
         divider.SetName(n"headerDivider");
         divider.SetSize(new Vector2(670.0, 1.0));
-        divider.SetTintColor(this.m_accentColor);
+        divider.SetTintColor(GarageColors.AccentBlue());
         divider.SetOpacity(0.3);
         divider.Reparent(headerPanel);
 
@@ -255,7 +212,7 @@ public class CartWidget extends inkCustomController {
         let divider2 = new inkRectangle();
         divider2.SetName(n"totalDivider");
         divider2.SetSize(new Vector2(670.0, 1.0));
-        divider2.SetTintColor(this.m_accentColor);
+        divider2.SetTintColor(GarageColors.AccentBlue());
         divider2.SetOpacity(0.3);
         divider2.Reparent(bottomPanel);
 
@@ -312,17 +269,10 @@ public class CartWidget extends inkCustomController {
         items.Reparent(area);
         this.m_itemsContainer = items;
 
-        let empty = new inkText();
-        empty.SetName(n"emptyText");
-        empty.SetText(GetLocalizedTextByKey(n"Garage-Cart-Empty"));
-        empty.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
-        empty.SetFontStyle(n"Regular");
-        empty.SetFontSize(18);
-        empty.SetTintColor(this.m_accentColor);
+        let empty = GarageLabel(n"emptyText", GetLocalizedTextByKey(n"Garage-Cart-Empty"), n"Regular", 18, GarageColors.AccentBlue(), items);
         empty.SetOpacity(0.4);
         empty.SetHorizontalAlignment(textHorizontalAlignment.Center);
         empty.SetVisible(false);
-        empty.Reparent(items);
         this.m_emptyText = empty;
 
         let slider = new inkCanvas();
@@ -336,7 +286,7 @@ public class CartWidget extends inkCustomController {
         let fill = new inkRectangle();
         fill.SetName(n"sliderFill");
         fill.SetAnchor(inkEAnchor.Fill);
-        fill.SetTintColor(this.m_accentColor);
+        fill.SetTintColor(GarageColors.AccentBlue());
         fill.SetOpacity(0.15);
         fill.Reparent(slider);
 
@@ -344,7 +294,7 @@ public class CartWidget extends inkCustomController {
         handle.SetName(n"sliderHandle");
         handle.SetAnchor(inkEAnchor.TopFillHorizontaly);
         handle.SetSize(new Vector2(8.0, 40.0));
-        handle.SetTintColor(this.m_accentColor);
+        handle.SetTintColor(GarageColors.AccentBlue());
         handle.SetOpacity(0.5);
         handle.SetInteractive(true);
         handle.Reparent(slider);
@@ -401,8 +351,8 @@ public class CartWidget extends inkCustomController {
         if IsDefined(this.m_cartCountText) {
             this.m_cartCountText.SetText(ToString(count));
         }
-        if IsDefined(this.m_cartTotalText) {
-            this.m_cartTotalText.SetText(formattedTotal);
+        if IsDefined(this.m_headerTotal) {
+            this.m_headerTotal.SetValue(formattedTotal);
         }
 
         if IsDefined(this.m_total) {
@@ -420,7 +370,7 @@ public class CartWidget extends inkCustomController {
         }
     }
 
-    // Rows are kept and rebound; the pool only grows to the longest cart seen
+    // Rows get rebound, never rebuilt. The pool only grows to the longest cart seen
     private func RefreshItemsList() {
         if !IsDefined(this.m_itemsContainer) {
             return;
@@ -438,7 +388,7 @@ public class CartWidget extends inkCustomController {
         let i = 0;
         while i < ArraySize(this.m_rows) {
             if i < count {
-                this.m_rows[i].Bind(items[i], this.m_priceColor, this.m_accentColor);
+                this.m_rows[i].Bind(items[i]);
             } else {
                 this.m_rows[i].Clear();
             }
@@ -465,12 +415,7 @@ public class CartWidget extends inkCustomController {
 
     public func RemoveItem(subcategory: CName) {
         GarageSystem.Get().Parts().RemoveFromCart(subcategory);
-        this.RefreshDisplay();
         if IsDefined(this.m_screenManager) {
-            let screen = this.m_screenManager.GetScreen(this.m_screenManager.GetCurrentScreen());
-            if IsDefined(screen) {
-                screen.RefreshAfterCartChange();
-            }
             let garageFrame = this.m_screenManager.GetGarageFrame();
             if IsDefined(garageFrame) {
                 garageFrame.TriggerCartChanged();
@@ -529,13 +474,11 @@ public class CartWidget extends inkCustomController {
     }
 }
 
-/// One cart line: name, price and a remove button. The cart and the checkout list both use it; a click on the X fires
-/// OnRemove and the owner asks Subcategory() which item that was.
+/// One cart line, shared by the cart and checkout. The X fires OnRemove and the owner looks the row up with Find
 public class CartRow extends inkCustomController {
     private let m_subcategory: CName;
     private let m_name: wref<inkText>;
-    private let m_price: wref<inkText>;
-    private let m_icon: wref<inkImage>;
+    private let m_price: ref<GarageMoneyLine>;
     private let m_iconReady: Bool;
 
     public static func Width() -> Float { return 644.0; }
@@ -544,7 +487,6 @@ public class CartRow extends inkCustomController {
 
     public func Subcategory() -> CName { return this.m_subcategory; }
 
-    // The row whose root fired a callback, by widget
     public static func Find(rows: array<ref<CartRow>>, widget: wref<inkWidget>) -> CName {
         for row in rows {
             if row.GetRootWidget() == widget { return row.Subcategory(); }
@@ -559,17 +501,12 @@ public class CartRow extends inkCustomController {
         row.SetSize(new Vector2(CartRow.Width(), CartWidget.RowHeight()));
         this.SetRootWidget(row);
 
-        let name = new inkText();
-        name.SetName(n"itemName");
-        name.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
-        name.SetFontStyle(n"Regular");
-        name.SetFontSize(fontSize);
+        let name = GarageLabel(n"itemName", "", n"Regular", fontSize, GarageColors.AccentBlue(), row);
         name.SetAnchor(inkEAnchor.CenterLeft);
         name.SetAnchorPoint(new Vector2(0.0, 0.5));
         name.SetMargin(new inkMargin(15.0, 0.0, 0.0, 0.0));
         name.SetSize(new Vector2(CartRow.NameWidth(), CartWidget.RowHeight()));
         name.SetOverflowPolicy(textOverflowPolicy.DotsEnd);
-        name.Reparent(row);
         this.m_name = name;
 
         // 64x64 at half scale draws at 32. The negative margins let the hit area overhang the row without moving it
@@ -592,43 +529,22 @@ public class CartRow extends inkCustomController {
         remove.RegisterToCallback(n"OnRelease", this, n"OnRemoveClick");
 
         // 57 = the 32 px button and a 25 px gap
-        let priceRow = new inkHorizontalPanel();
-        priceRow.SetName(n"priceRow");
-        priceRow.SetAnchor(inkEAnchor.CenterRight);
-        priceRow.SetAnchorPoint(new Vector2(1.0, 0.5));
-        priceRow.SetMargin(new inkMargin(0.0, 0.0, 57.0, 0.0));
-        priceRow.SetChildMargin(new inkMargin(2.0, 0.0, 2.0, 0.0));
-        priceRow.Reparent(row);
-
-        let icon = CreateMoneyIconForFont(fontSize, 0.5, GarageColors.Gold());
-        icon.SetName(n"priceIcon");
-        icon.SetSize(new Vector2(32.0, 32.0));
-        icon.SetContentHAlign(inkEHorizontalAlign.Center);
-        icon.SetMargin(new inkMargin(4.0, 0.0, 4.0, 0.0));
-        icon.SetVAlign(inkEVerticalAlign.Center);
-        icon.Reparent(priceRow);
-        this.m_icon = icon;
-
-        let price = new inkText();
-        price.SetName(n"itemPrice");
-        price.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
-        price.SetFontStyle(n"Bold");
-        price.SetFontSize(fontSize);
-        price.Reparent(priceRow);
-        this.m_price = price;
+        this.m_price = GarageMoneyLine.Make(row, n"price", "", fontSize, 1.0);
+        let price = this.m_price.Root();
+        price.SetAnchor(inkEAnchor.CenterRight);
+        price.SetAnchorPoint(new Vector2(1.0, 0.5));
+        price.SetMargin(new inkMargin(0.0, 0.0, 57.0, 0.0));
     }
 
-    public func Bind(item: ref<GarageCartItem>, priceColor: HDRColor, nameColor: HDRColor) {
+    public func Bind(item: ref<GarageCartItem>) {
         this.GetRootWidget().SetVisible(true);
         this.m_subcategory = item.category;
         this.m_name.SetText(item.name);
-        this.m_name.SetTintColor(nameColor);
-        this.m_price.SetText(GarageText.Price(item.Total()));
-        this.m_price.SetTintColor(priceColor);
+        this.m_price.SetValue(GarageText.Price(item.Total()));
         // The atlas only takes once the row's in the tree
         if !this.m_iconReady {
             this.m_iconReady = true;
-            InitMoneyIcon(this.m_icon);
+            this.m_price.InitIcon();
         }
     }
 
@@ -643,8 +559,8 @@ public class CartRow extends inkCustomController {
     }
 }
 
-/// A label, the money icon and an amount, built the same way everywhere so totals line up: the cart's and checkout's
-/// TOTAL at TotalSize, checkout's other lines at LineSize.
+/// Label, money icon and amount, built one way so every total lines up
+/// An empty label leaves the label out, for a bare price
 public class GarageMoneyLine extends IScriptable {
     private let m_root: wref<inkHorizontalPanel>;
     private let m_icon: wref<inkImage>;
@@ -652,6 +568,10 @@ public class GarageMoneyLine extends IScriptable {
 
     public static func TotalSize() -> Int32 { return 48; }
     public static func LineSize() -> Int32 { return 30; }
+    // The text's visible height against its point size, so the icon stands as tall as the digits beside it
+    public static func IconRatio() -> Float { return 0.8; }
+    // The game draws its own price icons 50x30. A square box squashes the art
+    public static func IconAspect() -> Float { return 50.0 / 30.0; }
 
     public static func Make(parent: ref<inkCompoundWidget>, name: CName, label: String, size: Int32, labelOpacity: Float) -> ref<GarageMoneyLine> {
         let line = new GarageMoneyLine();
@@ -665,37 +585,27 @@ public class GarageMoneyLine extends IScriptable {
         row.Reparent(parent);
         line.m_root = row;
 
-        let text = new inkText();
-        text.SetName(StringToName(NameToString(name) + "Label"));
-        text.SetText(label);
-        text.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
-        text.SetFontStyle(style);
-        text.SetFontSize(size);
-        text.SetTintColor(GarageColors.AccentBlue());
-        text.SetOpacity(labelOpacity);
-        text.SetVAlign(inkEVerticalAlign.Center);
-        text.SetMargin(new inkMargin(0.0, 0.0, points / 3.0, 0.0));
-        text.Reparent(row);
+        if StrLen(label) > 0 {
+            let text = GarageLabel(StringToName(NameToString(name) + "Label"), label, style, size, GarageColors.AccentBlue(), row);
+            text.SetOpacity(labelOpacity);
+            text.SetVAlign(inkEVerticalAlign.Center);
+            text.SetMargin(new inkMargin(0.0, 0.0, points / 3.0, 0.0));
+        }
 
         let icon = new inkImage();
         icon.SetName(StringToName(NameToString(name) + "Icon"));
-        icon.SetSize(new Vector2(points, points));
-        icon.SetFitToContent(true);
+        let height = points * GarageMoneyLine.IconRatio();
+        icon.SetSize(new Vector2(height * GarageMoneyLine.IconAspect(), height));
+        icon.SetFitToContent(false);
+        icon.SetBrushMirrorType(inkBrushMirrorType.NoMirror);
         icon.SetMargin(new inkMargin(0.0, 0.0, points / 8.0, 0.0));
         icon.SetTintColor(GarageColors.Gold());
         icon.SetVAlign(inkEVerticalAlign.Center);
         icon.Reparent(row);
         line.m_icon = icon;
 
-        let value = new inkText();
-        value.SetName(StringToName(NameToString(name) + "Value"));
-        value.SetText("0");
-        value.SetFontFamily("base\\gameplay\\gui\\fonts\\raj\\raj.inkfontfamily");
-        value.SetFontStyle(n"Bold");
-        value.SetFontSize(size);
-        value.SetTintColor(GarageColors.Gold());
+        let value = GarageLabel(StringToName(NameToString(name) + "Value"), "0", n"Bold", size, GarageColors.Gold(), row);
         value.SetVAlign(inkEVerticalAlign.Center);
-        value.Reparent(row);
         line.m_value = value;
 
         line.InitIcon();
@@ -703,6 +613,7 @@ public class GarageMoneyLine extends IScriptable {
     }
 
     public func Root() -> wref<inkHorizontalPanel> { return this.m_root; }
+    public func Icon() -> wref<inkImage> { return this.m_icon; }
     public func Value() -> wref<inkText> { return this.m_value; }
     public func SetValue(text: String) { this.m_value.SetText(text); }
     // Again whenever the widget's shown: an atlas set while hidden doesn't take
