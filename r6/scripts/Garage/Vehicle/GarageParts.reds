@@ -209,7 +209,7 @@ public class GaragePartsCatalog extends IScriptable {
       part.name = source.GetChoiceName(choice.id);
       part.description = source.GetChoiceDescription(choice.id);
       part.swatch = choice.swatch;
-      part.price = IsDefined(slot.group) ? this.GroupPrice(slot.targets, choice) : choice.price;
+      part.price = IsDefined(slot.group) ? this.GroupPrice(slot.targets, choice) : Max(choice.price, 0);
       part.isStock = true;
       for target in slot.targets {
         if GaragePartsCatalog.IsPaint(target) || !this.IsStock(system, target, choice.id) { part.isStock = false; }
@@ -240,15 +240,16 @@ public class GaragePartsCatalog extends IScriptable {
     let total: Int32 = 0;
     for target in targets {
       let category: ref<VehicleCategory> = this.Category(target);
-      total += IsDefined(category) && category.HasChoice(choice.id) ? category.GetPrice(choice.id) : choice.price;
+      total += Max(IsDefined(category) && category.HasChoice(choice.id) ? category.GetPrice(choice.id) : choice.price, 0);
     }
     return total;
   }
 
+  /// What the car came with. The cart doesn't charge for it and a sale doesn't pay for it.
   public func IsStock(system: ref<VCSystem>, category: CName, choice: CName) -> Bool {
     let fallback: CName = system.GetDefaultCName(this.schema.id, category);
     if IsNameValid(fallback) { return Equals(fallback, choice); }
-    if Equals(choice, n"OptionNone") || Equals(choice, n"Stock") || Equals(choice, n"Default") { return true; }
+    if Equals(choice, n"OptionNone") || Equals(choice, n"None") || Equals(choice, n"Stock") || Equals(choice, n"Default") { return true; }
     let definition: ref<VehicleCategory> = this.Category(category);
     let name: String = IsDefined(definition) ? StrLower(definition.GetChoiceName(choice)) : "";
     return StrBeginsWith(name, "no ") || StrBeginsWith(name, "none") || StrContains(name, "stock") || StrContains(name, "default")
@@ -301,6 +302,8 @@ public class GaragePartRow extends IScriptable {
   public let status: EGaragePartStatus;
   public let badge: EGaragePartBadge;
   public let forcesOthers: Bool;
+  /// What this garage charges for it, the list price is part.price
+  public let price: Int32;
   public let serviceFee: Int32;
 }
 
@@ -388,6 +391,7 @@ public class GarageParts extends IScriptable {
   private let m_effects: array<ref<GaragePreviewEffect>>;
   private let m_totals: ref<GarageVisitTotals>;
   private let m_context: ref<GarageContext>;
+  private let m_markup: ref<GarageMarkup>;
 
   /// False for a car with no schema, which only gets the trade services.
   public func Begin(vehicle: wref<VehicleObject>, location: ref<GarageLocation>) -> Bool {
@@ -400,6 +404,8 @@ public class GarageParts extends IScriptable {
     this.m_schema = IsDefined(schemas) && IsDefined(vehicle) ? schemas.GetSchemaByRecord(vehicle.GetRecordID()) : null;
     this.m_system = VCSystem.Get(GetGameInstance());
     this.m_context = this.BuildContext(vehicle, location);
+    let pricing: ref<GaragePricing> = GarageSystem.Get().Pricing();
+    this.m_markup = IsDefined(vehicle) && IsDefined(location) ? pricing.Markup(location.id, pricing.TierOf(vehicle.GetRecordID(), vehicle.GetCurrentAppearanceName())) : new GarageMarkup();
     if !IsDefined(this.m_schema) || !IsDefined(this.m_system) { return false; }
     this.m_catalog = this.CatalogFor(this.m_schema);
     this.m_system.ClearPreview(this.m_schema.id);
@@ -413,6 +419,7 @@ public class GarageParts extends IScriptable {
     this.m_plan = null;
     this.m_location = null;
     this.m_context = null;
+    this.m_markup = null;
     ArrayClear(this.m_effects);
   }
 
@@ -453,7 +460,8 @@ public class GarageParts extends IScriptable {
       context.vehicle = vehicle;
       context.vehicleRecord = vehicle.GetRecordID();
       context.vehicleDisplayName = IsDefined(this.m_schema) ? this.m_schema.GetName() : GetLocalizedTextByKey(vehicle.GetRecord().DisplayName());
-      context.isOwned = GarageVehicles.IsOwned(vehicle.GetRecordID(), vehicle.GetCurrentAppearanceName());
+      context.ownedRecord = GarageVehicles.OwnedRecord(vehicle.GetRecordID(), vehicle.GetCurrentAppearanceName());
+      context.isOwned = TDBID.IsValid(context.ownedRecord);
     }
     return context;
   }
@@ -465,6 +473,12 @@ public class GarageParts extends IScriptable {
   }
 
   public func Schema() -> ref<VehicleSchema> { return this.m_schema; }
+
+  /// This garage's markup on the car's parts and labour, for showing the discount.
+  public func Markup() -> ref<GarageMarkup> {
+    if !IsDefined(this.m_markup) { this.m_markup = new GarageMarkup(); }
+    return this.m_markup;
+  }
 
   public func Cart() -> ref<GarageCart> {
     if !IsDefined(this.m_cart) { this.m_cart = new GarageCart(); }
@@ -618,23 +632,48 @@ public class GarageParts extends IScriptable {
     return IsDefined(this.m_schema) ? this.Plan().installed.Copy() : new GarageChoices();
   }
 
-  /// What the non-stock parts on a car cost new, for GaragePricing's partsCost. This visit's car unless you name one.
+  /// What V paid for the non-stock parts on a car, for GaragePricing's partsCost. The list price stands in for a part
+  /// with nothing noted. This visit's car unless you name one.
   public func InstalledValue(opt record: TweakDBID) -> Int32 {
-    let schema: ref<VehicleSchema> = this.m_schema;
-    if TDBID.IsValid(record) {
-      let schemas: ref<VehicleSchemas> = VehicleSchemas.Get();
-      schema = IsDefined(schemas) ? schemas.GetSchemaByRecord(record) : null;
-    }
+    let schema: ref<VehicleSchema> = this.SchemaFor(record);
     let system: ref<VCSystem> = VCSystem.Get(GetGameInstance());
-    if !IsDefined(schema) || !IsDefined(system) { return 0; }
+    let paid: ref<GaragePaidParts> = GaragePaidParts.Get();
+    if !IsDefined(schema) || !IsDefined(system) || !IsDefined(paid) { return 0; }
+    let catalog: ref<GaragePartsCatalog> = this.CatalogFor(schema);
     let total: Int32 = 0;
     for category in schema.categories {
       let value: CName = system.GetSettingOrDefault(schema.id, category.id);
-      if IsNameValid(value) && NotEquals(value, n"None") && NotEquals(value, system.GetDefaultCName(schema.id, category.id)) && category.HasChoice(value) {
-        total += Max(category.GetPrice(value), 0);
+      if IsNameValid(value) && category.HasChoice(value) && !catalog.IsStock(system, category.id, value) {
+        total += paid.Paid(schema.id, category.id, value, Max(category.GetPrice(value), 0));
       }
     }
     return total;
+  }
+
+  /// A sold car takes its parts along: they stop being V's and the model goes back to stock, so the next one doesn't come with them.
+  /// Parts V owns that weren't on it stay V's.
+  public func StripSold(record: TweakDBID) -> Void {
+    let schema: ref<VehicleSchema> = this.SchemaFor(record);
+    let system: ref<VCSystem> = VCSystem.Get(GetGameInstance());
+    if !IsDefined(schema) || !IsDefined(system) { return; }
+    for category in schema.categories {
+      let value: CName = system.GetSettingOrDefault(schema.id, category.id);
+      let stock: CName = system.GetDefaultCName(schema.id, category.id);
+      if !Equals(value, stock) {
+        GaragePaidParts.Get().Forget(schema.id, category.id, value);
+        system.RemoveOwnedPartCName(schema.id, category.id, value);
+        system.SetSettingCName(schema.id, category.id, stock);
+      }
+    }
+    system.ClearPreview(schema.id);
+    system.RefreshTrackedVehiclesByName(schema.id);
+    if IsDefined(this.m_schema) && Equals(this.m_schema.id, schema.id) { this.m_plan = null; }
+  }
+
+  private func SchemaFor(record: TweakDBID) -> ref<VehicleSchema> {
+    if !TDBID.IsValid(record) { return this.m_schema; }
+    let schemas: ref<VehicleSchemas> = VehicleSchemas.Get();
+    return IsDefined(schemas) ? schemas.GetSchemaByRecord(record) : null;
   }
 
   /// What the picker should mark as current. n"" for a group whose targets differ.
@@ -696,7 +735,7 @@ public class GarageParts extends IScriptable {
     let targets: array<CName> = this.Targets(id);
     for target in targets { raw += pricing.ServiceFee(target); }
     let garage: Float = IsDefined(this.m_location) ? this.m_location.economy.serviceMultiplier : 1.0;
-    return FloorF(Cast<Float>(raw) * this.FeeMultiplier(IsDefined(this.m_schema) ? this.m_schema.tier : n"") * garage);
+    return this.Markup().Apply(FloorF(Cast<Float>(raw) * this.FeeMultiplier(IsDefined(this.m_schema) ? this.m_schema.tier : n"") * garage));
   }
 
   /// A section's categories and the groups whose targets all exist on this car, sorted by name.
@@ -722,7 +761,7 @@ public class GarageParts extends IScriptable {
       info.serviceFee = fee;
       info.swatch = part.swatch;
       info.status = this.StatusOf(slot, part.id, part);
-      info.price = part.price;
+      info.price = this.Markup().Apply(part.price);
       ArrayPush(list, info);
     }
     return list;
@@ -752,6 +791,7 @@ public class GarageParts extends IScriptable {
       let part: ref<GaragePartData> = list.parts[i];
       let row: ref<GaragePartRow> = new GaragePartRow();
       row.part = part;
+      row.price = this.Markup().Apply(part.price);
       row.serviceFee = fee;
       row.status = this.StatusOf(slot, part.id, part);
       row.forcesOthers = this.Forces(context, part.id);
@@ -946,7 +986,7 @@ public class GarageParts extends IScriptable {
     pick.description = IsDefined(part) ? part.description : "";
     pick.cartName = slot.name + " - " + pick.name;
     pick.status = this.StatusOf(slot, choice, part);
-    pick.price = Equals(pick.status, EGaragePartStatus.Unowned) && IsDefined(part) ? part.price : 0;
+    pick.price = Equals(pick.status, EGaragePartStatus.Unowned) && IsDefined(part) ? this.Markup().Apply(part.price) : 0;
     pick.serviceFee = this.ServiceFee(id);
     pick.final = result.final;
     pick.touched = result.touched;
@@ -981,7 +1021,7 @@ public class GarageParts extends IScriptable {
     part.status = this.Status(category, choice);
     part.backToInstalled = Equals(choice, plan.installed.Get(category));
     if !part.backToInstalled {
-      part.price = Equals(part.status, EGaragePartStatus.Unowned) && IsDefined(definition) ? definition.GetPrice(choice) : 0;
+      part.price = Equals(part.status, EGaragePartStatus.Unowned) && IsDefined(definition) ? this.Markup().Apply(Max(definition.GetPrice(choice), 0)) : 0;
       part.serviceFee = this.ServiceFee(category);
     }
     return part;
@@ -1138,7 +1178,7 @@ public class GarageParts extends IScriptable {
     let definition: ref<VehicleCategory> = this.m_catalog.Category(category);
     if !IsDefined(definition) { return; }
     let status: EGaragePartStatus = this.Status(category, choice);
-    let price: Int32 = Equals(status, EGaragePartStatus.Unowned) ? definition.GetPrice(choice) : 0;
+    let price: Int32 = Equals(status, EGaragePartStatus.Unowned) ? this.Markup().Apply(Max(definition.GetPrice(choice), 0)) : 0;
     this.m_cart.Add(category, choice, definition.GetName() + " - " + definition.GetChoiceName(choice), price, this.ServiceFee(category), status, source);
   }
 
@@ -1194,7 +1234,7 @@ public class GarageParts extends IScriptable {
     let pick: ref<GaragePick> = this.Assess(id, choice);
     if !IsDefined(pick) { return; }
     pick.cartName = name;
-    pick.price = Equals(status, EGaragePartStatus.Unowned) ? price : 0;
+    pick.price = Equals(status, EGaragePartStatus.Unowned) ? Max(price, 0) : 0;
     pick.serviceFee = serviceFee;
     pick.status = status;
     this.AddPick(pick);
@@ -1202,8 +1242,10 @@ public class GarageParts extends IScriptable {
 
   // --- Buying
 
-  private func Apply(id: CName, choice: CName, status: EGaragePartStatus) -> Void {
+  // paid is what was charged for the part itself, labour aside
+  private func Apply(id: CName, choice: CName, status: EGaragePartStatus, paid: Int32) -> Void {
     let targets: array<CName> = this.Targets(id);
+    if Equals(status, EGaragePartStatus.Unowned) { this.NotePaid(targets, choice, paid); }
     for target in targets {
       if Equals(status, EGaragePartStatus.Unowned) && !this.IsPaint(target) { this.m_system.AddOwnedPartCName(this.m_schema.id, target, choice); }
       this.m_system.SetSettingCName(this.m_schema.id, target, choice);
@@ -1211,6 +1253,26 @@ public class GarageParts extends IScriptable {
       this.m_system.SetPreviewCName(this.m_schema.id, target, choice);
     }
     this.m_plan = null;
+  }
+
+  // A group's price is spread over its targets the way their own prices are
+  private func NotePaid(targets: array<CName>, choice: CName, paid: Int32) -> Void {
+    let ledger: ref<GaragePaidParts> = GaragePaidParts.Get();
+    if !IsDefined(ledger) || ArraySize(targets) == 0 { return; }
+    let list: array<Int32>;
+    let sum: Int32 = 0;
+    for target in targets {
+      let category: ref<VehicleCategory> = this.m_catalog.Category(target);
+      let price: Int32 = IsDefined(category) && category.HasChoice(choice) ? Max(category.GetPrice(choice), 0) : 0;
+      ArrayPush(list, price);
+      sum += price;
+    }
+    let i: Int32 = 0;
+    while i < ArraySize(targets) {
+      let share: Int32 = sum > 0 ? Cast<Int32>(Cast<Int64>(paid) * Cast<Int64>(list[i]) / Cast<Int64>(sum)) : paid / ArraySize(targets);
+      ledger.Note(this.m_schema.id, targets[i], choice, share);
+      i += 1;
+    }
   }
 
   private func RefreshTargets(id: CName) -> Void {
@@ -1239,9 +1301,9 @@ public class GarageParts extends IScriptable {
     if !this.Charge(pick.Total(), pick.Purchases(), EGarageTxKind.Parts, n"aftermarket") { return false; }
     this.ShowPick(pick);
     let changed: array<CName> = this.ClearWay(pick, n"");
-    this.Apply(pick.slot, pick.choice, pick.status);
+    this.Apply(pick.slot, pick.choice, pick.status, pick.price);
     for part in pick.forced {
-      if !part.backToInstalled { this.Apply(part.category, part.choice, part.status); }
+      if !part.backToInstalled { this.Apply(part.category, part.choice, part.status, part.price); }
       ArrayPush(changed, part.category);
     }
     ArrayPush(changed, pick.slot);
@@ -1254,15 +1316,15 @@ public class GarageParts extends IScriptable {
     if !IsDefined(this.m_schema) { return false; }
     let chargedAs: EGarageTxKind = IsNameValid(source) ? kind : EGarageTxKind.Parts;
     if !this.Charge(totalCost, 1, chargedAs, IsNameValid(source) ? source : n"aftermarket") { return false; }
-    this.Apply(id, choice, status);
+    this.Apply(id, choice, status, Max(totalCost - this.ServiceFee(id), 0));
     this.RefreshTargets(id);
     return true;
   }
 
-  /// Puts a part on with no charge, for a service that took its money its own way.
-  public func Install(id: CName, choice: CName, status: EGaragePartStatus) -> Bool {
+  /// Puts a part on with no charge, for a service that took its money its own way. paid is what that came to for the part itself.
+  public func Install(id: CName, choice: CName, status: EGaragePartStatus, opt paid: Int32) -> Bool {
     if !IsDefined(this.m_schema) { return false; }
-    this.Apply(id, choice, status);
+    this.Apply(id, choice, status, paid);
     this.RefreshTargets(id);
     return true;
   }
@@ -1274,10 +1336,58 @@ public class GarageParts extends IScriptable {
     let rush: Bool = this.m_cart.quickServicePending;
     if !this.Charge(total, this.m_cart.Count(), rush ? EGarageTxKind.Rush : EGarageTxKind.Parts, rush ? n"quick" : n"aftermarket") { return false; }
     let items: array<ref<GarageCartItem>> = this.m_cart.Items();
-    for item in items { this.Apply(item.category, item.choice, item.status); }
+    for item in items { this.Apply(item.category, item.choice, item.status, item.price); }
     let vehicle: wref<VehicleObject> = this.m_vehicle;
     if IsDefined(vehicle) { VehicleRefresh.Vehicle(vehicle); }
     this.m_cart.Clear();
     return true;
+  }
+}
+
+public class GaragePaidPart {
+  public persistent let model: CName;
+  public persistent let category: CName;
+  public persistent let choice: CName;
+  public persistent let paid: Int32;
+}
+
+/// What V paid for each part, after the garage's markup and discount, saved with the game. A sale's parts never fetch more.
+public class GaragePaidParts extends ScriptableSystem {
+  private persistent let m_parts: array<ref<GaragePaidPart>>;
+
+  public static func Get() -> ref<GaragePaidParts> {
+    return GameInstance.GetScriptableSystemsContainer(GetGameInstance()).Get(n"Garage.Vehicle.GaragePaidParts") as GaragePaidParts;
+  }
+
+  public func Note(model: CName, category: CName, choice: CName, paid: Int32) -> Void {
+    let part: ref<GaragePaidPart> = this.Find(model, category, choice);
+    if !IsDefined(part) {
+      // Plenty for every part on every car V's likely to own, the oldest goes first
+      if ArraySize(this.m_parts) >= 1024 { ArrayErase(this.m_parts, 0); }
+      part = new GaragePaidPart();
+      part.model = model;
+      part.category = category;
+      part.choice = choice;
+      ArrayPush(this.m_parts, part);
+    }
+    part.paid = Max(paid, 0);
+  }
+
+  /// fallback for a part bought before anything was noted
+  public func Paid(model: CName, category: CName, choice: CName, fallback: Int32) -> Int32 {
+    let part: ref<GaragePaidPart> = this.Find(model, category, choice);
+    return IsDefined(part) ? part.paid : fallback;
+  }
+
+  public func Forget(model: CName, category: CName, choice: CName) -> Void {
+    let part: ref<GaragePaidPart> = this.Find(model, category, choice);
+    if IsDefined(part) { ArrayRemove(this.m_parts, part); }
+  }
+
+  private func Find(model: CName, category: CName, choice: CName) -> ref<GaragePaidPart> {
+    for part in this.m_parts {
+      if Equals(part.model, model) && Equals(part.category, category) && Equals(part.choice, choice) { return part; }
+    }
+    return null;
   }
 }

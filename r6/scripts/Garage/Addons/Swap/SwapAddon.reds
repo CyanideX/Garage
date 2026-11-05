@@ -46,7 +46,7 @@ public class SwapService extends GarageService {
   }
 
   public func IsMuted(ctx: ref<GarageContext>) -> Bool {
-    return this.LookCount(ctx) <= 1 || ctx.MustClaimFirst();
+    return this.LookCount(ctx) <= 1 || ctx.MustClaimFirst() || !ctx.CanRestyle() || (ctx.isOwned && !ctx.HoldsLook());
   }
 
   public func Open(ctx: ref<GarageContext>) -> Void {
@@ -74,6 +74,10 @@ public class SwapJob extends GarageSwapListener {
   }
 
   public func OnBlack() -> Void { GarageSystem.Get().RequestClose(); }
+
+  public func OnResult(reason: CName, car: wref<VehicleObject>) -> Void {
+    if IsDefined(car) { this.m_preview.MoveTo(car); }
+  }
 
   public func OnClear(reason: CName, timedOut: Bool) -> Void {
     if IsNameValid(reason) {
@@ -122,7 +126,7 @@ public class SwapScreen extends GarageConfirmScreen {
   }
 
   private func Price(ctx: ref<GarageContext>, look: CName) -> Int32 {
-    return GarageSystem.Get().Pricing().SwapPrice(ctx.vehicleRecord, this.m_preview.Original(), look, n"", 1.0, 0);
+    return GarageSystem.Get().Pricing().SwapPrice(ctx.vehicleRecord, this.m_preview.Original(), look, ctx.locationId);
   }
 
   protected func Fill() -> Void {
@@ -130,6 +134,16 @@ public class SwapScreen extends GarageConfirmScreen {
     let ctx: ref<GarageContext> = system.Parts().Context();
     this.SetTitle(GarageText.Get(n"Garage-Paint-Title"));
     this.SetCar(ctx.vehicleDisplayName);
+    if !ctx.CanRestyle() {
+      this.Refuse(GarageText.Get(n"Garage-Paint-OneOfAKind"));
+      this.SetConfirmText(GarageText.Get(n"Garage-Repair-Blocked"));
+      return;
+    }
+    if ctx.isOwned && !ctx.HoldsLook() {
+      this.Refuse(GarageText.Get(n"Garage-Paint-LookNotSaved"));
+      this.SetConfirmText(GarageText.Get(n"Garage-Repair-Blocked"));
+      return;
+    }
     let count: Int32 = ArraySize(this.m_looks);
     if count == 0 {
       this.Refuse(GarageText.Get(n"Garage-Paint-NoAppearances"));
@@ -143,16 +157,21 @@ public class SwapScreen extends GarageConfirmScreen {
     this.SetOption(appearances.DisplayName(look) + " (" + IntToString(this.m_index + 1) + " / " + IntToString(count) + ")", "");
     let price: Int32 = this.Price(ctx, look);
     let balance: Int32 = GarageTransactions.Balance();
-    this.SetPrice(GarageText.Get(n"Garage-Paint-PriceLabel"), price, "");
+    let pricing: ref<GaragePricing> = system.Pricing();
+    let markup: ref<GarageMarkup> = pricing.Markup(ctx.locationId, pricing.TierOf(ctx.vehicleRecord, original));
+    let garage: String = markup.Lines("\n");
+    let lines: String = StrLen(garage) > 0 ? GarageText.Get(n"Garage-ChopShop-BaseLabel") + GarageText.Price(pricing.SwapCost(ctx.vehicleRecord, original, look)) + "\n" + garage : "";
+    this.SetPrice(GarageText.Get(n"Garage-Paint-PriceLabel"), price, lines);
     this.SetBalance(GarageText.Get(n"Garage-Paint-BalanceLabel"), balance - price, balance >= price);
-    let same: Bool = Equals(look, original);
-    let unowned: Bool = ctx.MustClaimFirst();
-    if unowned {
+    // Looks can still be browsed, so the player sees what claiming gets them
+    if ctx.MustClaimFirst() {
+      this.Refuse(GarageText.Get(n"Garage-Paint-ClaimToSwap"));
       this.SetConfirmText(GarageText.Get(n"Garage-Paint-ClaimFirst"));
-    } else {
-      if same { this.SetConfirmText(GarageText.Get(ctx.isOwned ? n"Garage-Paint-Owned" : n"Garage-Paint-Active")); }
+      return;
     }
-    this.SetCanConfirm(balance >= price && !same && !unowned && system.Swap().CanStart());
+    let same: Bool = Equals(look, original);
+    if same { this.SetConfirmText(GarageText.Get(ctx.isOwned ? n"Garage-Paint-Owned" : n"Garage-Paint-Active")); }
+    this.SetCanConfirm(balance >= price && !same && system.Swap().CanStart());
   }
 
   public func RevertLook() -> Void {
@@ -170,7 +189,7 @@ public class SwapScreen extends GarageConfirmScreen {
     let system: ref<GarageSystem> = GarageSystem.Get();
     let ctx: ref<GarageContext> = system.Parts().Context();
     let vehicle: wref<VehicleObject> = ctx.vehicle;
-    if !IsDefined(vehicle) || !system.Swap().CanStart() {
+    if !IsDefined(vehicle) || !system.Swap().CanStart() || ctx.MustClaimFirst() || !ctx.CanRestyle() || !ctx.HoldsLook() {
       this.Refresh();
       return;
     }

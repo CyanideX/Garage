@@ -10,6 +10,7 @@
   "rushHeatStep": 0.5,
   "rushMinFee": 500,
   "rushMaxHeat": 2,
+  "blockLikelyUnique": true,
   "quickRepairMultiplier": 0.1,
   "fullRepairMultiplier": 0.2,
   "quickRepairFee": 500,
@@ -236,10 +237,14 @@
   "flagMultipliers": [
     {
       "tag": "hackable",
-      "value": 10.0
+      "value": 1.0
     }
   ],
   "tierSellPct": [
+    {
+      "tier": "Hyper",
+      "value": 0.85
+    },
     {
       "tier": "Exotic",
       "value": 0.8
@@ -247,6 +252,10 @@
     {
       "tier": "Premium",
       "value": 0.7
+    },
+    {
+      "tier": "Muscle",
+      "value": 0.65
     },
     {
       "tier": "Sport",
@@ -267,8 +276,16 @@
       "value": 0.7
     },
     {
+      "tier": "Classic",
+      "value": 0.75
+    },
+    {
       "tier": "Sport",
       "value": 0.8
+    },
+    {
+      "tier": "Muscle",
+      "value": 0.85
     },
     {
       "tier": "Premium",
@@ -277,6 +294,10 @@
     {
       "tier": "Exotic",
       "value": 0.95
+    },
+    {
+      "tier": "Hyper",
+      "value": 1.0
     }
   ],
   "vinScrubRates": [
@@ -285,8 +306,16 @@
       "value": 0.1
     },
     {
+      "tier": "Classic",
+      "value": 0.12
+    },
+    {
       "tier": "Sport",
       "value": 0.15
+    },
+    {
+      "tier": "Muscle",
+      "value": 0.18
     },
     {
       "tier": "Premium",
@@ -295,6 +324,28 @@
     {
       "tier": "Exotic",
       "value": 0.25
+    },
+    {
+      "tier": "Hyper",
+      "value": 0.3
+    }
+  ],
+  "valueTiers": [
+    {
+      "tier": "Sport",
+      "value": 40000.0
+    },
+    {
+      "tier": "Premium",
+      "value": 80000.0
+    },
+    {
+      "tier": "Exotic",
+      "value": 130000.0
+    },
+    {
+      "tier": "Hyper",
+      "value": 250000.0
     }
   ],
   "defaultServiceFee": 250,

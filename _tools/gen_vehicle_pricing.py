@@ -74,6 +74,14 @@ def tags_for(record):
         tags.append("no_claim")
     if any(key in record for key in RULES["noSell"]):
         tags.append("no_sell")
+    # Exact names, a substring would catch the Autofixer sibling of a quest car
+    name = record[len("Vehicle."):]
+    if name in RULES["unique"]:
+        tags.append("unique")
+    if name in RULES["uniqueLikely"]:
+        tags.append("unique_likely")
+    if name in RULES["fixedLook"]:
+        tags.append("fixed_look")
     return tags
 
 

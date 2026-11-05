@@ -27,6 +27,12 @@ public class GarageLookPreview extends IScriptable {
 
   public func Original() -> CName { return this.m_original; }
 
+  /// Carries the preview to the car that replaced the one it started on, so Revert and Keep land there.
+  public func MoveTo(car: wref<VehicleObject>) -> Void {
+    this.m_car = car;
+    this.m_showing = IsDefined(car) ? car.GetCurrentAppearanceName() : n"";
+  }
+
   public func Show(look: CName) -> Void {
     let car: wref<VehicleObject> = this.m_car;
     if !IsDefined(car) || Equals(look, this.m_showing) { return; }

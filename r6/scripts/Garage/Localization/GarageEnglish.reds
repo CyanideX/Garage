@@ -114,6 +114,7 @@ public class GarageEnglish extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AlreadyOwned", "ALREADY ON YOUR TITLE");
     this.Text("Garage-ChopShop-CannotBeSold", "VEHICLE CANNOT BE SOLD");
     this.Text("Garage-ChopShop-CannotBeClaimed", "VEHICLE CANNOT BE CLAIMED");
+    this.Text("Garage-ChopShop-OneOfAKind", "ONE OF A KIND, NOT FOR SALE");
     this.Text("Garage-ChopShop-HeatBlocked", "NOT WITH HEAT ON YOU");
     this.Text("Garage-ChopShop-ConditionLabel", "Condition:");
 
@@ -145,6 +146,10 @@ public class GarageEnglish extends ModLocalizationPackage {
     this.Text("Garage-Paint-Owned", "OWNED");
     this.Text("Garage-Paint-Active", "ACTIVE");
     this.Text("Garage-Paint-ClaimFirst", "UNOWNED");
+    this.Text("Garage-Paint-ClaimToSwap", "CLAIM VEHICLE TO SWAP APPEARANCES");
+    this.Text("Garage-Paint-LookNotSaved", "THIS CAR'S LOOK CAN'T BE SAVED");
+    this.Text("Garage-Repair-ClaimForFull", "CLAIM VEHICLE FOR A FULL REPAIR");
+    this.Text("Garage-Paint-OneOfAKind", "ONE OF A KIND, ITS LOOK STAYS");
     this.Text("Garage-Paint-Cancel", "CANCEL");
     this.Text("Garage-Paint-Confirm", "CONFIRM");
 
@@ -200,6 +205,9 @@ public class GarageEnglish extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-TierLabel", "Tier: ");
     this.Text("Garage-ChopShop-MarketLabel", "Market: ");
     this.Text("Garage-ChopShop-PartsLabel", "Parts: ");
+    this.Text("Garage-ChopShop-SaleFloorLabel", "Sale floor: ");
+    this.Text("Garage-Price-LoyaltyLabel", "Loyalty: ");
+    this.Text("Garage-Price-RateLabel", "Garage rate: ");
 
     // Notify
     this.Text("Garage-Notify-UseTerminal", "Approach the vehicle to begin customization");

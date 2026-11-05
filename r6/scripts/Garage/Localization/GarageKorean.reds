@@ -114,6 +114,7 @@ public class GarageKorean extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AlreadyOwned", "이미 보유 중인 차량");
     this.Text("Garage-ChopShop-CannotBeSold", "판매할 수 없는 차량");
     this.Text("Garage-ChopShop-CannotBeClaimed", "인수할 수 없는 차량");
+    this.Text("Garage-ChopShop-OneOfAKind", "유일한 차량, 판매 불가");
     this.Text("Garage-ChopShop-HeatBlocked", "수배 중에는 거래 불가");
     this.Text("Garage-ChopShop-ConditionLabel", "상태:");
 
@@ -145,6 +146,10 @@ public class GarageKorean extends ModLocalizationPackage {
     this.Text("Garage-Paint-Owned", "보유 중");
     this.Text("Garage-Paint-Active", "활성");
     this.Text("Garage-Paint-ClaimFirst", "미등록");
+    this.Text("Garage-Paint-ClaimToSwap", "외관을 바꾸려면 차량을 인수하세요");
+    this.Text("Garage-Paint-LookNotSaved", "이 차량의 외관은 저장할 수 없습니다");
+    this.Text("Garage-Repair-ClaimForFull", "완전 수리를 하려면 차량을 인수하세요");
+    this.Text("Garage-Paint-OneOfAKind", "유일한 차량, 외관 변경 불가");
     this.Text("Garage-Paint-Cancel", "취소");
     this.Text("Garage-Paint-Confirm", "확인");
 
@@ -200,6 +205,9 @@ public class GarageKorean extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-TierLabel", "등급: ");
     this.Text("Garage-ChopShop-MarketLabel", "시세: ");
     this.Text("Garage-ChopShop-PartsLabel", "부품: ");
+    this.Text("Garage-ChopShop-SaleFloorLabel", "판매가 하한: ");
+    this.Text("Garage-Price-LoyaltyLabel", "단골 할인: ");
+    this.Text("Garage-Price-RateLabel", "정비소 요율: ");
 
     // Notify
     this.Text("Garage-Notify-UseTerminal", "터미널에 접근하여 커스터마이징을 시작하세요");

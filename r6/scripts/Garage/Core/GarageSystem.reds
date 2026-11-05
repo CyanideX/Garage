@@ -210,6 +210,8 @@ public class GarageSystem extends ScriptableService {
 
   public func PaintOriginals() -> ref<GaragePaintOriginals> { return this.m_paintOriginals; }
 
+  public func Repairs() -> ref<GarageRepairLedger> { return GarageRepairLedger.Get(); }
+
   public func Appearances() -> ref<GarageAppearances> { return this.m_appearances; }
 
   public func EconomyPanel() -> ref<GarageEconomyPanel> { return this.m_panel; }

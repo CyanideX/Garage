@@ -114,6 +114,7 @@ public class GarageChinese extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AlreadyOwned", "已在名下");
     this.Text("Garage-ChopShop-CannotBeSold", "该车辆无法出售");
     this.Text("Garage-ChopShop-CannotBeClaimed", "该车辆无法认领");
+    this.Text("Garage-ChopShop-OneOfAKind", "独一无二，不予出售");
     this.Text("Garage-ChopShop-HeatBlocked", "被通缉时无法交易");
     this.Text("Garage-ChopShop-ConditionLabel", "状况：");
 
@@ -145,6 +146,10 @@ public class GarageChinese extends ModLocalizationPackage {
     this.Text("Garage-Paint-Owned", "已拥有");
     this.Text("Garage-Paint-Active", "已启用");
     this.Text("Garage-Paint-ClaimFirst", "未拥有");
+    this.Text("Garage-Paint-ClaimToSwap", "认领车辆后才能更换外观");
+    this.Text("Garage-Paint-LookNotSaved", "此车辆的外观无法保存");
+    this.Text("Garage-Repair-ClaimForFull", "认领车辆后才能完整修复");
+    this.Text("Garage-Paint-OneOfAKind", "独一无二，外观不可更改");
     this.Text("Garage-Paint-Cancel", "取消");
     this.Text("Garage-Paint-Confirm", "确认");
 
@@ -200,6 +205,9 @@ public class GarageChinese extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-TierLabel", "等级：");
     this.Text("Garage-ChopShop-MarketLabel", "市场：");
     this.Text("Garage-ChopShop-PartsLabel", "零件：");
+    this.Text("Garage-ChopShop-SaleFloorLabel", "售价下限：");
+    this.Text("Garage-Price-LoyaltyLabel", "忠诚折扣：");
+    this.Text("Garage-Price-RateLabel", "车库费率：");
 
     // Notify
     this.Text("Garage-Notify-UseTerminal", "靠近车辆开始改装");

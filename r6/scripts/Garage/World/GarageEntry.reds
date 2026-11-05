@@ -75,7 +75,7 @@ public abstract class GarageEntry {
     if parked > site.arrival {
       return GarageText.Get(n"Garage-Notify-ParkOnDeckPrefix") + FloatToStringPrec(parked, 1) + GarageText.Get(n"Garage-Notify-ParkOnDeckSuffix");
     }
-    if IsDefined(schema) && !GarageEntry.TierFits(schema, location) { return GarageText.Get(n"Garage-Notify-TierBlocked"); }
+    if !GarageEntry.TierFits(vehicle, location) { return GarageText.Get(n"Garage-Notify-TierBlocked"); }
     return "";
   }
 
@@ -125,7 +125,7 @@ public abstract class GarageEntry {
   }
 
   private static func TierRank(tier: String) -> Int32 {
-    let ranks: array<String> = ["Classic", "Sport", "Muscle", "Premium", "Exotic", "Hyper"];
+    let ranks: array<String> = ["Standard", "Classic", "Sport", "Muscle", "Premium", "Exotic", "Hyper"];
     let i: Int32 = 0;
     while i < ArraySize(ranks) {
       if Equals(ranks[i], tier) { return i + 1; }
@@ -134,9 +134,11 @@ public abstract class GarageEntry {
     return 0;
   }
 
-  private static func TierFits(schema: ref<VehicleSchema>, location: ref<GarageLocation>) -> Bool {
+  private static func TierFits(vehicle: wref<VehicleObject>, location: ref<GarageLocation>) -> Bool {
     let limit: Int32 = GarageEntry.TierRank(location.economy.maxVehicleTier);
-    return limit == 0 || GarageEntry.TierRank(NameToString(schema.tier)) <= limit;
+    if limit == 0 { return true; }
+    let tier: CName = GarageSystem.Get().Pricing().TierOf(vehicle.GetRecordID(), vehicle.GetCurrentAppearanceName());
+    return GarageEntry.TierRank(NameToString(tier)) <= limit;
   }
 
   // Fails open: a car that can't be measured yet gets in

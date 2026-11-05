@@ -283,3 +283,64 @@ public abstract class GarageScreen extends inkCustomController {
         return false;
     }
 }
+
+/// Label, money icon and amount, built one way so every total lines up
+/// An empty label leaves the label out, for a bare price
+public class GarageMoneyLine extends IScriptable {
+    private let m_root: wref<inkHorizontalPanel>;
+    private let m_icon: wref<inkImage>;
+    private let m_value: wref<inkText>;
+
+    public static func TotalSize() -> Int32 { return 48; }
+    public static func LineSize() -> Int32 { return 30; }
+    // The text's visible height against its point size, so the icon stands as tall as the digits beside it
+    public static func IconRatio() -> Float { return 0.8; }
+    // The game draws its own price icons 50x30. A square box squashes the art
+    public static func IconAspect() -> Float { return 50.0 / 30.0; }
+
+    public static func Make(parent: ref<inkCompoundWidget>, name: CName, label: String, size: Int32, labelOpacity: Float) -> ref<GarageMoneyLine> {
+        let line = new GarageMoneyLine();
+        let points = Cast<Float>(size);
+        let style = size >= GarageMoneyLine.TotalSize() ? n"Bold" : n"Regular";
+
+        let row = new inkHorizontalPanel();
+        row.SetName(StringToName(NameToString(name) + "Row"));
+        row.SetHAlign(inkEHorizontalAlign.Center);
+        row.SetChildMargin(new inkMargin(4.0, 0.0, 4.0, 0.0));
+        row.Reparent(parent);
+        line.m_root = row;
+
+        if StrLen(label) > 0 {
+            let text = GarageLabel(StringToName(NameToString(name) + "Label"), label, style, size, GarageColors.AccentBlue(), row);
+            text.SetOpacity(labelOpacity);
+            text.SetVAlign(inkEVerticalAlign.Center);
+            text.SetMargin(new inkMargin(0.0, 0.0, points / 3.0, 0.0));
+        }
+
+        let icon = new inkImage();
+        icon.SetName(StringToName(NameToString(name) + "Icon"));
+        let height = points * GarageMoneyLine.IconRatio();
+        icon.SetSize(new Vector2(height * GarageMoneyLine.IconAspect(), height));
+        icon.SetFitToContent(false);
+        icon.SetBrushMirrorType(inkBrushMirrorType.NoMirror);
+        icon.SetMargin(new inkMargin(0.0, 0.0, points / 8.0, 0.0));
+        icon.SetTintColor(GarageColors.Gold());
+        icon.SetVAlign(inkEVerticalAlign.Center);
+        icon.Reparent(row);
+        line.m_icon = icon;
+
+        let value = GarageLabel(StringToName(NameToString(name) + "Value"), "0", n"Bold", size, GarageColors.Gold(), row);
+        value.SetVAlign(inkEVerticalAlign.Center);
+        line.m_value = value;
+
+        line.InitIcon();
+        return line;
+    }
+
+    public func Root() -> wref<inkHorizontalPanel> { return this.m_root; }
+    public func Icon() -> wref<inkImage> { return this.m_icon; }
+    public func Value() -> wref<inkText> { return this.m_value; }
+    public func SetValue(text: String) { this.m_value.SetText(text); }
+    // Again whenever the widget's shown: an atlas set while hidden doesn't take
+    public func InitIcon() { InitMoneyIcon(this.m_icon); }
+}

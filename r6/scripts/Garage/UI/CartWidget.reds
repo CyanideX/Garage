@@ -21,13 +21,11 @@ public class CartWidget extends inkCustomController {
     public static func RowStep() -> Float { return CartWidget.RowHeight() + 2.0 * CartWidget.RowGap(); }
     // Past this the list scrolls instead of running off the screen
     private static func MaxRows() -> Int32 { return 12; }
-    private static func ListTop() -> Float { return 76.0; }
-    private static func BottomHeight() -> Float { return 244.0; }
     private static func Width() -> Float { return 700.0; }
 
     private let m_rootCanvas: wref<inkCanvas>;
     private let m_collapsedView: wref<inkCanvas>;
-    private let m_expandedView: wref<inkCanvas>;
+    private let m_expandedView: wref<inkFlex>;
 
     private let m_cartIcon: wref<inkImage>;
     private let m_cartCountText: wref<inkText>;
@@ -163,33 +161,35 @@ public class CartWidget extends inkCustomController {
     }
 
     private func CreateExpandedView(parent: ref<inkCanvas>) {
-        let container = new inkCanvas();
+        // Sized by what's in it, so nothing below the list can end up over it
+        let container = new inkFlex();
         container.SetName(n"expandedView");
         container.SetAnchor(inkEAnchor.TopRight);
         container.SetAnchorPoint(new Vector2(1.0, 0.0));
         container.SetMargin(new inkMargin(0.0, 82.0, 0.0, 0.0));  // Below collapsed header (80px + 2px gap)
-        container.SetSize(new Vector2(700.0, 500.0));
+        container.SetFitToContent(true);
         container.Reparent(parent);
         this.m_expandedView = container;
 
         let bg = new inkRectangle();
         bg.SetName(n"expandedBg");
-        bg.SetAnchor(inkEAnchor.Fill);
+        bg.SetHAlign(inkEHorizontalAlign.Fill);
+        bg.SetVAlign(inkEVerticalAlign.Fill);
         bg.SetTintColor(new HDRColor(0.02, 0.02, 0.03, 1.0));
         bg.SetOpacity(0.4);
         bg.Reparent(container);
         this.m_expandedBg = bg;
 
-        let headerPanel = new inkVerticalPanel();
-        headerPanel.SetName(n"headerPanel");
-        headerPanel.SetAnchor(inkEAnchor.TopCenter);
-        headerPanel.SetAnchorPoint(new Vector2(0.5, 0.0));
-        headerPanel.SetMargin(new inkMargin(15.0, 12.0, 15.0, 0.0));
-        headerPanel.SetChildMargin(new inkMargin(0.0, 4.0, 0.0, 4.0));
-        headerPanel.Reparent(container);
+        let column = new inkVerticalPanel();
+        column.SetName(n"column");
+        column.SetHAlign(inkEHorizontalAlign.Center);
+        column.SetVAlign(inkEVerticalAlign.Top);
+        column.SetMargin(new inkMargin(15.0, 12.0, 15.0, 12.0));
+        column.SetChildMargin(new inkMargin(0.0, 4.0, 0.0, 4.0));
+        column.Reparent(container);
 
-        let header = GarageLabel(n"headerText", GetLocalizedTextByKey(n"Garage-Cart-Header"), n"Bold", 36, GarageColors.AccentBlue(), headerPanel);
-        header.SetHorizontalAlignment(textHorizontalAlignment.Center);
+        let header = GarageLabel(n"headerText", GetLocalizedTextByKey(n"Garage-Cart-Header"), n"Bold", 36, GarageColors.AccentBlue(), column);
+        header.SetHAlign(inkEHorizontalAlign.Center);
         this.m_headerText = header;
 
         let divider = new inkRectangle();
@@ -197,26 +197,19 @@ public class CartWidget extends inkCustomController {
         divider.SetSize(new Vector2(670.0, 1.0));
         divider.SetTintColor(GarageColors.AccentBlue());
         divider.SetOpacity(0.3);
-        divider.Reparent(headerPanel);
+        divider.Reparent(column);
 
-        this.CreateList(container);
-
-        let bottomPanel = new inkVerticalPanel();
-        bottomPanel.SetName(n"bottomPanel");
-        bottomPanel.SetAnchor(inkEAnchor.BottomCenter);
-        bottomPanel.SetAnchorPoint(new Vector2(0.5, 1.0));
-        bottomPanel.SetMargin(new inkMargin(15.0, 0.0, 0.0, 12.0));
-        bottomPanel.SetChildMargin(new inkMargin(0.0, 6.0, 0.0, 6.0));
-        bottomPanel.Reparent(container);
+        this.CreateList(column);
 
         let divider2 = new inkRectangle();
         divider2.SetName(n"totalDivider");
         divider2.SetSize(new Vector2(670.0, 1.0));
         divider2.SetTintColor(GarageColors.AccentBlue());
         divider2.SetOpacity(0.3);
-        divider2.Reparent(bottomPanel);
+        divider2.SetMargin(new inkMargin(0.0, 6.0, 0.0, 6.0));
+        divider2.Reparent(column);
 
-        this.m_total = GarageMoneyLine.Make(bottomPanel, n"total", GetLocalizedTextByKey(n"Garage-Cart-TotalLabel"), GarageMoneyLine.TotalSize(), 1.0);
+        this.m_total = GarageMoneyLine.Make(column, n"total", GetLocalizedTextByKey(n"Garage-Cart-TotalLabel"), GarageMoneyLine.TotalSize(), 1.0);
         this.m_total.Root().SetHAlign(inkEHorizontalAlign.Right);
         this.m_total.Root().SetMargin(new inkMargin(0.0, 0.0, 28.0, 0.0));
 
@@ -224,7 +217,8 @@ public class CartWidget extends inkCustomController {
         buttonsPanel.SetName(n"buttonsPanel");
         buttonsPanel.SetHAlign(inkEHorizontalAlign.Center);
         buttonsPanel.SetChildMargin(new inkMargin(8.0, 0.0, 8.0, 0.0));
-        buttonsPanel.Reparent(bottomPanel);
+        buttonsPanel.SetMargin(new inkMargin(0.0, 6.0, 0.0, 0.0));
+        buttonsPanel.Reparent(column);
 
         this.m_clearBtn = SimpleButton.Create();
         this.m_clearBtn.SetName(n"clearBtn");
@@ -245,12 +239,10 @@ public class CartWidget extends inkCustomController {
         this.m_checkoutBtn.RegisterToCallback(n"OnBtnClick", this, n"OnCheckoutClick");
     }
 
-    private func CreateList(parent: ref<inkCanvas>) {
+    private func CreateList(parent: ref<inkCompoundWidget>) {
         let region = new inkCanvas();
         region.SetName(n"listRegion");
-        region.SetAnchor(inkEAnchor.TopCenter);
-        region.SetAnchorPoint(new Vector2(0.5, 0.0));
-        region.SetMargin(new inkMargin(0.0, CartWidget.ListTop(), 0.0, 0.0));
+        region.SetHAlign(inkEHorizontalAlign.Center);
         region.SetSize(new Vector2(CartWidget.Width() - 20.0, CartWidget.RowStep()));
         region.Reparent(parent);
         this.m_listRegion = region;
@@ -398,13 +390,11 @@ public class CartWidget extends inkCustomController {
     }
 
     private func UpdateExpandedHeight(itemCount: Int32) {
-        if !IsDefined(this.m_expandedView) || !IsDefined(this.m_listRegion) {
+        if !IsDefined(this.m_listRegion) {
             return;
         }
         let shown = Max(Min(itemCount, CartWidget.MaxRows()), 1);
-        let listHeight = Cast<Float>(shown) * CartWidget.RowStep();
-        this.m_listRegion.SetSize(new Vector2(CartWidget.Width() - 20.0, listHeight));
-        this.m_expandedView.SetSize(new Vector2(CartWidget.Width(), CartWidget.ListTop() + listHeight + CartWidget.BottomHeight()));
+        this.m_listRegion.SetSize(new Vector2(CartWidget.Width() - 20.0, Cast<Float>(shown) * CartWidget.RowStep()));
     }
 
     protected cb func OnRowRemove(widget: wref<inkWidget>) -> Bool {
@@ -557,65 +547,4 @@ public class CartRow extends inkCustomController {
         if evt.IsAction(n"click") && IsNameValid(this.m_subcategory) { this.CallCustomCallback(n"OnRemove"); }
         return false;
     }
-}
-
-/// Label, money icon and amount, built one way so every total lines up
-/// An empty label leaves the label out, for a bare price
-public class GarageMoneyLine extends IScriptable {
-    private let m_root: wref<inkHorizontalPanel>;
-    private let m_icon: wref<inkImage>;
-    private let m_value: wref<inkText>;
-
-    public static func TotalSize() -> Int32 { return 48; }
-    public static func LineSize() -> Int32 { return 30; }
-    // The text's visible height against its point size, so the icon stands as tall as the digits beside it
-    public static func IconRatio() -> Float { return 0.8; }
-    // The game draws its own price icons 50x30. A square box squashes the art
-    public static func IconAspect() -> Float { return 50.0 / 30.0; }
-
-    public static func Make(parent: ref<inkCompoundWidget>, name: CName, label: String, size: Int32, labelOpacity: Float) -> ref<GarageMoneyLine> {
-        let line = new GarageMoneyLine();
-        let points = Cast<Float>(size);
-        let style = size >= GarageMoneyLine.TotalSize() ? n"Bold" : n"Regular";
-
-        let row = new inkHorizontalPanel();
-        row.SetName(StringToName(NameToString(name) + "Row"));
-        row.SetHAlign(inkEHorizontalAlign.Center);
-        row.SetChildMargin(new inkMargin(4.0, 0.0, 4.0, 0.0));
-        row.Reparent(parent);
-        line.m_root = row;
-
-        if StrLen(label) > 0 {
-            let text = GarageLabel(StringToName(NameToString(name) + "Label"), label, style, size, GarageColors.AccentBlue(), row);
-            text.SetOpacity(labelOpacity);
-            text.SetVAlign(inkEVerticalAlign.Center);
-            text.SetMargin(new inkMargin(0.0, 0.0, points / 3.0, 0.0));
-        }
-
-        let icon = new inkImage();
-        icon.SetName(StringToName(NameToString(name) + "Icon"));
-        let height = points * GarageMoneyLine.IconRatio();
-        icon.SetSize(new Vector2(height * GarageMoneyLine.IconAspect(), height));
-        icon.SetFitToContent(false);
-        icon.SetBrushMirrorType(inkBrushMirrorType.NoMirror);
-        icon.SetMargin(new inkMargin(0.0, 0.0, points / 8.0, 0.0));
-        icon.SetTintColor(GarageColors.Gold());
-        icon.SetVAlign(inkEVerticalAlign.Center);
-        icon.Reparent(row);
-        line.m_icon = icon;
-
-        let value = GarageLabel(StringToName(NameToString(name) + "Value"), "0", n"Bold", size, GarageColors.Gold(), row);
-        value.SetVAlign(inkEVerticalAlign.Center);
-        line.m_value = value;
-
-        line.InitIcon();
-        return line;
-    }
-
-    public func Root() -> wref<inkHorizontalPanel> { return this.m_root; }
-    public func Icon() -> wref<inkImage> { return this.m_icon; }
-    public func Value() -> wref<inkText> { return this.m_value; }
-    public func SetValue(text: String) { this.m_value.SetText(text); }
-    // Again whenever the widget's shown: an atlas set while hidden doesn't take
-    public func InitIcon() { InitMoneyIcon(this.m_icon); }
 }

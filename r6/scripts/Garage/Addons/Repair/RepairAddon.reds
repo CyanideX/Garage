@@ -81,6 +81,9 @@ public class RepairJob extends GarageSwapListener {
     let car: wref<VehicleObject> = this.m_car;
     if !IsDefined(car) { return n"gone"; }
     if GarageVehicles.IsFullHealth(car) { return n"already_fixed"; }
+    if !GarageVehicles.IsOwned(car.GetRecordID(), car.GetCurrentAppearanceName()) {
+      GarageSystem.Get().Repairs().Note(car, GarageVehicles.HealthShown(car));
+    }
     GarageVehicles.RepairInPlace(car);
     return n"";
   }
@@ -133,10 +136,8 @@ public class RepairScreen extends GarageConfirmScreen {
   }
 
   private func Quote(ctx: ref<GarageContext>, health: Float) -> ref<GarageRepairQuote> {
-    let system: ref<GarageSystem> = GarageSystem.Get();
-    let location: ref<GarageLocation> = system.Data().GetLocation(ctx.locationId);
-    let garage: Float = IsDefined(location) ? location.economy.serviceMultiplier : 1.0;
-    return system.Pricing().QuoteRepair(ctx.vehicleRecord, health, this.m_full, garage);
+    let vehicle: wref<VehicleObject> = ctx.vehicle;
+    return GarageSystem.Get().Pricing().QuoteRepair(ctx.vehicleRecord, IsDefined(vehicle) ? vehicle.GetCurrentAppearanceName() : n"", health, this.m_full, ctx.locationId);
   }
 
   private func IsHeatBlocked() -> Bool {
@@ -166,27 +167,31 @@ public class RepairScreen extends GarageConfirmScreen {
     this.SetOption(name + (this.m_full ? " (2 / 2)" : " (1 / 2)"), GarageText.Get(this.m_full ? n"Garage-Repair-FullDesc" : n"Garage-Repair-QuickDesc"));
     let quote: ref<GarageRepairQuote> = this.Quote(ctx, health);
     let lines: String = GarageText.Get(n"Garage-Repair-BaseLabel") + GarageText.Price(quote.base)
-      + "\n" + GarageText.Get(n"Garage-Repair-FeeLabel") + GarageText.Price(quote.fee)
-      + "\n" + GarageText.Get(n"Garage-Repair-TotalLabel") + GarageText.Price(quote.total);
+      + "\n" + GarageText.Get(n"Garage-Repair-FeeLabel") + GarageText.Price(quote.fee);
+    let garage: String = quote.markup.Lines("\n");
+    if StrLen(garage) > 0 { lines += "\n" + garage; }
+    lines += "\n" + GarageText.Get(n"Garage-Repair-TotalLabel") + GarageText.Price(quote.total);
     this.SetPrice(GarageText.Get(this.m_full ? n"Garage-Repair-FullPriceLabel" : n"Garage-Repair-QuickPriceLabel"), quote.total, lines);
     let balance: Int32 = GarageTransactions.Balance();
     this.SetBalance(GarageText.Get(n"Garage-Repair-BalanceLabel"), balance, balance >= quote.total);
     let blocked: Bool = this.IsHeatBlocked();
-    let unowned: Bool = ctx.MustClaimFirst();
+    // A full repair respawns the car, and only an owned one can be
+    let unowned: Bool = this.m_full && ctx.MustClaimFirst();
     if blocked { this.SetWarning(GarageText.Get(n"Garage-Repair-HeatWarning")); }
     if unowned {
+      this.Refuse(GarageText.Get(n"Garage-Repair-ClaimForFull"));
       this.SetConfirmText(GarageText.Get(n"Garage-Paint-ClaimFirst"));
-    } else {
-      if blocked { this.SetConfirmText(GarageText.Get(n"Garage-Repair-Blocked")); }
+      return;
     }
-    this.SetCanConfirm(balance >= quote.total && !blocked && !unowned && this.CarIsFree());
+    if blocked { this.SetConfirmText(GarageText.Get(n"Garage-Repair-Blocked")); }
+    this.SetCanConfirm(balance >= quote.total && !blocked && this.CarIsFree());
   }
 
   protected func OnConfirmed() -> Void {
     let system: ref<GarageSystem> = GarageSystem.Get();
     let ctx: ref<GarageContext> = system.Parts().Context();
     let vehicle: wref<VehicleObject> = ctx.vehicle;
-    if !IsDefined(vehicle) || GarageVehicles.IsFullHealth(vehicle) || this.IsHeatBlocked() || ctx.MustClaimFirst() || !this.CarIsFree() {
+    if !IsDefined(vehicle) || GarageVehicles.IsFullHealth(vehicle) || this.IsHeatBlocked() || (this.m_full && ctx.MustClaimFirst()) || !this.CarIsFree() {
       this.Refresh();
       return;
     }
@@ -203,7 +208,9 @@ public class RepairScreen extends GarageConfirmScreen {
       return;
     }
     let options: ref<XUtilsFadeOptions> = GarageEntitySwap.FadeOptions(prices.repairFadeHold);
-    if !system.Swap().BehindFade(options, ctx.OwnedRecord(), vehicle.GetCurrentAppearanceName(), GarageVehicles.SpotOf(vehicle), vehicle, job) {
+    // Respawning a record with no flat would roll a random look, so fix it where it stands
+    let record: TweakDBID = ctx.HoldsLook() ? ctx.OwnedRecord() : TDBID.None();
+    if !system.Swap().BehindFade(options, record, vehicle.GetCurrentAppearanceName(), GarageVehicles.SpotOf(vehicle), vehicle, job) {
       system.RequestClose();
       job.Refused();
     }

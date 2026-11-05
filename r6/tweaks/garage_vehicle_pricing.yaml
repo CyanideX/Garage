@@ -1327,7 +1327,7 @@ Vehicle.v_bubble_demo_trigger.garageTags:
 Vehicle.v_delamain_taxi.garageBasePrice: 40000
 Vehicle.v_delamain_taxi.garageTags:
   $type: array:String
-  $value: [no_claim, no_sell]
+  $value: [no_claim, no_sell, unique]
 Vehicle.v_golf_demo_trigger.garageTags:
   $type: array:String
   $value: [no_claim]
@@ -1425,12 +1425,12 @@ Vehicle.v_sport1_quadra_sport_r7_mrhands.garagePriceAssignment: "EconomicAssignm
 Vehicle.v_sport1_quadra_sport_r7_mrhands.garageBasePrice: 81000
 Vehicle.v_sport1_quadra_sport_r7_mrhands.garageTags:
   $type: array:String
-  $value: [v_sport1]
+  $value: [v_sport1, unique]
 Vehicle.v_sport1_quadra_sport_r7_netrunner.garagePriceAssignment: "EconomicAssignment.v_sport1_quadra_sport_r7_player"
 Vehicle.v_sport1_quadra_sport_r7_netrunner.garageBasePrice: 81000
 Vehicle.v_sport1_quadra_sport_r7_netrunner.garageTags:
   $type: array:String
-  $value: [v_sport1]
+  $value: [v_sport1, unique_likely]
 Vehicle.v_sport1_quadra_sport_r7_netrunner_01.garagePriceAssignment: "EconomicAssignment.v_sport1_quadra_sport_r7_player"
 Vehicle.v_sport1_quadra_sport_r7_netrunner_01.garageBasePrice: 81000
 Vehicle.v_sport1_quadra_sport_r7_netrunner_01.garageTags:
@@ -1510,7 +1510,7 @@ Vehicle.v_sport1_quadra_turbo_r_player.garagePriceAssignment: "EconomicAssignmen
 Vehicle.v_sport1_quadra_turbo_r_player.garageBasePrice: 69000
 Vehicle.v_sport1_quadra_turbo_r_player.garageTags:
   $type: array:String
-  $value: [v_sport1]
+  $value: [v_sport1, unique_likely]
 Vehicle.v_sport1_quadra_turbo_tyger_claw.garagePriceAssignment: "EconomicAssignment.v_sport1_quadra_turbo_player"
 Vehicle.v_sport1_quadra_turbo_tyger_claw.garageBasePrice: 69000
 Vehicle.v_sport1_quadra_turbo_tyger_claw.garageTags:
@@ -1555,7 +1555,7 @@ Vehicle.v_sport1_rayfield_caliburn_02_player.garagePriceAssignment: "EconomicAss
 Vehicle.v_sport1_rayfield_caliburn_02_player.garageBasePrice: 135000
 Vehicle.v_sport1_rayfield_caliburn_02_player.garageTags:
   $type: array:String
-  $value: [v_sport1]
+  $value: [v_sport1, unique]
 Vehicle.v_sport1_rayfield_caliburn_courier.garagePriceAssignment: "EconomicAssignment.v_sport1_rayfield_caliburn_player"
 Vehicle.v_sport1_rayfield_caliburn_courier.garageBasePrice: 135000
 Vehicle.v_sport1_rayfield_caliburn_courier.garageTags:
@@ -1570,7 +1570,7 @@ Vehicle.v_sport1_rayfield_caliburn_mordred_player.garagePriceAssignment: "Econom
 Vehicle.v_sport1_rayfield_caliburn_mordred_player.garageBasePrice: 135000
 Vehicle.v_sport1_rayfield_caliburn_mordred_player.garageTags:
   $type: array:String
-  $value: [v_sport1]
+  $value: [v_sport1, unique_likely]
 Vehicle.v_sport1_rayfield_caliburn_murdered.garagePriceAssignment: "EconomicAssignment.v_sport1_rayfield_caliburn_player"
 Vehicle.v_sport1_rayfield_caliburn_murdered.garageBasePrice: 135000
 Vehicle.v_sport1_rayfield_caliburn_murdered.garageTags:
@@ -1616,7 +1616,7 @@ Vehicle.v_sport2_mizutani_shion_nomad_02_player.garagePriceAssignment: "Economic
 Vehicle.v_sport2_mizutani_shion_nomad_02_player.garageBasePrice: 57000
 Vehicle.v_sport2_mizutani_shion_nomad_02_player.garageTags:
   $type: array:String
-  $value: [v_sport2]
+  $value: [v_sport2, unique_likely]
 Vehicle.v_sport2_mizutani_shion_nomad_buggy.garagePriceAssignment: "EconomicAssignment.v_sport2_mizutani_shion_nomad_player"
 Vehicle.v_sport2_mizutani_shion_nomad_buggy.garageBasePrice: 57000
 Vehicle.v_sport2_mizutani_shion_nomad_buggy.garageTags:
@@ -1726,12 +1726,12 @@ Vehicle.v_sport2_porsche_911turbo_cabrio_player.garagePriceAssignment: "Economic
 Vehicle.v_sport2_porsche_911turbo_cabrio_player.garageBasePrice: 20000
 Vehicle.v_sport2_porsche_911turbo_cabrio_player.garageTags:
   $type: array:String
-  $value: [v_sport2, no_claim, no_sell]
+  $value: [v_sport2, no_claim, no_sell, fixed_look]
 Vehicle.v_sport2_porsche_911turbo_player.garagePriceAssignment: "EconomicAssignment.v_sport2_porsche_911turbo_player"
 Vehicle.v_sport2_porsche_911turbo_player.garageBasePrice: 20000
 Vehicle.v_sport2_porsche_911turbo_player.garageTags:
   $type: array:String
-  $value: [v_sport2, no_claim, no_sell]
+  $value: [v_sport2, no_claim, no_sell, unique]
 Vehicle.v_sport2_porsche_911turbo_quest.garagePriceAssignment: "EconomicAssignment.v_sport2_porsche_911turbo_player"
 Vehicle.v_sport2_porsche_911turbo_quest.garageBasePrice: 20000
 Vehicle.v_sport2_porsche_911turbo_quest.garageTags:
@@ -1746,7 +1746,7 @@ Vehicle.v_sport2_quadra_type66_02_player.garagePriceAssignment: "EconomicAssignm
 Vehicle.v_sport2_quadra_type66_02_player.garageBasePrice: 99000
 Vehicle.v_sport2_quadra_type66_02_player.garageTags:
   $type: array:String
-  $value: [v_sport2]
+  $value: [v_sport2, unique_likely]
 Vehicle.v_sport2_quadra_type66_avenger.garagePriceAssignment: "EconomicAssignment.v_sport2_quadra_type66_avenger_player"
 Vehicle.v_sport2_quadra_type66_avenger.garageBasePrice: 99000
 Vehicle.v_sport2_quadra_type66_avenger.garageTags:
@@ -1821,7 +1821,7 @@ Vehicle.v_sport2_quadra_type66_nomad_tribute.garagePriceAssignment: "EconomicAss
 Vehicle.v_sport2_quadra_type66_nomad_tribute.garageBasePrice: 99000
 Vehicle.v_sport2_quadra_type66_nomad_tribute.garageTags:
   $type: array:String
-  $value: [v_sport2]
+  $value: [v_sport2, unique_likely]
 Vehicle.v_sport2_quadra_type66_nomad_wraith.garagePriceAssignment: "EconomicAssignment.v_sport2_quadra_type66_nomad_player"
 Vehicle.v_sport2_quadra_type66_nomad_wraith.garageBasePrice: 99000
 Vehicle.v_sport2_quadra_type66_nomad_wraith.garageTags:
@@ -1946,7 +1946,7 @@ Vehicle.v_sport2_villefort_alvarado_valentinos_player.garagePriceAssignment: "Ec
 Vehicle.v_sport2_villefort_alvarado_valentinos_player.garageBasePrice: 38000
 Vehicle.v_sport2_villefort_alvarado_valentinos_player.garageTags:
   $type: array:String
-  $value: [v_sport2]
+  $value: [v_sport2, unique_likely]
 Vehicle.v_sport2_villefort_deleon.garagePriceAssignment: "EconomicAssignment.v_sport2_villefort_deleon_player"
 Vehicle.v_sport2_villefort_deleon.garageBasePrice: 26000
 Vehicle.v_sport2_villefort_deleon.garageTags:
@@ -2013,6 +2013,9 @@ Vehicle.v_sportbike1_yaiba_kusanagi_tyger_courier.garagePriceAssignment: "Econom
 Vehicle.v_sportbike1_yaiba_kusanagi_tyger_courier.garageBasePrice: 66000
 Vehicle.v_sportbike1_yaiba_kusanagi_tyger_player.garagePriceAssignment: "EconomicAssignment.v_sportbike1_yaiba_kusanagi_player"
 Vehicle.v_sportbike1_yaiba_kusanagi_tyger_player.garageBasePrice: 66000
+Vehicle.v_sportbike1_yaiba_kusanagi_tyger_player.garageTags:
+  $type: array:String
+  $value: [unique_likely]
 Vehicle.v_sportbike1_yaiba_muramasa_naked.garagePriceAssignment: "EconomicAssignment.v_sportbike1_yaiba_muramasa_player"
 Vehicle.v_sportbike1_yaiba_muramasa_naked.garageBasePrice: 75000
 Vehicle.v_sportbike1_yaiba_muramasa_naked_as.garagePriceAssignment: "EconomicAssignment.v_sportbike1_yaiba_muramasa_player"
@@ -2051,9 +2054,18 @@ Vehicle.v_sportbike2_arch.garagePriceAssignment: "EconomicAssignment.v_sportbike
 Vehicle.v_sportbike2_arch_courier.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_player"
 Vehicle.v_sportbike2_arch_jackie.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_jackie_player"
 Vehicle.v_sportbike2_arch_jackie_player.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_jackie_player"
+Vehicle.v_sportbike2_arch_jackie_player.garageTags:
+  $type: array:String
+  $value: [unique]
 Vehicle.v_sportbike2_arch_jackie_tuned.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_jackie_tuned_player"
 Vehicle.v_sportbike2_arch_jackie_tuned_player.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_jackie_tuned_player"
+Vehicle.v_sportbike2_arch_jackie_tuned_player.garageTags:
+  $type: array:String
+  $value: [unique]
 Vehicle.v_sportbike2_arch_linas_player.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_player"
+Vehicle.v_sportbike2_arch_linas_player.garageTags:
+  $type: array:String
+  $value: [unique_likely]
 Vehicle.v_sportbike2_arch_player.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_player"
 Vehicle.v_sportbike2_arch_player_02.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_player"
 Vehicle.v_sportbike2_arch_player_03.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_player"
@@ -2063,6 +2075,9 @@ Vehicle.v_sportbike2_arch_sport.garageBasePrice: 71000
 Vehicle.v_sportbike2_arch_tyger.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_player"
 Vehicle.v_sportbike2_arch_tyger_courier.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_player"
 Vehicle.v_sportbike2_arch_tyger_player.garagePriceAssignment: "EconomicAssignment.v_sportbike2_arch_player"
+Vehicle.v_sportbike2_arch_tyger_player.garageTags:
+  $type: array:String
+  $value: [unique_likely]
 Vehicle.v_sportbike3_brennan_apollo.garagePriceAssignment: "EconomicAssignment.v_sportbike3_brennan_apollo_player"
 Vehicle.v_sportbike3_brennan_apollo.garageBasePrice: 30000
 Vehicle.v_sportbike3_brennan_apollo_basic_01_prevention.garagePriceAssignment: "EconomicAssignment.v_sportbike3_brennan_apollo_player"
@@ -2077,6 +2092,9 @@ Vehicle.v_sportbike3_brennan_apollo_nomad.garagePriceAssignment: "EconomicAssign
 Vehicle.v_sportbike3_brennan_apollo_nomad.garageBasePrice: 30000
 Vehicle.v_sportbike3_brennan_apollo_nomad_player.garagePriceAssignment: "EconomicAssignment.v_sportbike3_brennan_apollo_nomad_player"
 Vehicle.v_sportbike3_brennan_apollo_nomad_player.garageBasePrice: 30000
+Vehicle.v_sportbike3_brennan_apollo_nomad_player.garageTags:
+  $type: array:String
+  $value: [unique_likely]
 Vehicle.v_sportbike3_brennan_apollo_player.garagePriceAssignment: "EconomicAssignment.v_sportbike3_brennan_apollo_player"
 Vehicle.v_sportbike3_brennan_apollo_player.garageBasePrice: 30000
 Vehicle.v_sportbike3_brennan_apollo_player_02.garagePriceAssignment: "EconomicAssignment.v_sportbike3_brennan_apollo_player"
@@ -2215,7 +2233,7 @@ Vehicle.v_standard25_thorton_colby_pickup.garageTags:
 Vehicle.v_standard25_thorton_colby_pickup_02_player.garageBasePrice: 33000
 Vehicle.v_standard25_thorton_colby_pickup_02_player.garageTags:
   $type: array:String
-  $value: [v_standard25]
+  $value: [v_standard25, unique_likely]
 Vehicle.v_standard25_thorton_colby_pickup_kurtz.garageBasePrice: 33000
 Vehicle.v_standard25_thorton_colby_pickup_kurtz.garageTags:
   $type: array:String
@@ -2462,7 +2480,7 @@ Vehicle.v_standard2_archer_hella_player.garagePriceAssignment: "EconomicAssignme
 Vehicle.v_standard2_archer_hella_player.garageBasePrice: 20000
 Vehicle.v_standard2_archer_hella_player.garageTags:
   $type: array:String
-  $value: [v_standard2, no_sell]
+  $value: [v_standard2, no_sell, unique]
 Vehicle.v_standard2_archer_hella_police.garagePriceAssignment: "EconomicAssignment.v_standard2_archer_hella_player"
 Vehicle.v_standard2_archer_hella_police.garageBasePrice: 20000
 Vehicle.v_standard2_archer_hella_police.garageTags:
@@ -2937,7 +2955,7 @@ Vehicle.v_standard2_thorton_galena_bobas_player.garagePriceAssignment: "Economic
 Vehicle.v_standard2_thorton_galena_bobas_player.garageBasePrice: 13000
 Vehicle.v_standard2_thorton_galena_bobas_player.garageTags:
   $type: array:String
-  $value: [v_standard2]
+  $value: [v_standard2, unique_likely]
 Vehicle.v_standard2_thorton_galena_courier.garagePriceAssignment: "EconomicAssignment.v_standard2_thorton_galena_player"
 Vehicle.v_standard2_thorton_galena_courier.garageBasePrice: 13000
 Vehicle.v_standard2_thorton_galena_courier.garageTags:
@@ -3102,7 +3120,7 @@ Vehicle.v_standard2_villefort_cortes_delamain_player.garagePriceAssignment: "Eco
 Vehicle.v_standard2_villefort_cortes_delamain_player.garageBasePrice: 28000
 Vehicle.v_standard2_villefort_cortes_delamain_player.garageTags:
   $type: array:String
-  $value: [v_standard2]
+  $value: [v_standard2, unique]
 Vehicle.v_standard2_villefort_cortes_delamain_taxi.garagePriceAssignment: "EconomicAssignment.v_standard2_villefort_cortes_delamain_player"
 Vehicle.v_standard2_villefort_cortes_delamain_taxi.garageBasePrice: 28000
 Vehicle.v_standard2_villefort_cortes_delamain_taxi.garageTags:
@@ -3337,7 +3355,7 @@ Vehicle.v_standard3_makigai_tanishi_player_mr_hands.garagePriceAssignment: "Econ
 Vehicle.v_standard3_makigai_tanishi_player_mr_hands.garageBasePrice: 35000
 Vehicle.v_standard3_makigai_tanishi_player_mr_hands.garageTags:
   $type: array:String
-  $value: [v_standard3]
+  $value: [v_standard3, unique]
 Vehicle.v_standard3_makigai_tanishi_poor.garagePriceAssignment: "EconomicAssignment.v_standard3_makigai_tanishi_player"
 Vehicle.v_standard3_makigai_tanishi_poor.garageBasePrice: 35000
 Vehicle.v_standard3_makigai_tanishi_poor.garageTags:
@@ -3382,7 +3400,7 @@ Vehicle.v_standard3_thorton_mackinaw_02_player.garagePriceAssignment: "EconomicA
 Vehicle.v_standard3_thorton_mackinaw_02_player.garageBasePrice: 33000
 Vehicle.v_standard3_thorton_mackinaw_02_player.garageTags:
   $type: array:String
-  $value: [v_standard3]
+  $value: [v_standard3, unique_likely]
 Vehicle.v_standard3_thorton_mackinaw_cargo_courier.garagePriceAssignment: "EconomicAssignment.v_standard3_thorton_mackinaw_player"
 Vehicle.v_standard3_thorton_mackinaw_cargo_courier.garageBasePrice: 33000
 Vehicle.v_standard3_thorton_mackinaw_cargo_courier.garageTags:
@@ -3412,7 +3430,7 @@ Vehicle.v_standard3_thorton_mackinaw_ncu_player.garagePriceAssignment: "Economic
 Vehicle.v_standard3_thorton_mackinaw_ncu_player.garageBasePrice: 33000
 Vehicle.v_standard3_thorton_mackinaw_ncu_player.garageTags:
   $type: array:String
-  $value: [v_standard3]
+  $value: [v_standard3, unique]
 Vehicle.v_standard3_thorton_mackinaw_nomad.garagePriceAssignment: "EconomicAssignment.v_standard3_thorton_mackinaw_player"
 Vehicle.v_standard3_thorton_mackinaw_nomad.garageBasePrice: 33000
 Vehicle.v_standard3_thorton_mackinaw_nomad.garageTags:
@@ -3720,7 +3738,7 @@ Vehicle.v_utility4_thorton_mackinaw_bmf.garageTags:
 Vehicle.v_utility4_thorton_mackinaw_bmf_player.garageBasePrice: 33000
 Vehicle.v_utility4_thorton_mackinaw_bmf_player.garageTags:
   $type: array:String
-  $value: [v_utility4]
+  $value: [v_utility4, unique]
 Vehicle.v_villefort_columbus_courier_intro_chase.garageBasePrice: 19000
 Vehicle.vehicle_template.garageTags:
   $type: array:String

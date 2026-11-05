@@ -1,7 +1,9 @@
 module Garage.Services
 
 import Garage.*
+import Garage.Economy.*
 import Garage.UI.*
+import Garage.Vehicle.*
 
 /// What a service sees when it's asked about the car and the garage it's in.
 public class GarageContext extends IScriptable {
@@ -12,16 +14,27 @@ public class GarageContext extends IScriptable {
   public let locationName: String;
   public let garageTier: Int32;
   public let isOwned: Bool;
+  /// The record V owns it under, which isn't vehicleRecord after a claim through a record named after the look.
+  /// None for a stolen car, since those can't be summoned and their record is every one in traffic.
+  public let ownedRecord: TweakDBID;
   /// VehicleCore has a schema for the car
   public let hasSchema: Bool;
   /// What Open pushes your screen on.
   public let screens: wref<ScreenManager>;
 
-  /// The record, or none for a stolen car, since those can't be summoned and their record is every one in traffic.
-  public func OwnedRecord() -> TweakDBID { return this.isOwned ? this.vehicleRecord : TDBID.None(); }
+  public func OwnedRecord() -> TweakDBID { return this.ownedRecord; }
 
   /// A stolen car with ChopShop up, so it has to be claimed before anyone works on it.
   public func MustClaimFirst() -> Bool { return !this.isOwned && GarageSystem.Get().IsAddonUp(n"chopshop"); }
+
+  /// False when the owned record has no appearance flat, so a respawn can't keep any look.
+  public func HoldsLook() -> Bool { return GaragePaint.HasFlat(this.OwnedRecord()); }
+
+  /// False for a quest or gift car, whose look stays the way the game gave it.
+  public func CanRestyle() -> Bool {
+    let pricing: ref<GaragePricing> = GarageSystem.Get().Pricing();
+    return pricing.CanRestyle(this.vehicleRecord) && pricing.CanRestyle(this.ownedRecord);
+  }
 }
 
 /// When a hub button shows. Every condition you fill in has to pass. Empty or 0 means no restriction.

@@ -114,6 +114,7 @@ public class GarageGerman extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-AlreadyOwned", "BEREITS IN DEINEM BESITZ");
     this.Text("Garage-ChopShop-CannotBeSold", "FAHRZEUG KANN NICHT VERKAUFT WERDEN");
     this.Text("Garage-ChopShop-CannotBeClaimed", "FAHRZEUG KANN NICHT BEANSPRUCHT WERDEN");
+    this.Text("Garage-ChopShop-OneOfAKind", "EINZELSTÜCK, NICHT ZU VERKAUFEN");
     this.Text("Garage-ChopShop-HeatBlocked", "NICHT, SOLANGE DU GESUCHT WIRST");
     this.Text("Garage-ChopShop-ConditionLabel", "Zustand:");
 
@@ -145,6 +146,10 @@ public class GarageGerman extends ModLocalizationPackage {
     this.Text("Garage-Paint-Owned", "IM BESITZ");
     this.Text("Garage-Paint-Active", "AKTIV");
     this.Text("Garage-Paint-ClaimFirst", "FREMD");
+    this.Text("Garage-Paint-ClaimToSwap", "FAHRZEUG BEANSPRUCHEN, UM DAS DESIGN ZU WECHSELN");
+    this.Text("Garage-Paint-LookNotSaved", "DAS DESIGN DIESES FAHRZEUGS LÄSST SICH NICHT SPEICHERN");
+    this.Text("Garage-Repair-ClaimForFull", "FAHRZEUG FÜR EINE VOLLREPARATUR BEANSPRUCHEN");
+    this.Text("Garage-Paint-OneOfAKind", "EINZELSTÜCK, DAS DESIGN BLEIBT");
     this.Text("Garage-Paint-Cancel", "ABBRECHEN");
     this.Text("Garage-Paint-Confirm", "BESTÄTIGEN");
 
@@ -200,6 +205,9 @@ public class GarageGerman extends ModLocalizationPackage {
     this.Text("Garage-ChopShop-TierLabel", "Stufe: ");
     this.Text("Garage-ChopShop-MarketLabel", "Markt: ");
     this.Text("Garage-ChopShop-PartsLabel", "Teile: ");
+    this.Text("Garage-ChopShop-SaleFloorLabel", "Verkaufsuntergrenze: ");
+    this.Text("Garage-Price-LoyaltyLabel", "Treue: ");
+    this.Text("Garage-Price-RateLabel", "Werkstatttarif: ");
 
     // Notify
     this.Text("Garage-Notify-UseTerminal", "Nutze das Terminal, um die Anpassung zu starten");

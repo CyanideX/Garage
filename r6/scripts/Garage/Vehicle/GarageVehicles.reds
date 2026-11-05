@@ -38,6 +38,15 @@ public abstract class GarageVehicles {
 
   public static func IsFullHealth(vehicle: ref<VehicleObject>) -> Bool { return GarageVehicles.HealthPercent(vehicle) >= 100; }
 
+  /// The health a sale pays on. A car you don't own can't be summoned back to full for free, so a garage repair on it
+  /// doesn't count, or repair-then-sell prints money.
+  public static func SaleHealth(vehicle: ref<VehicleObject>, owned: Bool) -> Float {
+    let shown: Float = GarageVehicles.HealthShown(vehicle);
+    if owned { return shown; }
+    let ledger: ref<GarageRepairLedger> = GarageRepairLedger.Get();
+    return IsDefined(ledger) ? MinF(shown, ledger.Before(vehicle)) : shown;
+  }
+
   /// Where the car's sitting, for a swap to put its replacement.
   public static func SpotOf(vehicle: wref<VehicleObject>) -> ref<GarageSpot> {
     let spot: ref<GarageSpot> = new GarageSpot();
@@ -103,9 +112,17 @@ public abstract class GarageVehicles {
 
   /// V owns this car. With an appearance, the record named after both counts too, since that's what Unlock can make.
   public static func IsOwned(record: TweakDBID, opt appearance: CName) -> Bool {
+    return TDBID.IsValid(GarageVehicles.OwnedRecord(record, appearance));
+  }
+
+  /// The record V owns this car under, the one Unlock enabled: the record named after both if there's one. None if V doesn't own it.
+  public static func OwnedRecord(record: TweakDBID, opt appearance: CName) -> TweakDBID {
     let vehicles: ref<VehicleSystem> = GameInstance.GetVehicleSystem(GetGameInstance());
-    if IsNameValid(appearance) && vehicles.IsVehiclePlayerUnlocked(record + TDBID.Create("_" + NameToString(appearance))) { return true; }
-    return vehicles.IsVehiclePlayerUnlocked(record);
+    if IsNameValid(appearance) {
+      let combined: TweakDBID = record + TDBID.Create("_" + NameToString(appearance));
+      if vehicles.IsVehiclePlayerUnlocked(combined) { return combined; }
+    }
+    return vehicles.IsVehiclePlayerUnlocked(record) ? record : TDBID.None();
   }
 }
 
@@ -242,4 +259,75 @@ public class GarageRecordNames extends IScriptable {
     }
     return text;
   }
+}
+
+public class GarageRepairEntry {
+  public persistent let recordId: TweakDBID;
+  public persistent let appearance: CName;
+  public persistent let health: Float;
+  public persistent let noted: Float;
+  // Not saved: a traffic car comes back from a load with a new id
+  public let entity: EntityID;
+}
+
+/// Health a car V doesn't own had before Garage repaired it, lowest kept, and saved with the game.
+/// Entity ids don't survive a load, so a loaded entry matches any car of that record and look for a game day.
+public class GarageRepairLedger extends ScriptableSystem {
+  private persistent let m_entries: array<ref<GarageRepairEntry>>;
+
+  public static func Get() -> ref<GarageRepairLedger> {
+    return GameInstance.GetScriptableSystemsContainer(GetGameInstance()).Get(n"Garage.Vehicle.GarageRepairLedger") as GarageRepairLedger;
+  }
+
+  private static func LoadedLifetime() -> Float { return 86400.0; }
+
+  public func Note(vehicle: ref<VehicleObject>, health: Float) -> Void {
+    let entry: ref<GarageRepairEntry> = this.Find(vehicle);
+    if IsDefined(entry) {
+      entry.health = MinF(entry.health, health);
+      entry.noted = this.Now();
+      entry.entity = vehicle.GetEntityID();
+      return;
+    }
+    // A handful of stolen cars at most, the oldest goes first
+    if ArraySize(this.m_entries) >= 32 { ArrayErase(this.m_entries, 0); }
+    entry = new GarageRepairEntry();
+    entry.recordId = vehicle.GetRecordID();
+    entry.appearance = vehicle.GetCurrentAppearanceName();
+    entry.health = health;
+    entry.noted = this.Now();
+    entry.entity = vehicle.GetEntityID();
+    ArrayPush(this.m_entries, entry);
+  }
+
+  /// 1.0 for a car Garage never repaired
+  public func Before(vehicle: ref<VehicleObject>) -> Float {
+    let entry: ref<GarageRepairEntry> = this.Find(vehicle);
+    return IsDefined(entry) ? entry.health : 1.0;
+  }
+
+  /// The car's been sold, so its entry's done with.
+  public func Forget(vehicle: ref<VehicleObject>) -> Void {
+    let entry: ref<GarageRepairEntry> = this.Find(vehicle);
+    if IsDefined(entry) { ArrayRemove(this.m_entries, entry); }
+  }
+
+  private func Find(vehicle: ref<VehicleObject>) -> ref<GarageRepairEntry> {
+    if !IsDefined(vehicle) { return null; }
+    let id: EntityID = vehicle.GetEntityID();
+    let record: TweakDBID = vehicle.GetRecordID();
+    let look: CName = vehicle.GetCurrentAppearanceName();
+    let now: Float = this.Now();
+    let loaded: ref<GarageRepairEntry>;
+    for entry in this.m_entries {
+      if EntityID.IsDefined(entry.entity) {
+        if entry.entity == id { return entry; }
+      } else {
+        if !IsDefined(loaded) && entry.recordId == record && Equals(entry.appearance, look) && now - entry.noted < GarageRepairLedger.LoadedLifetime() { loaded = entry; }
+      }
+    }
+    return loaded;
+  }
+
+  private func Now() -> Float { return GameInstance.GetTimeSystem(this.GetGameInstance()).GetGameTimeStamp(); }
 }

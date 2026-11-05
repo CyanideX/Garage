@@ -62,7 +62,9 @@ public class QuickAddon extends GarageAddon {
   public func IsRunning() -> Bool { return IsDefined(this.m_timer) && this.m_timer.IsRunning(); }
 
   /// Why there's no rush to be had, "" if there is. Being short on eddies isn't one, the screen still shows the price.
-  public func Refusal() -> String {
+  public func Refusal(ctx: ref<GarageContext>) -> String {
+    if !ctx.CanRestyle() { return GarageText.Get(n"Garage-Paint-OneOfAKind"); }
+    if ctx.isOwned && !ctx.HoldsLook() { return GarageText.Get(n"Garage-Paint-LookNotSaved"); }
     let heat: Int32 = this.Heat();
     if heat <= 0 { return GarageText.Get(n"Garage-Unavailable-QuickMessage"); }
     if this.IsRunning() { return GarageText.Get(n"Garage-Quick-AlreadyPaid"); }
@@ -93,7 +95,7 @@ public class QuickService extends GarageService {
 
   public func IsMuted(ctx: ref<GarageContext>) -> Bool {
     let addon: wref<QuickAddon> = this.m_addon;
-    return addon.Heat() <= 0 || addon.IsRunning();
+    return addon.Heat() <= 0 || addon.IsRunning() || !ctx.CanRestyle() || (ctx.isOwned && !ctx.HoldsLook());
   }
 
   public func IsHighlighted(ctx: ref<GarageContext>) -> Bool { return true; }
@@ -135,7 +137,7 @@ public class QuickScreen extends GarageConfirmScreen {
     let addon: wref<QuickAddon> = this.m_addon;
     this.SetTitle(GarageText.Get(n"Garage-Quick-Title"));
     this.SetCar(ctx.vehicleDisplayName);
-    let refusal: String = addon.Refusal();
+    let refusal: String = addon.Refusal(ctx);
     if StrLen(refusal) > 0 {
       this.Refuse(refusal);
       return;
@@ -148,6 +150,8 @@ public class QuickScreen extends GarageConfirmScreen {
     let balance: Int32 = GarageTransactions.Balance();
     this.SetOption(this.m_lookName, "");
     let lines: String = GarageText.Get(n"Garage-Quick-AppearanceLabel") + " " + GarageText.Price(quote.look) + "\n" + GarageText.Get(n"Garage-Quick-RushFeeLabel") + " " + GarageText.Price(quote.fee);
+    let garage: String = quote.markup.Lines("\n");
+    if StrLen(garage) > 0 { lines += "\n" + garage; }
     this.SetPrice(GarageText.Get(n"Garage-Quick-TotalLabel"), quote.total, lines);
     this.SetBalance(GarageText.Get(n"Garage-Quick-BalanceLabel"), balance, balance >= quote.total);
     this.SetCanConfirm(balance >= quote.total);
@@ -170,7 +174,7 @@ public class QuickScreen extends GarageConfirmScreen {
       this.m_look = pick.id;
       this.m_lookName = pick.name;
       this.m_status = pick.status;
-      this.m_quote = system.Pricing().QuoteRush(pick.price, parts.ServiceFee(n"car_paint"), heat);
+      this.m_quote = system.Pricing().QuoteRush(pick.price, parts.ServiceFee(n"car_paint"), heat, parts.Markup());
       parts.Preview(n"car_paint", pick.id);
       return true;
     }
@@ -182,8 +186,8 @@ public class QuickScreen extends GarageConfirmScreen {
     if ArraySize(looks) == 0 { return false; }
     this.m_look = looks[RandRange(0, ArraySize(looks))];
     this.m_lookName = system.Appearances().DisplayName(this.m_look);
-    let cost: Int32 = system.Pricing().SwapPrice(ctx.vehicleRecord, this.m_look, this.m_look, n"", 1.0, 0);
-    this.m_quote = system.Pricing().QuoteRush(cost, cost, heat);
+    let cost: Int32 = system.Pricing().SwapPrice(ctx.vehicleRecord, this.m_look, this.m_look, ctx.locationId);
+    this.m_quote = system.Pricing().QuoteRush(cost, cost, heat, system.Pricing().Markup(ctx.locationId, system.Pricing().TierOf(ctx.vehicleRecord, worn)));
     this.m_preview = new GarageLookPreview();
     this.m_preview.Begin(vehicle);
     this.m_preview.Show(this.m_look);
@@ -206,13 +210,13 @@ public class QuickScreen extends GarageConfirmScreen {
     let system: ref<GarageSystem> = GarageSystem.Get();
     let ctx: ref<GarageContext> = system.Parts().Context();
     let quote: ref<GarageRushQuote> = this.m_quote;
-    if !IsDefined(quote) || StrLen(this.m_addon.Refusal()) > 0 {
+    if !IsDefined(quote) || StrLen(this.m_addon.Refusal(ctx)) > 0 {
       this.Refresh();
       return;
     }
     if !IsDefined(this.Charge(ctx.locationId, quote.total, EGarageTxKind.Rush, n"quick")) { return; }
     if ctx.hasSchema {
-      system.Parts().Install(n"car_paint", this.m_look, this.m_status);
+      system.Parts().Install(n"car_paint", this.m_look, this.m_status, quote.look);
     } else {
       this.m_preview.Keep(ctx.OwnedRecord());
     }

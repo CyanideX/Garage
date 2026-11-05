@@ -118,5 +118,37 @@
     "delamain_cab",
     "delamain_taxi",
     "v_standard2_archer_hella_player"
-  ]
+  ],
+  "unique": {
+    "v_sport2_porsche_911turbo_player": "Johnny's Porsche, Chippin' In",
+    "v_standard2_archer_hella_player": "V's starting Hella, never sold anywhere",
+    "v_sportbike2_arch_jackie_player": "Jackie's Arch, Heroes",
+    "v_sportbike2_arch_jackie_tuned_player": "Jackie's tuned Arch, Heroes",
+    "v_standard2_villefort_cortes_delamain_player": "Delamain No. 21, Don't Lose Your Mind",
+    "v_delamain_taxi": "Delamain cab, Delamain's quests",
+    "v_standard3_thorton_mackinaw_ncu_player": "Claire's truck, The Beast in Me",
+    "v_sport1_rayfield_caliburn_02_player": "Caliburn you find, not the Autofixer one",
+    "v_sport1_quadra_sport_r7_mrhands": "Mr. Hands' Sport R-7, Phantom Liberty",
+    "v_standard3_makigai_tanishi_player_mr_hands": "Mr. Hands' Tanishi, Phantom Liberty",
+    "v_utility4_thorton_mackinaw_bmf_player": "Demiurge, Phantom Liberty"
+  },
+  "uniqueLikely": {
+    "v_standard3_thorton_mackinaw_02_player": "Second Mackinaw on Claire's race truck, not on Autofixer",
+    "v_sport2_villefort_alvarado_valentinos_player": "Valentinos Alvarado, quest gift with no price",
+    "v_standard2_thorton_galena_bobas_player": "Galena from the prologue, quest gift with no price",
+    "v_sportbike3_brennan_apollo_nomad_player": "Nomad Apollo, not on Autofixer",
+    "v_sport2_mizutani_shion_nomad_02_player": "Nomad Shion buggy, Aldecaldo gift",
+    "v_sport1_rayfield_caliburn_mordred_player": "Caliburn Mordred, not on Autofixer",
+    "v_sport1_quadra_turbo_r_player": "Turbo-R from the prologue, not on Autofixer",
+    "v_sport2_quadra_type66_02_player": "Type-66 Bulleat, not on Autofixer",
+    "v_sport2_quadra_type66_nomad_tribute": "Nomad Type-66 tribute, not on Autofixer",
+    "v_standard25_thorton_colby_pickup_02_player": "Second Colby pickup, not on Autofixer",
+    "v_sportbike1_yaiba_kusanagi_tyger_player": "Tyger Claws Kusanagi, not on Autofixer",
+    "v_sportbike2_arch_tyger_player": "Tyger Claws Arch, not on Autofixer",
+    "v_sportbike2_arch_linas_player": "Arch, not on Autofixer",
+    "v_sport1_quadra_sport_r7_netrunner": "Phantom Liberty Sport R-7, not on Autofixer"
+  },
+  "fixedLook": {
+    "v_sport2_porsche_911turbo_cabrio_player": "Porsche cabriolet, keeps the look it's sold with"
+  }
 }

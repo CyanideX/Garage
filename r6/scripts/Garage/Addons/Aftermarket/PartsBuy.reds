@@ -150,6 +150,8 @@ public class ConfirmScreen extends AftermarketScreen {
       label = GarageText.Get(Equals(pick.status, EGaragePartStatus.Stock) ? n"Garage-Confirm-Equip" : n"Garage-Confirm-Install");
     }
     if pick.forcedCost > 0 { breakdown += " + " + GarageText.Price(pick.forcedCost) + " " + GarageText.Get(n"Garage-Confirm-Required"); }
+    let garage: String = this.Parts().Markup().Lines(", ");
+    if StrLen(garage) > 0 { breakdown += ", " + garage; }
     this.m_breakdown.SetText("(" + breakdown + ")");
     this.m_priceText.SetText(GarageText.Price(pick.Total()));
     this.m_priceText.SetTintColor(gold);
@@ -291,6 +293,7 @@ public class CheckoutScreen extends AftermarketScreen {
   private let m_emptyText: wref<inkText>;
   private let m_subtotalValue: wref<inkText>;
   private let m_serviceValue: wref<inkText>;
+  private let m_garageRates: wref<inkText>;
   private let m_totalValue: wref<inkText>;
   private let m_lines: array<ref<GarageMoneyLine>>;
   private let m_balanceValue: wref<inkText>;
@@ -388,6 +391,11 @@ public class CheckoutScreen extends AftermarketScreen {
     let size: Int32 = GarageMoneyLine.LineSize();
     this.m_subtotalValue = this.AddLine(bottom, n"subtotal", n"Garage-Checkout-PartsLabel", size, 0.7);
     this.m_serviceValue = this.AddLine(bottom, n"service", n"Garage-Checkout-ServiceLabel", size, 0.7);
+    // The prices above already carry these
+    let rates: ref<inkText> = GarageLabel(n"garageRates", "", n"Regular", 24, accent, bottom);
+    rates.SetHAlign(inkEHorizontalAlign.Center);
+    rates.SetOpacity(0.7);
+    this.m_garageRates = rates;
     this.m_totalValue = this.AddLine(bottom, n"total", n"Garage-Checkout-TotalLabel", GarageMoneyLine.TotalSize(), 1.0);
     this.m_balanceValue = this.AddLine(bottom, n"balance", n"Garage-Checkout-BalanceLabel", size, 0.7);
 
@@ -472,6 +480,9 @@ public class CheckoutScreen extends AftermarketScreen {
     this.m_canAfford = balance >= total;
     this.m_subtotalValue.SetText(GarageText.Price(subtotal));
     this.m_serviceValue.SetText(GarageText.Price(service));
+    let garage: String = this.Parts().Markup().Lines("   ");
+    this.m_garageRates.SetText(garage);
+    this.m_garageRates.SetVisible(StrLen(garage) > 0);
     this.m_totalValue.SetText(GarageText.Price(total));
     this.m_balanceValue.SetText(GarageText.Price(balance));
     this.m_balanceValue.SetTintColor(this.m_canAfford ? GarageColors.Gold() : GarageColors.Error());

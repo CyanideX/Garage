@@ -397,7 +397,7 @@ public class PartRow extends inkCustomController {
       this.m_badge.SetVisible(false);
     }
     this.ShowCartIcon(Equals(row.badge, EGaragePartBadge.Cart));
-    this.ShowPrice(Equals(row.badge, EGaragePartBadge.Price), row.part.price);
+    this.ShowPrice(Equals(row.badge, EGaragePartBadge.Price), row.price);
   }
 
   /// The row a slot with no choices gets, there's nothing to click on it.

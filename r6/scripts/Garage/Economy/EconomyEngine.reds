@@ -5,13 +5,20 @@ import Garage.Data.*
 import Garage.World.*
 
 public class PendingSaleState {
+  /// What comes off V's list. The car's own record for a stolen one
   public persistent let recordId: TweakDBID;
+  /// The car's own record, for its parts. recordId stands in when it's empty
+  public persistent let vehicleRecord: TweakDBID;
+  /// Never V's, so there's nothing to take off V's list or give back
+  public persistent let stolen: Bool;
   public persistent let salePrice: Int32;
   public persistent let garageId: CName;
   // A String can't be persistent
   public persistent let vehicleName: CName;
   public persistent let deadlineGameSeconds: Int32;
   public persistent let active: Bool;
+  // Not saved: after a load the game's already taken the car away
+  public let entity: EntityID;
 }
 
 public class GarageEconomyState {
@@ -333,6 +340,12 @@ public class EconomyEngine extends ScriptableSystem {
     return IsDefined(state) ? Cast<Float>(this.PlayerFactorScaled(state)) / 10000.0 : 0.0;
   }
 
+  /// What this garage's tier does to its prices, 1.0 for one it doesn't know.
+  public func GetPricingMultiplier(garageId: CName) -> Float {
+    let state: ref<GarageEconomyState> = this.FindState(garageId);
+    return IsDefined(state) ? Cast<Float>(this.Tier(state.tierName).pricingMultiplier) / 100.0 : 1.0;
+  }
+
   /// The fraction off prices here: the player factor times the tier's most.
   public func GetPricingDiscount(garageId: CName) -> Float {
     let state: ref<GarageEconomyState> = this.FindState(garageId);
@@ -536,20 +549,23 @@ public class EconomyEngine extends ScriptableSystem {
 
   // --- Pending sales
 
-  /// False for a garage it doesn't know, one with a sale already, or no record.
-  public func PersistPendingSale(garageId: CName, recordId: TweakDBID, salePrice: Int32, vehicleName: String, vehicleClass: CName) -> Bool {
-    let state: ref<GarageEconomyState> = this.FindState(garageId);
-    if !IsDefined(state) || !TDBID.IsValid(recordId) || this.IsSalePending(state) { return false; }
+  /// Null for a garage it doesn't know, one with a sale already, or no record.
+  public func PersistPendingSale(draft: ref<GarageSaleDraft>) -> ref<PendingSaleState> {
+    let state: ref<GarageEconomyState> = this.FindState(draft.garageId);
+    if !IsDefined(state) || !TDBID.IsValid(draft.recordId) || this.IsSalePending(state) { return null; }
     let sale: ref<PendingSaleState> = new PendingSaleState();
-    sale.recordId = recordId;
-    sale.salePrice = salePrice;
-    sale.garageId = garageId;
-    sale.vehicleName = StringToName(vehicleName);
-    sale.deadlineGameSeconds = this.GameSeconds() + this.ComputeSaleDelay(garageId, vehicleClass);
+    sale.recordId = draft.recordId;
+    sale.vehicleRecord = draft.vehicleRecord;
+    sale.stolen = draft.stolen;
+    sale.entity = draft.entity;
+    sale.salePrice = draft.salePrice;
+    sale.garageId = draft.garageId;
+    sale.vehicleName = StringToName(draft.vehicleName);
+    sale.deadlineGameSeconds = this.GameSeconds() + this.ComputeSaleDelay(draft.garageId, draft.vehicleClass);
     sale.active = true;
     state.pendingSale = sale;
     this.WatchSales();
-    return true;
+    return sale;
   }
 
   public func HasPendingSale(garageId: CName) -> Bool {

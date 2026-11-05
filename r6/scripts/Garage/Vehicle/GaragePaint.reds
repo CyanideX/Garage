@@ -114,10 +114,16 @@ public abstract class GaragePaint {
     }
   }
 
+  /// Whether the record has an appearance flat at all. An empty one is a car that picks a random look per spawn, and
+  /// it still takes one written in.
+  public static func HasFlat(record: TweakDBID) -> Bool {
+    return TDBID.IsValid(record) && IsDefined(TweakDBInterface.GetFlat(record + t".appearanceName"));
+  }
+
   /// The flat only, the save doesn't hear about it. False when the record has no appearance flat.
   public static func WriteFlat(record: TweakDBID, appearance: CName) -> Bool {
+    if !GaragePaint.HasFlat(record) { return false; }
     let flat: CName = GaragePaint.GetFlat(record);
-    if !IsNameValid(flat) { return false; }
     GarageSystem.Get().PaintOriginals().Remember(record, flat);
     TweakDBManager.SetFlat(record + t".appearanceName", appearance);
     TweakDBManager.UpdateRecord(record);

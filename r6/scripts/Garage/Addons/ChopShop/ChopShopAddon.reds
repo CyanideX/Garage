@@ -6,7 +6,6 @@ import Garage.Economy.*
 import Garage.Services.*
 import Garage.UI.*
 import Garage.Vehicle.*
-import VehicleCore.Schema.*
 
 public class ChopShopAddon extends GarageAddon {
   public func Id() -> CName { return n"chopshop"; }
@@ -52,20 +51,20 @@ public abstract class ChopShopDeal {
     manager.ShowScreen(n"chopshop_confirm");
   }
 
-  public static func Tier() -> CName {
-    let schema: ref<VehicleSchema> = GarageSystem.Get().Parts().Schema();
-    return IsDefined(schema) ? schema.tier : n"";
+  public static func Tier(ctx: ref<GarageContext>) -> CName {
+    let vehicle: wref<VehicleObject> = ctx.vehicle;
+    return GarageSystem.Get().Pricing().TierOf(ctx.vehicleRecord, IsDefined(vehicle) ? vehicle.GetCurrentAppearanceName() : n"");
   }
 
   public static func ClaimQuote(ctx: ref<GarageContext>) -> ref<GarageClaimQuote> {
     let vehicle: wref<VehicleObject> = ctx.vehicle;
-    return GarageSystem.Get().Pricing().QuoteClaim(ctx.vehicleRecord, vehicle.GetCurrentAppearanceName(), ChopShopDeal.Tier());
+    return GarageSystem.Get().Pricing().QuoteClaim(ctx.vehicleRecord, vehicle.GetCurrentAppearanceName());
   }
 
   public static func SaleQuote(ctx: ref<GarageContext>) -> ref<GarageSaleQuote> {
     let vehicle: wref<VehicleObject> = ctx.vehicle;
     let system: ref<GarageSystem> = GarageSystem.Get();
-    return system.Pricing().QuoteSale(ctx.vehicleRecord, vehicle.GetCurrentAppearanceName(), ChopShopDeal.Tier(), GarageVehicles.HealthShown(vehicle), system.Parts().InstalledValue());
+    return system.Pricing().QuoteSale(ctx.vehicleRecord, vehicle.GetCurrentAppearanceName(), GarageVehicles.SaleHealth(vehicle, ctx.isOwned), system.Parts().InstalledValue());
   }
 
   /// Why this deal's off, "" if it isn't. Being short on eddies for a claim isn't one, the screen still shows the price.
@@ -79,13 +78,14 @@ public abstract class ChopShopDeal {
       if ctx.isOwned { return GarageText.Get(n"Garage-ChopShop-AlreadyOwned"); }
       if !pricing.CanClaim(ctx.vehicleRecord) { return GarageText.Get(n"Garage-ChopShop-CannotBeClaimed"); }
     } else {
+      if pricing.IsUnique(ctx.vehicleRecord) || pricing.IsUnique(ctx.OwnedRecord()) { return GarageText.Get(n"Garage-ChopShop-OneOfAKind"); }
       if !pricing.CanSell(ctx.vehicleRecord) { return GarageText.Get(n"Garage-ChopShop-CannotBeSold"); }
     }
     let settings: ref<GarageSettings> = GarageSettings.Get();
     if IsDefined(settings) && settings.chopShopBlockAnyHeat && system.Xu().State().Get(XUtilsStateField.WantedLevel) > 0 {
       return GarageText.Get(n"Garage-ChopShop-HeatBlocked");
     }
-    if engine.IsVehicleClassBlocked(ctx.locationId, ChopShopDeal.Tier()) { return GarageText.Get(n"Garage-ChopShop-TierTooHigh"); }
+    if engine.IsVehicleClassBlocked(ctx.locationId, ChopShopDeal.Tier(ctx)) { return GarageText.Get(n"Garage-ChopShop-TierTooHigh"); }
     if !claiming {
       let quote: ref<GarageSaleQuote> = ChopShopDeal.SaleQuote(ctx);
       if quote.total <= 0 { return GarageText.Get(n"Garage-ChopShop-CannotBeSold"); }
@@ -127,26 +127,32 @@ public class ChopShopScreen extends GarageConfirmScreen {
   }
 
   private func ClaimLines(quote: ref<GarageClaimQuote>) -> String {
-    let lines: String = this.AmountLine(n"Garage-ChopShop-BaseLabel", "", quote.base);
+    let lines: String = this.ValueLines(quote.value);
     lines += "\n" + this.TimesLine(n"Garage-ChopShop-ClaimRateLabel", quote.rate);
     lines += "\n" + this.AmountLine(n"Garage-ChopShop-VinScrubLabel", "+", quote.scrub);
     if quote.scrubMultiplier != 1.0 { lines += " (x" + FloatToStringPrec(quote.scrubMultiplier, 2) + ")"; }
     if quote.market != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-MarketLabel", quote.market); }
+    if quote.floor > 0 { lines += "\n" + this.AmountLine(n"Garage-ChopShop-SaleFloorLabel", "", quote.floor); }
     lines += "\n" + this.AmountLine(n"Garage-ChopShop-TotalLabel", "", quote.total);
     return lines;
   }
 
+  private func ValueLines(value: ref<GarageCarValue>) -> String {
+    let lines: String = this.AmountLine(n"Garage-ChopShop-BaseLabel", "", value.base);
+    if value.risk != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-RiskLabel", value.risk); }
+    if value.appearance != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-AppearanceLabel", value.appearance); }
+    if value.grade != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-GradeLabel", value.grade); }
+    if value.type != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-TypeLabel", value.type); }
+    if value.special != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-SpecialLabel", value.special); }
+    return lines;
+  }
+
   private func SaleLines(quote: ref<GarageSaleQuote>) -> String {
-    let lines: String = this.AmountLine(n"Garage-ChopShop-BaseLabel", "", quote.base);
-    if quote.risk != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-RiskLabel", quote.risk); }
-    if quote.appearance != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-AppearanceLabel", quote.appearance); }
-    if quote.grade != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-GradeLabel", quote.grade); }
-    if quote.type != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-TypeLabel", quote.type); }
-    if quote.special != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-SpecialLabel", quote.special); }
-    if quote.parts > 0 { lines += "\n" + this.AmountLine(n"Garage-ChopShop-PartsLabel", "+", quote.parts); }
+    let lines: String = this.ValueLines(quote.value);
     if quote.condition < 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-DamageLabel", quote.condition); }
     lines += "\n" + this.TimesLine(n"Garage-ChopShop-TierLabel", quote.tier);
     if quote.market != 1.0 { lines += "\n" + this.TimesLine(n"Garage-ChopShop-MarketLabel", quote.market); }
+    if quote.parts > 0 { lines += "\n" + this.AmountLine(n"Garage-ChopShop-PartsLabel", "+", quote.parts); }
     return lines;
   }
 
@@ -201,7 +207,16 @@ public class ChopShopScreen extends GarageConfirmScreen {
     let vehicle: wref<VehicleObject> = ctx.vehicle;
     let system: ref<GarageSystem> = GarageSystem.Get();
     let quote: ref<GarageSaleQuote> = ChopShopDeal.SaleQuote(ctx);
-    system.Sales().Start(ctx.vehicleRecord, quote.total, ctx.vehicleDisplayName, ctx.locationId, vehicle.GetEntityID(), ChopShopDeal.Tier());
+    let draft: ref<GarageSaleDraft> = new GarageSaleDraft();
+    draft.stolen = !ctx.isOwned;
+    draft.recordId = draft.stolen ? ctx.vehicleRecord : ctx.OwnedRecord();
+    draft.vehicleRecord = ctx.vehicleRecord;
+    draft.entity = vehicle.GetEntityID();
+    draft.salePrice = quote.total;
+    draft.vehicleName = ctx.vehicleDisplayName;
+    draft.garageId = ctx.locationId;
+    draft.vehicleClass = quote.tierName;
+    system.Sales().Start(draft);
     let ps: ref<VehicleComponentPS> = vehicle.GetVehiclePS();
     if IsDefined(ps) { ps.LockAllVehDoors(); }
     vehicle.TurnEngineOn(false);
