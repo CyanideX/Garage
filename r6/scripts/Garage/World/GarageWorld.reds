@@ -271,14 +271,11 @@ public class GarageWorld extends IScriptable {
 
   // Service rings can overlap, and the closest deck is the one V means
   private func PickActive() -> ref<GarageSite> {
-    let player: ref<PlayerPuppet> = GetPlayer(GetGameInstance());
-    if !IsDefined(player) { return null; }
-    let at: Vector4 = player.GetWorldPosition();
     let best: ref<GarageSite>;
     let bestDistance: Float = 0.0;
     for site in this.m_sites {
-      if site.zone >= 3 {
-        let distance: Float = Vector4.DistanceSquared(at, site.location.deck.Position());
+      if site.zone >= 3 && IsDefined(site.watcher) {
+        let distance: Float = site.watcher.GetDistance();
         if !IsDefined(best) || distance < bestDistance {
           best = site;
           bestDistance = distance;

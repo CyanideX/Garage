@@ -51,9 +51,8 @@ public abstract class GarageGetawayTimer extends IScriptable {
   protected let m_xu: ref<XUtilsMod>;
   protected let m_garage: CName;
   private let m_countdown: ref<XUtilsCountdown>;
-  private let m_watch: Uint64;
+  private let m_watch: ref<XUtilsWatcher>;
   private let m_record: TweakDBID;
-  private let m_deck: Vector4;
 
   private static func Seconds() -> Float { return 15.0; }
   private static func LeaveDistance() -> Float { return 15.0; }
@@ -72,7 +71,6 @@ public abstract class GarageGetawayTimer extends IScriptable {
   public func Start(record: TweakDBID, deck: Vector4, garage: CName) -> Void {
     this.Stop();
     this.m_record = record;
-    this.m_deck = deck;
     this.m_garage = garage;
     let options: ref<XUtilsCountdownOptions> = XUtilsCountdownOptions.Create().Seconds(GarageGetawayTimer.Seconds()).Format(XUtilsTimeFormat.MinSecTenths)
       .Stage(5.0, new HDRColor(1.176, 0.2, 0.2, 1.0), 2.0)
@@ -80,19 +78,18 @@ public abstract class GarageGetawayTimer extends IScriptable {
     this.m_countdown = this.m_xu.Screen().Countdown(options);
     this.m_countdown.On(XUtilsEventType.CountdownComplete, this, n"OnExpired");
     this.m_countdown.Start();
-    this.m_watch = this.m_xu.Every(1.0, this, n"OnWatch");
+    this.m_watch = this.m_xu.World().Watch(XUtilsZones.At(deck).Flat(true).Ring(GarageGetawayTimer.LeaveDistance()));
+    this.m_watch.On(XUtilsEventType.ZoneExit, this, n"OnLeft");
   }
 
-  public func OnWatch(e: ref<XUtilsEvent>) -> Void {
-    let player: ref<PlayerPuppet> = GetPlayer(GetGameInstance());
-    let car: wref<VehicleObject> = IsDefined(player) ? GetMountedVehicle(player) : null;
-    if !IsDefined(car) || car.GetRecordID() != this.m_record { return; }
-    let at: Vector4 = car.GetWorldPosition();
-    if Vector4.Distance2D(at, this.m_deck) > GarageGetawayTimer.LeaveDistance() {
-      this.CancelWatch();
-      this.m_countdown.Cancel(1.0);
-      this.OnGotAway();
-    }
+  // Walking out doesn't count. Coming back and driving it off does, since that crosses the ring again
+  public func OnLeft(e: ref<XUtilsEvent>) -> Void {
+    let car: wref<Entity> = this.m_xu.Player().GetVehicle();
+    let vehicle: wref<VehicleObject> = car as VehicleObject;
+    if !IsDefined(vehicle) || vehicle.GetRecordID() != this.m_record { return; }
+    this.CancelWatch();
+    this.m_countdown.Cancel(1.0);
+    this.OnGotAway();
   }
 
   public func OnExpired(e: ref<XUtilsEvent>) -> Void {
@@ -100,11 +97,11 @@ public abstract class GarageGetawayTimer extends IScriptable {
     this.OnTooSlow();
   }
 
-  public func IsRunning() -> Bool { return this.m_watch != 0ul; }
+  public func IsRunning() -> Bool { return IsDefined(this.m_watch); }
 
   private func CancelWatch() -> Void {
-    if this.m_watch != 0ul { this.m_xu.Cancel(this.m_watch); }
-    this.m_watch = 0ul;
+    if IsDefined(this.m_watch) { this.m_watch.Destroy(); }
+    this.m_watch = null;
   }
 
   public func Stop() -> Void {

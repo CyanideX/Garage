@@ -60,7 +60,7 @@ public abstract class GarageEntry {
     if GarageLocks.IsLocked(location.id) { return GarageLocks.EntryText(location.id); }
     if xu.State().Is(XUtilsStateField.IsInVehicle) { return GarageText.Get(n"Garage-Notify-ExitVehicle"); }
 
-    vehicle = GarageEntry.ClosestVehicle(player, deck, site.service);
+    vehicle = xu.World().NearestVehicle(site.service, TDBID.None(), XUtilsAnchor.Point(deck)) as VehicleObject;
     if !IsDefined(vehicle) { return GarageText.Get(n"Garage-Notify-NoVehicles"); }
     if !VC_IsVisualCustomizationSafe(vehicle) { return GarageText.Get(n"Garage-Notify-BeyondRepair"); }
 
@@ -71,7 +71,7 @@ public abstract class GarageEntry {
       let ps: ref<VehicleComponentPS> = vehicle.GetVehiclePS();
       if IsDefined(ps) && ps.GetIsVehicleVisualCustomizationBlockedByDamage() { return GarageText.Get(n"Garage-Notify-TooDamaged"); }
     }
-    let parked: Float = GarageEntry.VehicleDistance(vehicle, deck);
+    let parked: Float = Vector4.Distance(vehicle.GetWorldPosition(), deck);
     if parked > site.arrival {
       return GarageText.Get(n"Garage-Notify-ParkOnDeckPrefix") + FloatToStringPrec(parked, 1) + GarageText.Get(n"Garage-Notify-ParkOnDeckSuffix");
     }
@@ -100,28 +100,6 @@ public abstract class GarageEntry {
       i += 1;
     }
     return false;
-  }
-
-  /// The car closest to deck among those within radius of the player. Null if there's none. The player can't be in one.
-  public static func ClosestVehicle(player: ref<PlayerPuppet>, deck: Vector4, radius: Float) -> wref<VehicleObject> {
-    let closest: wref<VehicleObject>;
-    let best: Float = 99999999.0;
-    let around: array<ref<Entity>> = player.GetEntitiesAroundObject(radius);
-    for entity in around {
-      let vehicle: wref<VehicleObject> = entity as VehicleObject;
-      if IsDefined(vehicle) {
-        let distance: Float = Vector4.DistanceSquared(vehicle.GetWorldPosition(), deck);
-        if distance < best {
-          best = distance;
-          closest = vehicle;
-        }
-      }
-    }
-    return closest;
-  }
-
-  public static func VehicleDistance(vehicle: ref<VehicleObject>, deck: Vector4) -> Float {
-    return Vector4.Distance(vehicle.GetWorldPosition(), deck);
   }
 
   private static func TierRank(tier: String) -> Int32 {

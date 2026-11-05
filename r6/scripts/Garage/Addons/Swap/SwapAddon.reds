@@ -64,13 +64,11 @@ public class SwapJob extends GarageSwapListener {
   private let m_receipt: ref<GarageReceipt>;
   private let m_preview: ref<GarageLookPreview>;
   private let m_record: TweakDBID;
-  private let m_flat: CName;
 
   public func Setup(receipt: ref<GarageReceipt>, record: TweakDBID, preview: ref<GarageLookPreview>) -> Void {
     this.m_receipt = receipt;
     this.m_record = record;
     this.m_preview = preview;
-    if TDBID.IsValid(record) { this.m_flat = GaragePaint.GetFlat(record); }
   }
 
   public func OnBlack() -> Void { GarageSystem.Get().RequestClose(); }
@@ -90,8 +88,6 @@ public class SwapJob extends GarageSwapListener {
 
   private func Fail(reason: CName) -> Void {
     this.m_preview.Revert();
-    // Respawn wrote the new look to the record before it knew how this would go
-    if TDBID.IsValid(this.m_record) { GaragePaint.WriteFlat(this.m_record, this.m_flat); }
     GarageTransactions.Refund(this.m_receipt);
     let xu: ref<XUtilsMod> = GarageSystem.Get().Xu();
     xu.Log("Vehicle").Warn("look swap failed: " + NameToString(reason));

@@ -22,7 +22,7 @@ public class GaragePopup extends InGamePopup {
   private let m_vehicle: wref<VehicleObject>;
   private let m_savedState: ref<VehicleSavedState>;
   private let m_holdTimer: Uint64;
-  private let m_watchTimer: Uint64;
+  private let m_carGone: ref<CallbackSystemHandler>;
   private let m_keepAliveTimer: Uint64;
   private let m_economyListen: Uint64;
   private let m_holding: Bool;
@@ -130,7 +130,11 @@ public class GaragePopup extends InGamePopup {
     this.RegisterToGlobalInputCallback(n"OnPostOnPress", this, n"OnButtonPress");
     this.RegisterToGlobalInputCallback(n"OnPostOnRelease", this, n"OnButtonRelease");
     let xu: ref<XUtilsMod> = GarageSystem.Get().Xu();
-    this.m_watchTimer = xu.Every(0.25, this, n"OnWatch");
+    let car: wref<VehicleObject> = this.m_vehicle;
+    if IsDefined(car) {
+      this.m_carGone = GameInstance.GetCallbackSystem().RegisterCallback(n"Entity/Detach", this, n"OnCarGone")
+        .AddTarget(EntityTarget.ID(car.GetEntityID()));
+    }
     this.m_keepAliveTimer = xu.Every(3.0, this, n"OnKeepAlive");
     this.m_economyListen = xu.OnCustom(GarageEvents.EconomyRefresh(), this, n"OnEconomyRefresh");
   }
@@ -232,13 +236,10 @@ public class GaragePopup extends InGamePopup {
   }
 
   // The car can go away under us
-  public func OnWatch(e: ref<XUtilsEvent>) -> Void {
+  protected cb func OnCarGone(event: ref<EntityLifecycleEvent>) {
     if this.m_closing { return; }
-    let vehicle: wref<VehicleObject> = this.m_vehicle;
-    if !IsDefined(vehicle) {
-      GarageSystem.Get().Xu().Log("UI").Warn("the car went away mid-visit, closing");
-      this.ForceClose();
-    }
+    GarageSystem.Get().Xu().Log("UI").Warn("the car went away mid-visit, closing");
+    this.ForceClose();
   }
 
   public func OnKeepAlive(e: ref<XUtilsEvent>) -> Void {
@@ -261,10 +262,10 @@ public class GaragePopup extends InGamePopup {
 
   private func StopListening() -> Void {
     this.CancelTimer(this.m_holdTimer);
-    this.CancelTimer(this.m_watchTimer);
     this.CancelTimer(this.m_keepAliveTimer);
     this.m_holdTimer = 0ul;
-    this.m_watchTimer = 0ul;
+    if IsDefined(this.m_carGone) { this.m_carGone.Unregister(); }
+    this.m_carGone = null;
     this.m_keepAliveTimer = 0ul;
     this.m_holding = false;
     if this.m_economyListen != 0ul { GarageSystem.Get().Xu().Off(this.m_economyListen); }

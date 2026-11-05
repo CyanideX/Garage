@@ -8,6 +8,12 @@ public class GarageSpot extends IScriptable {
   public let yaw: Float;
 
   public func Position() -> Vector4 { return new Vector4(this.x, this.y, this.z, 1.0); }
+
+  public func Pose() -> XUtilsPose {
+    let angles: EulerAngles;
+    angles.Yaw = this.yaw;
+    return XUtilsPose.Make(this.Position(), angles);
+  }
 }
 
 public class GarageZone extends IScriptable {

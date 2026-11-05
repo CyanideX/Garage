@@ -22,7 +22,7 @@ public class GarageScene extends IScriptable {
   private let m_lens: ref<XUtilsLensRequest>;
   private let m_fade: ref<XUtilsFade>;
   private let m_servicePath: ref<XUtilsPlayback>;
-  private let m_settleTimer: Uint64;
+  private let m_settle: ref<XUtilsSettle>;
   private let m_spot: XUtilsPose;
   private let m_hasSpot: Bool;
   private let m_lastPosition: CName;
@@ -60,12 +60,19 @@ public class GarageScene extends IScriptable {
       return;
     }
     this.SnapCar();
-    // The car needs a moment to settle after the teleport, or the ground check reads it mid-drop
-    this.m_settleTimer = this.m_xu.After(0.1, this, n"OnSettled");
+    // The ground check reads it mid-drop unless it's landed first
+    let vehicle: wref<VehicleObject> = this.m_vehicle;
+    if IsDefined(vehicle) { this.m_settle = this.m_xu.World().Settle(vehicle, 1.0); }
+    if !IsDefined(this.m_settle) {
+      this.OnSettled(null);
+      return;
+    }
+    this.m_settle.On(XUtilsEventType.EntitySettled, this, n"OnSettled");
+    this.m_settle.On(XUtilsEventType.EntityFailed, this, n"OnSettled");
   }
 
   public func OnSettled(e: ref<XUtilsEvent>) -> Void {
-    this.m_settleTimer = 0ul;
+    this.m_settle = null;
     if this.m_open { this.Build(); }
     if IsDefined(this.m_fade) { this.m_fade.Release(); }
   }
@@ -77,11 +84,7 @@ public class GarageScene extends IScriptable {
 
   private func SnapCar() -> Void {
     let vehicle: wref<VehicleObject> = this.m_vehicle;
-    if !IsDefined(vehicle) { return; }
-    let deck: ref<GarageSpot> = this.m_location.deck;
-    let angles: EulerAngles;
-    angles.Yaw = deck.yaw;
-    GameInstance.GetTeleportationFacility(GetGameInstance()).Teleport(vehicle, deck.Position(), angles);
+    if IsDefined(vehicle) { this.m_xu.World().Teleport(vehicle, this.m_location.deck.Pose()); }
   }
 
   // The snap can park the car on V's old spot, so with no playerSpawn V goes beside it on the side they were nearer.
@@ -126,8 +129,8 @@ public class GarageScene extends IScriptable {
   public func Close() -> Void {
     if !this.m_open { return; }
     this.m_open = false;
-    if this.m_settleTimer != 0ul { this.m_xu.Cancel(this.m_settleTimer); }
-    this.m_settleTimer = 0ul;
+    if IsDefined(this.m_settle) { this.m_settle.Destroy(); }
+    this.m_settle = null;
     let settings: ref<GarageSettings> = GarageSettings.Get();
     let camera: ref<XUtilsCamera> = this.m_xu.Camera();
     if this.m_driverListen != 0ul { camera.Off(this.m_driverListen); }

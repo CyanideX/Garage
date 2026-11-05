@@ -24,10 +24,6 @@ public class GarageSales extends IScriptable {
   private let m_xu: ref<XUtilsMod>;
   private let m_log: ref<XUtilsLog>;
   private let m_draft: ref<GarageSaleDraft>;
-  // Sold cars parked under the map until they're destroyed
-  private let m_doomed: array<wref<GameObject>>;
-  private let m_doomedSales: array<ref<PendingSaleState>>;
-  private let m_removeTimer: Uint64;
 
   public func Setup(xu: ref<XUtilsMod>) -> Void {
     this.m_xu = xu;
@@ -80,8 +76,7 @@ public class GarageSales extends IScriptable {
       sold = sale.entity;
     }
     if !EntityID.IsDefined(sold) { return false; }
-    let player: ref<PlayerPuppet> = GetPlayer(GetGameInstance());
-    let mounted: wref<VehicleObject> = IsDefined(player) ? GetMountedVehicle(player) : null;
+    let mounted: wref<Entity> = this.m_xu.Player().GetVehicle();
     return IsDefined(mounted) && Equals(mounted.GetEntityID(), sold);
   }
 
@@ -111,36 +106,17 @@ public class GarageSales extends IScriptable {
       this.Tell(GarageEvents.LockdownExpired(), id);
       return;
     }
-    let entity: wref<GameObject> = EntityID.IsDefined(sale.entity) ? GameInstance.FindEntityByID(GetGameInstance(), sale.entity) as GameObject : null;
+    let entity: wref<Entity> = EntityID.IsDefined(sale.entity) ? this.m_xu.World().Find(sale.entity) : null;
     if IsDefined(entity) {
-      // Under the map first, so nobody watches it pop out of existence
-      let at: Vector4 = entity.GetWorldPosition();
-      let flat: EulerAngles;
-      GameInstance.GetTeleportationFacility(GetGameInstance()).Teleport(entity, new Vector4(at.X, at.Y, at.Z - 100.0, at.W), flat);
-      ArrayPush(this.m_doomed, entity);
-      ArrayPush(this.m_doomedSales, sale);
-      if this.m_removeTimer == 0ul { this.m_removeTimer = this.m_xu.After(0.5, this, n"OnRemove"); }
+      GarageRepairLedger.Get().Forget(entity as VehicleObject);
+      this.m_xu.World().Remove(entity);
     } else {
-      this.Finish(sale);
+      // Out of V's list since V walked away, but a copy could still be out somewhere
+      if !sale.stolen { GarageVehicles.SetEnabled(sale.recordId, false, true); }
     }
+    this.Finish(sale);
     this.m_xu.Screen().Notify(GarageText.Format(n"Garage-Sale-Cleared", [name]), SimpleMessageType.Money, 6.0, true);
     this.Tell(GarageEvents.LockdownExpired(), id);
-  }
-
-  public func OnRemove(e: ref<XUtilsEvent>) -> Void {
-    this.m_removeTimer = 0ul;
-    let i: Int32 = 0;
-    while i < ArraySize(this.m_doomed) {
-      let entity: wref<GameObject> = this.m_doomed[i];
-      if IsDefined(entity) {
-        GarageRepairLedger.Get().Forget(entity as VehicleObject);
-        EntityGameInterface.Destroy(entity.GetEntity());
-      }
-      this.Finish(this.m_doomedSales[i]);
-      i += 1;
-    }
-    ArrayClear(this.m_doomed);
-    ArrayClear(this.m_doomedSales);
   }
 
   private func GiveBack(sale: ref<PendingSaleState>) -> Void {
@@ -148,7 +124,6 @@ public class GarageSales extends IScriptable {
   }
 
   private func Finish(sale: ref<PendingSaleState>) -> Void {
-    if !sale.stolen { GarageVehicles.SetEnabled(sale.recordId, false, true); }
     let system: ref<GarageSystem> = GarageSystem.Get();
     if IsDefined(system) { system.Parts().StripSold(TDBID.IsValid(sale.vehicleRecord) ? sale.vehicleRecord : sale.recordId); }
     this.Tell(GarageEvents.SaleCompleted(), sale.garageId);
@@ -163,11 +138,5 @@ public class GarageSales extends IScriptable {
   /// Session end. Drops a sale that's only agreed. One under way is in the save and carries on after the next load.
   public func Stop() -> Void {
     this.m_draft = null;
-    ArrayClear(this.m_doomed);
-    ArrayClear(this.m_doomedSales);
-    if this.m_removeTimer != 0ul {
-      this.m_xu.Cancel(this.m_removeTimer);
-      this.m_removeTimer = 0ul;
-    }
   }
 }

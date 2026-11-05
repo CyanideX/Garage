@@ -46,29 +46,6 @@ public class PaintOverrides extends ScriptableSystem {
   public func All() -> array<ref<PaintOverrideEntry>> { return this.m_overrides; }
 }
 
-// Flats outlive a load and the save that paid for them doesn't, so whatever we overwrite goes back at session end
-public class GaragePaintOriginals extends IScriptable {
-  private let m_records: array<TweakDBID>;
-  private let m_flats: array<CName>;
-
-  public func Remember(record: TweakDBID, flat: CName) -> Void {
-    if ArrayContains(this.m_records, record) { return; }
-    ArrayPush(this.m_records, record);
-    ArrayPush(this.m_flats, flat);
-  }
-
-  public func RestoreAll() -> Void {
-    let i: Int32 = 0;
-    while i < ArraySize(this.m_records) {
-      TweakDBManager.SetFlat(this.m_records[i] + t".appearanceName", this.m_flats[i]);
-      TweakDBManager.UpdateRecord(this.m_records[i]);
-      i += 1;
-    }
-    ArrayClear(this.m_records);
-    ArrayClear(this.m_flats);
-  }
-}
-
 /// A car's saved appearance, on the record itself so every spawn of it comes out that way.
 public abstract class GaragePaint {
   public static func GetOverride(record: TweakDBID) -> CName {
@@ -82,7 +59,7 @@ public abstract class GaragePaint {
 
   /// Sets the flat and saves it. False, with nothing saved, when the record has no appearance flat.
   public static func Apply(record: TweakDBID, appearance: CName) -> Bool {
-    if !IsNameValid(appearance) || !GaragePaint.WriteFlat(record, appearance) { return false; }
+    if !IsNameValid(appearance) || !GaragePaint.Hold(record, appearance) { return false; }
     let overrides: ref<PaintOverrides> = PaintOverrides.Get();
     if IsDefined(overrides) { overrides.Set(record, appearance); }
     return true;
@@ -95,7 +72,7 @@ public abstract class GaragePaint {
     let done: Int32 = 0;
     let all: array<ref<PaintOverrideEntry>> = overrides.All();
     for entry in all {
-      if GaragePaint.WriteFlat(entry.recordId, entry.appearanceName) { done += 1; }
+      if GaragePaint.Hold(entry.recordId, entry.appearanceName) { done += 1; }
     }
     return done;
   }
@@ -114,19 +91,24 @@ public abstract class GaragePaint {
     }
   }
 
-  /// Whether the record has an appearance flat at all. An empty one is a car that picks a random look per spawn, and
-  /// it still takes one written in.
+  /// Whether the record has an appearance flat at all. An empty one rolls a random look per spawn, and still takes one held in.
   public static func HasFlat(record: TweakDBID) -> Bool {
-    return TDBID.IsValid(record) && IsDefined(TweakDBInterface.GetFlat(record + t".appearanceName"));
+    return GarageSystem.Get().Xu().Tweaks().Has(record, n"appearanceName");
   }
 
-  /// The flat only, the save doesn't hear about it. False when the record has no appearance flat.
-  public static func WriteFlat(record: TweakDBID, appearance: CName) -> Bool {
-    if !GaragePaint.HasFlat(record) { return false; }
-    let flat: CName = GaragePaint.GetFlat(record);
-    GarageSystem.Get().PaintOriginals().Remember(record, flat);
-    TweakDBManager.SetFlat(record + t".appearanceName", appearance);
-    TweakDBManager.UpdateRecord(record);
-    return true;
+  /// The flat only, the save doesn't hear about it. XU puts the game's own back at session end.
+  /// False when the record has no appearance flat.
+  public static func Hold(record: TweakDBID, appearance: CName) -> Bool {
+    return GarageSystem.Get().Xu().Tweaks().HoldName(record, n"appearanceName", appearance, "paint");
+  }
+
+  /// Back to the look V saved, or the game's own when there isn't one
+  public static func ShowSaved(record: TweakDBID) -> Void {
+    let saved: CName = GaragePaint.GetOverride(record);
+    if IsNameValid(saved) {
+      GaragePaint.Hold(record, saved);
+    } else {
+      GarageSystem.Get().Xu().Tweaks().Release(record, n"appearanceName");
+    }
   }
 }

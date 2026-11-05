@@ -31,8 +31,6 @@ public class GarageSystem extends ScriptableService {
   private let m_addons: array<ref<GarageAddon>>;
   private let m_started: array<Bool>;
   private let m_services: array<ref<GarageService>>;
-  private let m_recordNames: ref<GarageRecordNames>;
-  private let m_paintOriginals: ref<GaragePaintOriginals>;
   private let m_inSession: Bool;
   private let m_said: Bool;
   private let m_visited: Bool;
@@ -53,7 +51,6 @@ public class GarageSystem extends ScriptableService {
     this.m_pricing = new GaragePricing();
     this.m_pricing.Setup(this.m_xu);
     this.m_parts = new GarageParts();
-    this.m_paintOriginals = new GaragePaintOriginals();
     this.m_swap = new GarageEntitySwap();
     this.m_swap.Setup(this.m_xu);
     this.m_appearances = new GarageAppearances();
@@ -136,11 +133,6 @@ public class GarageSystem extends ScriptableService {
     return false;
   }
 
-  public func RecordNames() -> ref<GarageRecordNames> {
-    if !IsDefined(this.m_recordNames) { this.m_recordNames = new GarageRecordNames(); }
-    return this.m_recordNames;
-  }
-
   public func RegisterScreens(screens: ref<ScreenManager>, frame: ref<GarageFrame>) -> Void {
     let i: Int32 = 0;
     while i < ArraySize(this.m_addons) {
@@ -208,8 +200,6 @@ public class GarageSystem extends ScriptableService {
 
   public func Swap() -> ref<GarageEntitySwap> { return this.m_swap; }
 
-  public func PaintOriginals() -> ref<GaragePaintOriginals> { return this.m_paintOriginals; }
-
   public func Repairs() -> ref<GarageRepairLedger> { return GarageRepairLedger.Get(); }
 
   public func Appearances() -> ref<GarageAppearances> { return this.m_appearances; }
@@ -276,7 +266,6 @@ public class GarageSystem extends ScriptableService {
     this.m_parts.End();
     this.m_scene.Close();
     this.m_swap.Abort();
-    this.m_paintOriginals.RestoreAll();
     this.m_appearances.ClearCache();
     this.m_panel.Hide();
     this.m_claim.Stop();
