@@ -231,7 +231,7 @@ public class GarageData extends IScriptable {
 
   private func Write(path: String, json: ref<XUtilsJson>) -> ref<GarageSaveResult> {
     let files: ref<XUtilsFiles> = this.m_xu.Files();
-    if files.Exists(path) { files.Copy(path, path + ".bak"); }
+    files.Backup(path, 3);
     return files.WriteJson(path, json) ? GarageSaveResult.Saved(path) : GarageSaveResult.Failed("couldn't write " + path);
   }
 

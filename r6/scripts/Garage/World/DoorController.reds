@@ -31,16 +31,7 @@ public class DoorRegistration {
   public let retryTries: Int32;
   public let retryMax: Int32;
   public let retryInterval: Float;
-}
-
-// Holds the id, not the registration, so a callback left over from before a load finds nothing to do
-public class DoorRetryCallback extends DelayCallback {
-  public let controller: wref<DoorController>;
-  public let garageId: CName;
-
-  protected func Call() -> Void {
-    if IsDefined(this.controller) { this.controller.OnRetry(this.garageId); }
-  }
+  public let retryTimer: Uint64;
 }
 
 /// Every garage door. A location file with a door gets one that follows the zones by itself.
@@ -279,11 +270,19 @@ public class DoorController extends ScriptableSystem {
     this.QueueRetry(reg);
   }
 
+  // On the game clock, since a door only streams in while the world runs. Keyed by garage, so a retry re-arms
   private func QueueRetry(reg: ref<DoorRegistration>) -> Void {
-    let callback: ref<DoorRetryCallback> = new DoorRetryCallback();
-    callback.controller = this;
-    callback.garageId = reg.garageId;
-    GameInstance.GetDelaySystem(this.GetGameInstance()).DelayCallback(callback, reg.retryInterval, false);
+    reg.retryTimer = XUtils.Mod("Garage").After(reg.retryInterval, this, n"OnRetryTimer", reg.garageId, XUtilsClock.Game);
+  }
+
+  public func OnRetryTimer(e: ref<XUtilsEvent>) -> Void {
+    for reg in this.m_registrations {
+      if reg.retryTimer == e.id {
+        reg.retryTimer = 0ul;
+        this.OnRetry(reg.garageId);
+        return;
+      }
+    }
   }
 
   private func InDebounce(reg: ref<DoorRegistration>) -> Bool {
